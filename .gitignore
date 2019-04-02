@@ -1,0 +1,16 @@
+.Rhistory
+.Rapp.history
+.DS_Store
+.Rproj.user/
+old/
+data/studies/raw/
+analysis/
+chelsa/
+prism/
+stan/*.rds
+studies_check*
+studies_emails*
+*.png
+ex_3a_prep.R
+ex_3c_analysis.R
+species_clim.csv
