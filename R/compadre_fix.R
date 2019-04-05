@@ -123,6 +123,29 @@ compadre$mat[[shryock_fix1]]@matU[i1] <- 0
 compadre$mat[[shryock_fix2]]@matU[i2] <- 0
 
 
+## lazaro
+lazaro_fix <- which(
+  compadre$SpeciesAuthor == "Dioon_merolae" &
+    compadre$MatrixPopulation == "EC"
+)
+
+for (i in lazaro_fix) {
+  compadre$mat[[i]]@matU <- compadre$mat[[i]]@matU + compadre$mat[[i]]@matC
+  compadre$mat[[i]]@matC[compadre$mat[[i]]@matC > 0] <- 0
+}
+
+
+## portela
+portela_fix1 <- which(
+  compadre$SpeciesAuthor == "Astrocaryum_aculeatissimum"
+)
+
+for (i in portela_fix1) {
+  compadre$mat[[i]]@matU <- compadre$mat[[i]]@matU + compadre$mat[[i]]@matC
+  compadre$mat[[i]]@matC[compadre$mat[[i]]@matC > 0] <- 0
+}
+
+
 
 ### write corrected db to file
 save(compadre, file = "data/COMPADRE_v.X.X.X_Corrected.RData")
