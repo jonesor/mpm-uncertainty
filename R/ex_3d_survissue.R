@@ -6,7 +6,7 @@ library(popdemo)
 
 
 ### load COMPADRE
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X.RData")
+compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ## possible columns to collapse on
@@ -57,7 +57,7 @@ sum(table(comp_tot$ns1)[-1]) / sum(table(comp_tot$ns1))
 sum(table(comp_pop$ns1)[-1]) / sum(table(comp_pop$ns1))
 sum(table(comp_spp$ns1)[-1]) / sum(table(comp_spp$ns1))
 
-# proportion MPMs with 12 stage-specific survival >= 1
+# proportion MPMs with 2+ stage-specific survival >= 1
 sum(table(comp_tot$ns1)[-(1:2)]) / sum(table(comp_tot$ns1))
 sum(table(comp_pop$ns1)[-(1:2)]) / sum(table(comp_pop$ns1))
 sum(table(comp_spp$ns1)[-(1:2)]) / sum(table(comp_spp$ns1))
