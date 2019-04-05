@@ -58,6 +58,23 @@ cdb_glimpse <- function(db, cols = NULL) {
         "MatrixTreatment", "StartYear", "EndYear", cols)]
 }
 
+cdb_bind_rows <- function(dbs) {
+  vers <- dbs[[1]]@version
+  dbs <- bind_rows(lapply(dbs, as_tibble))
+  new("CompadreDB",
+      data = dbs,
+      version = vers)
+}
+
+
+
+### Other utilities ############################################################
+rdata_load <- function(path) {
+  env <- new.env()
+  x <- load(path, env)[1]
+  return(env[[x]])
+}
+
 
 
 ### Confirm that stage-specific sample sizes match transition rates ############
@@ -563,4 +580,124 @@ mpm_flatten <- function(matA, matU, matF, matC, stage_names) {
   out$C <- c(matC)
   return(out)
 }
+
+
+scale_U <- function(matU) {
+  out <- apply(matU, 2, function(x) if (any(sum(x) > 1)) {x / sum(x)} else {x})
+  dimnames(out) <- dimnames(matU)
+  return(out)
+}
+
+
+mat_mean2 <- function(l, na.rm = TRUE, replace_na = TRUE) {
+  m <- popbio::mean.list(l, na.rm = na.rm)
+  if (replace_na) m[is.na(m)] <- 0
+  return(m)
+}
+
+
+
+### MPM and age-from-stage analyses ############################################
+repro_prop_start <- function(matU, start, repro_stages) {
+  
+  if (sum(repro_stages) == 1) {
+    n <- as.numeric(repro_stages)
+  } else {
+    primeU <- matU
+    primeU[,repro_stages] <- 0
+    N <- try(solve(diag(nrow(primeU)) - primeU))
+    if (class(N) == "try-error") {
+      n <- NA
+    } else {
+      n <- rep(0, nrow(matU))
+      n[repro_stages] <- N[repro_stages,start] / sum(N[repro_stages,start])
+    }
+  }
+  return(n)
+}
+
+
+lx_submax <- function(lx, tmax, strip_zero = TRUE) {
+  upp <- min(tmax, length(lx))
+  lx <- lx[1L:upp] / lx[1L]
+  if (strip_zero) lx <- lx[lx > 0]
+  return(lx)
+}
+
+
+lx_from_mature <- function(matU, n1, crit = 0.00001, nmax = 1e4) {
+  lx_vec <- numeric(1)
+  lx <- 1.0
+  n <- n1
+  t <- 0L
+  
+  while (lx > crit & t < nmax) {
+    n <- matU %*% n
+    lx <- sum(n)
+    t <- t + 1L
+    lx_vec[t] <- lx
+  }
+  
+  return(c(1, lx_vec[lx_vec > 0]))
+}
+
+
+qsd <- function(matU, n1, conv = 0.01, nmax = 1e4L) {
+
+  start <- which(n1 > 0)
+  
+  if (!isErgodic(matU)) {
+    
+    nonzero <- rep(FALSE, nrow(matU))
+    nonzero[start] <- TRUE
+    
+    n <- n1
+    t <- 1L
+    
+    while (!all(nonzero) & t < (nrow(matU) * 3)) {
+      n <- matU %*% n
+      nonzero[n > 0] <- TRUE
+      t <- t + 1L
+    }
+    
+    matU <- as.matrix(matU[nonzero,nonzero])
+    n1 <- n1[nonzero]
+    start <- which(which(nonzero) %in% start)
+  }
+  
+  w <- stable.stage(matU)
+  n <- n1
+  dist <- conv + 1
+  t <- 0L
+  
+  while (!is.na(dist) & dist > conv & t < nmax) {
+    dist <- 0.5 * (sum(abs(n - w)))
+    n <- matU %*% n
+    n <- n / sum(n)
+    t <- t + 1L
+  }
+  
+  return(ifelse(is.na(dist) | dist > conv, NA_integer_, t)) 
+}
+
+
+shape_surv2 <- function(lx, q) {
+  upp <- min(q, length(lx))
+  ifelse(q < 4, NA_real_, shape_surv(lx[1:upp]))
+}
+
+
+# stages_reached <- function(matU, rep_stages) {
+#   n <- as.numeric(rep_stages)
+#   nonzero <- rep_stages
+#   t <- 1L
+#   
+#   while (!all(nonzero) & t < (nrow(matU) * 3)) {
+#     n <- matU %*% n
+#     nonzero[n > 0] <- TRUE
+#     t <- t + 1L
+#   }
+# 
+#   return(nonzero)
+# }
 
