@@ -533,6 +533,10 @@ plank <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
+# moody and panther had 0 seedlings... use pooled value of 5 instead
+plank$N[[3]][1] <- 5
+plank$N[[4]][1] <- 5
+
 # sampling distribution
 sd_plank <- plank %>% 
   mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
@@ -544,8 +548,8 @@ sd_plank <- plank %>%
   mutate(rep = 1:n()) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
+  summarize(simU = list(mat_mean2(simU)),
+            simF = list(mat_mean2(simF))) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation) %>% 
   summarize(simU = list(simU),
@@ -874,14 +878,6 @@ assc_out <- compadre %>%
 # save(assc_out, file = "analysis/sd_assc.RData")
 
 
-# out <- assc %>%
-#   filter(MatrixPopulation == "Haynes Creek")
-# 
-# sapply(out$matF, function(x) x[3,5])
-# sapply(out$N, function(x) x[5])
-
-
-
 
 #### Lemke
 spp <- "Trollius_europaeus"
@@ -922,8 +918,8 @@ sd_lemke <- lemke %>%
   mutate(rep = 1:n()) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
+  summarize(simU = list(mat_mean2(simU)),
+            simF = list(mat_mean2(simF))) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation) %>% 
   summarize(simU = list(simU),
@@ -1305,36 +1301,42 @@ keller <- compadre %>%
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Individual") %>% 
   cdb_unnest() %>% 
-  mutate(matR = map2(matF, matC, ~ .x + .y)) %>% 
+  mutate(matF = map2(matF, matC, ~ .x + .y)) %>% 
+  mutate(matC = map(matC, ~ matrix(0, nrow(.x), ncol(.x)))) %>% 
   left_join(keller_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
   group_by(MatrixPopulation) %>% 
   mutate(posU = list(mat_mean(matU) > 0),
-         posR = list(mat_mean(matR) > 0)) %>% 
+         posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
 # sampling distribution
 sd_keller <- keller %>% 
   mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simR = pmap(list(matR, posR, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simR) %>% 
+  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
   unnest() %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   mutate(rep = 1:n()) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation, rep) %>% 
   summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simR = list(popbio::mean.list(simR, na.rm = TRUE))) %>% 
+            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation) %>% 
   summarize(simU = list(simU),
-            simR = list(simR))
+            simF = list(simF))
 
 keller_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
   left_join(sd_keller)
+
+for (i in 1:nrow(keller_out)) {
+  keller_out$mat[[i]]@matF <- keller_out$mat[[i]]@matF + keller_out$mat[[i]]@matC
+  keller_out$mat[[i]]@matC[keller_out$mat[[i]]@matC > 0] <- 0
+}
 
 # save(keller_out, file = "analysis/sd_keller.RData")
 
@@ -1359,7 +1361,6 @@ raghu <- compadre %>%
   mutate(posU = list(mat_mean(matU) > 0),
          posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
-
 
 # sampling distribution
 sd_raghu <- raghu %>% 
@@ -1400,7 +1401,8 @@ martin_n <- read_csv("data/studies/martin_n.csv") %>%
 
 martin <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
-  filter(MatrixComposite == "Individual") %>% 
+  filter(MatrixComposite == "Individual",
+         MatrixTreatment == "Unmanipulated") %>% 
   cdb_unnest() %>% 
   left_join(martin_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
   group_by(MatrixPopulation) %>% 
@@ -1712,7 +1714,6 @@ sd_dias <- dias %>%
   group_by(MatrixPopulation) %>% 
   summarize(simU = list(simU),
             simF = list(simF))
-
 
 dias_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
