@@ -48,3 +48,20 @@ studies_check <- compadre %>%
 ### write to file
 write.csv("studies_check.csv", row.names = FALSE)
 
+
+
+# ### median number of years of temporal replication
+# comp_rep <- compadre %>% 
+#   filter(MatrixTreatment == "Unmanipulated",
+#          MatrixCaptivity == "W",
+#          MatrixComposite == "Individual",
+#          AnnualPeriodicity == "1") %>% 
+#   as_tibble() %>% 
+#   group_by(SpeciesAuthor, MatrixPopulation) %>% 
+#   summarize(n = length(unique(paste(MatrixStartYear, MatrixEndYear)))) %>% 
+#   ungroup() %>% 
+#   filter(n > 1)
+# 
+# table(comp_rep$n)
+# median(comp_rep$n)
+
