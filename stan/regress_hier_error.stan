@@ -11,29 +11,22 @@ data {
 
 parameters {
   vector[N_spp] z_alpha_spp;
-  // vector[N_spp] z_beta_spp;
   
   real mu_alpha;
   real mu_beta;
   
   vector[N] y;
-  
   vector[N] x;
   
   real<lower=0> sigma_alpha_spp;
-  // real<lower=0> sigma_beta_spp;
-  
   real<lower=0> sigma_y;
 }
 
 transformed parameters {
   vector[N_spp] alpha_spp;
-  // vector[N_spp] beta_spp;
-  
   vector[N] y_hat;
   
   alpha_spp = z_alpha_spp * sigma_alpha_spp;
-  // beta_spp = z_beta_spp * sigma_beta_spp;
   
   for (i in 1:N) {
     y_hat[i] = (mu_alpha + alpha_spp[spp[i]]) +
@@ -42,21 +35,16 @@ transformed parameters {
 }
 
 model {
-  
   z_alpha_spp ~ normal(0, 1);
-  // z_beta_spp ~ normal(0, 1);
   
-  mu_alpha ~ normal(0, 10);
-  mu_beta ~ normal(0, 10);
+  mu_alpha ~ normal(0, 1);
+  mu_beta ~ normal(0, 2);
   
-  sigma_alpha_spp ~ normal(0, 10);
-  // sigma_beta_spp ~ normal(0, 5);
+  sigma_alpha_spp ~ normal(0, 2);
   
-  sigma_y ~ normal(0, 10);
+  sigma_y ~ normal(0, 2);
   
   y_mean ~ normal(y, y_se);
-  
-  x ~ normal(0, 10);
   x_mean ~ normal(x, x_se);
   
   y ~ normal(y_hat, sigma_y);
