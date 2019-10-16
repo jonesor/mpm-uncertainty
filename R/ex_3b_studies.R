@@ -3,9 +3,7 @@
 ### libraries
 library(tidyverse)
 library(Rcompadre)
-library(Rage)
 library(popbio)
-library(gridExtra)
 source("R/functions.R")
 
 
@@ -14,14 +12,13 @@ compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### Load data from Ellis et al. (2012)
-ellis_data <- read.table('data/ellis/Transition_Matrices.txt', sep = '\t',
+ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
-  mutate(matA = lapply(Mx, stringToMat)) %>% 
-  mutate(matU = lapply(Tmx, stringToMat)) %>% 
-  mutate(matF = mapply(function(a, b) a - b, matA, matU, SIMPLIFY = F)) %>% 
-  mutate(N = lapply(Nx, NxToVec))
-
+  mutate(matA = lapply(Mx, string_to_mat)) %>% 
+  mutate(matU = lapply(Tmx, string_to_mat)) %>% 
+  mutate(matF = mapply(function(a, b) a - b, matA, matU, SIMPLIFY = FALSE)) %>% 
+  mutate(N = lapply(Nx, nx_to_vec))
 
 
 
@@ -30,7 +27,6 @@ ellis_data <- read.table('data/ellis/Transition_Matrices.txt', sep = '\t',
 
 ### Aschero
 spp <- "Prosopis_ﬂexuosa"
-
 aschero_n <- read_csv("data/studies/aschero_n.csv")
 
 aschero <- compadre %>% 
@@ -39,8 +35,8 @@ aschero <- compadre %>%
   mutate(N = list(aschero_n$N))
 
 sd_aschero <- aschero %>% 
-  mutate(simU = map2(matU, N, ~ SimMatUWrapper(matU = .x, N = .y, nsim = 1000))) %>% 
-  mutate(simF = map2(matF, N, ~ SimMatFWrapper(matF = .x, N = .y, nsim = 1000))) %>% 
+  mutate(simU = map2(matU, N, ~ sim_U_wrapper(matU = .x, N = .y, nsim = 1000))) %>% 
+  mutate(simF = map2(matF, N, ~ sim_F_wrapper(matF = .x, N = .y, nsim = 1000))) %>% 
   as_tibble() %>% 
   select(MatrixPopulation, simU, simF)
 
@@ -48,7 +44,7 @@ aschero_out <- compadre %>%
   filter(SpeciesAuthor == spp, MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_aschero)
 
-# save(aschero_out, file = "analysis/sd_aschero.RData")
+save(aschero_out, file = "analysis/sd_aschero.RData")
 
 
 
@@ -76,32 +72,22 @@ kiviniemi <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_kiviniemi <- kiviniemi %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- kiviniemi %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 kiviniemi_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  filter(MatrixPopulation %in% c("A", "B")) %>% 
-  left_join(sd_kiviniemi)
+  filter(MatrixPopulation %in% c("A", "B")) %>%
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(kiviniemi_out, file = "analysis/sd_kiviniemi.RData")
+save(kiviniemi_out, file = "analysis/sd_kiviniemi.RData")
 
 
 
@@ -132,31 +118,21 @@ satterthwaite <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_satterthwaite <- satterthwaite %>% 
-  mutate(simU = pmap(list(matU, posU, Nu), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, Nf), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- satterthwaite %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(Nu)))
 
 satterthwaite_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_satterthwaite)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(satterthwaite_out, file = "analysis/sd_satterthwaite.RData")
+save(satterthwaite_out, file = "analysis/sd_satterthwaite.RData")
 
 
 
@@ -196,32 +172,22 @@ andrello <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_andrello <- andrello %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- andrello %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 andrello_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
   slice(-grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_andrello)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(andrello_out, file = "analysis/sd_andrello.RData")
+save(andrello_out, file = "analysis/sd_andrello.RData")
 
 
 
@@ -255,31 +221,21 @@ lisc <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_lisc <- lisc %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- lisc %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 lisc_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_lisc)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(lisc_out, file = "analysis/sd_lisc.RData")
+save(lisc_out, file = "analysis/sd_lisc.RData")
 
 
 
@@ -318,31 +274,21 @@ cipi <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_cipi <- cipi %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- cipi %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 cipi_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_cipi)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(cipi_out, file = "analysis/sd_cipi.RData")
+save(cipi_out, file = "analysis/sd_cipi.RData")
 
 
 
@@ -374,32 +320,22 @@ scanga <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_scanga <- scanga %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- scanga %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 scanga_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixPopulation %in% pop) %>% 
   filter(MatrixComposite == "Individual") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_scanga)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(scanga_out, file = "analysis/sd_scanga.RData")
+save(scanga_out, file = "analysis/sd_scanga.RData")
 
 
 
@@ -427,32 +363,22 @@ lazaro <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_lazaro <- lazaro %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- lazaro %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 lazaro_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
   slice(-grep(";", MatrixPopulation)) %>% 
-  left_join(sd_lazaro)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(lazaro_out, file = "analysis/sd_lazaro.RData")
+save(lazaro_out, file = "analysis/sd_lazaro.RData")
 
 
 
@@ -480,31 +406,21 @@ arroyo <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_arroyo <- arroyo %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- arroyo %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 arroyo_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_arroyo)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(arroyo_out, file = "analysis/sd_arroyo.RData")
+save(arroyo_out, file = "analysis/sd_arroyo.RData")
 
 
 
@@ -533,35 +449,25 @@ plank <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# moody and panther had 0 seedlings... use pooled value of 5 instead
-plank$N[[3]][1] <- 5
-plank$N[[4]][1] <- 5
-
-# sampling distribution
-sd_plank <- plank %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- plank %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean2(simU)),
-            simF = list(mat_mean2(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
+
+# moody and panther had 0 seedlings... use pooled value of 5 instead
+npool$N[[3]][1] <- 5
+npool$N[[4]][1] <- 5
 
 plank_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Individual") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_plank)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(plank_out, file = "analysis/sd_plank.RData")
+save(plank_out, file = "analysis/sd_plank.RData")
 
 
 
@@ -588,33 +494,24 @@ jolls <- compadre %>%
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup() %>% 
-  mutate(MatrixPopulation = ifelse(MatrixStartYear <= 2000, 1995, 2005))
+  mutate(MatrixPopulation = ifelse(MatrixStartYear <= 2000, "1995", "2005"))
 
-# sampling distribution
-sd_jolls <- jolls %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- jolls %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 jolls_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
-  filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_jolls, by = c("MatrixStartYear" = "MatrixPopulation"))
+  filter(MatrixTreatment == "Unmanipulated") %>%
+  mutate(MatrixPopulation = ifelse(MatrixStartYear <= 2000, "1995", "2005")) %>% 
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(jolls_out, file = "analysis/sd_jolls.RData")
+save(jolls_out, file = "analysis/sd_jolls.RData")
 
 
 
@@ -643,31 +540,21 @@ torres <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_torres <- torres %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- torres %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 torres_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Individual") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_torres)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(torres_out, file = "analysis/sd_torres.RData")
+save(torres_out, file = "analysis/sd_torres.RData")
 
 
 
@@ -683,7 +570,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-andrieu_n <- read_csv("data/studies/andrieu_n_pooled.csv") %>% 
+andrieu_n <- read_csv("data/studies/andrieu_n.csv") %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -700,32 +587,22 @@ andrieu <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_andrieu <- andrieu %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- andrieu %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 andrieu_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixPopulation %in% pops) %>%
   filter(MatrixComposite == "Pooled") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_andrieu)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(andrieu_out, file = "analysis/sd_andrieu.RData")
+save(andrieu_out, file = "analysis/sd_andrieu.RData")
 
 
 
@@ -755,32 +632,22 @@ eriksson <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_eriksson <- eriksson %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- eriksson %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 eriksson_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
   slice(-grep(";", MatrixPopulation)) %>% 
-  left_join(sd_eriksson)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(eriksson_out, file = "analysis/sd_eriksson.RData")
+save(eriksson_out, file = "analysis/sd_eriksson.RData")
 
 
 
@@ -810,72 +677,28 @@ assc <- compadre %>%
   filter(MatrixComposite == "Individual") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_unnest() %>% 
-  left_join(assc_n, by = c("MatrixPopulation", "MatrixStartYear"))
+  left_join(assc_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
+  group_by(MatrixPopulation) %>% 
+  mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posF = list(mat_mean(matF) > 0)) %>% 
+  ungroup()
 
-mat_dim <- ncol(assc$matA[[1]])
-
-# fit bayesian models, and save posterior samples
-trans_sim <- assc %>% 
+npool <- assc %>% 
   as_tibble() %>% 
   group_by(MatrixPopulation) %>% 
-  do(bind_rows(lapply(seq_len(mat_dim),
-                      tr_bayes_wrap,
-                      matU = .$matU, matF = .$matF, N = .$N,
-                      poolU = .$PU, poolF = .$PF))) %>% 
-  ungroup()
-
-# df of all transitions, possible and not
-cast_dim <- function(dim) {
-  dim <- unique(dim[[1]])
-  expand.grid(col = seq_len(dim),
-              row = seq_len(dim),
-              rep = seq_len(1000),
-              stringsAsFactors = FALSE)
-}
-
-tr_df <- assc %>%
-  as_tibble() %>%
-  select(MatrixPopulation, year = MatrixStartYear) %>%
-  group_by(MatrixPopulation) %>%
-  mutate(year = as.integer(as.factor(year))) %>%
-  ungroup() %>%
-  group_by(MatrixPopulation, year) %>%
-  do(cast_dim(mat_dim)) %>%
-  ungroup()
-
-trans_sim_full <- trans_sim %>%
-  select(MatrixPopulation, year) %>%
-  unique() %>%
-  mutate(SpeciesAuthor = spp) %>%
-  full_join(tr_df) %>%
-  select(-SpeciesAuthor) %>%
-  left_join(trans_sim) %>%
-  arrange(MatrixPopulation, year, rep, col, row)
-
-sd_assc <- trans_sim_full %>%
-  mutate(tr_U = ifelse(is.na(tr_U), 0, tr_U),
-         tr_F = ifelse(is.na(tr_F), 0, tr_F)) %>%
-  group_by(MatrixPopulation, rep, col, row) %>%
-  summarize(tr_U = mean(tr_U),
-            tr_F = mean(tr_F)) %>%
-  ungroup() %>%
-  group_by(MatrixPopulation, rep) %>%
-  summarize(simU = list(MakeMat(tr_U, mat_dim)),
-            simF = list(MakeMat(tr_F, mat_dim))) %>%
-  ungroup() %>%
-  group_by(MatrixPopulation) %>%
-  summarize(simU = list(simU),
-            simF = list(simF)) %>%
-  mutate(SpeciesAuthor = spp)
+  summarize(N = list(pool_counts(N)))
 
 assc_out <- compadre %>%
-  filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
-  filter(MatrixTreatment == "Unmanipulated") %>%
-  slice(-grep(";", MatrixPopulation)) %>% 
-  left_join(sd_assc)
+  filter(SpeciesAuthor == spp) %>% 
+  filter(MatrixComposite == "Mean") %>% 
+  filter(MatrixTreatment == "Unmanipulated") %>% 
+  filter(!grepl(";", MatrixPopulation)) %>% 
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(assc_out, file = "analysis/sd_assc.RData")
+save(assc_out, file = "analysis/sd_assc.RData")
 
 
 
@@ -907,32 +730,22 @@ lemke <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_lemke <- lemke %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- lemke %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean2(simU)),
-            simF = list(mat_mean2(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 lemke_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
   filter(MatrixComposite == "Pooled") %>% 
   filter(Observation == "Pooled by habitat and year") %>%
-  left_join(sd_lemke)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(lemke_out, file = "analysis/sd_lemke.RData")
+save(lemke_out, file = "analysis/sd_lemke.RData")
 
 
 
@@ -958,33 +771,24 @@ toledo <- compadre %>%
   left_join(toledo_n) %>% 
   group_by(MatrixPopulation) %>% 
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_toledo <- toledo %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- toledo %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 toledo_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_toledo)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(toledo_out, file = "analysis/sd_toledo.RData")
+save(toledo_out, file = "analysis/sd_toledo.RData")
 
 
 
@@ -1010,33 +814,24 @@ crone <- compadre %>%
   left_join(crone_n) %>% 
   group_by(MatrixPopulation) %>% 
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_crone <- crone %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- crone %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 crone_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_crone)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(crone_out, file = "analysis/sd_crone.RData")
+save(crone_out, file = "analysis/sd_crone.RData")
 
 
 
@@ -1064,33 +859,24 @@ dostalek <- compadre %>%
   left_join(dostalek_n) %>% 
   group_by(MatrixPopulation) %>% 
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_dostalek <- dostalek %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- dostalek %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 dostalek_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_dostalek)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(dostalek_out, file = "analysis/sd_dostalek.RData")
+save(dostalek_out, file = "analysis/sd_dostalek.RData")
 
 
 
@@ -1115,33 +901,24 @@ evju <- compadre %>%
   left_join(evju_n) %>% 
   group_by(MatrixPopulation) %>% 
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_evju <- evju %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- evju %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 evju_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_evju)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(evju_out, file = "analysis/sd_evju.RData")
+save(evju_out, file = "analysis/sd_evju.RData")
 
 
 
@@ -1166,33 +943,24 @@ flores <- compadre %>%
   left_join(flores_n) %>% 
   group_by(MatrixPopulation) %>% 
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_flores <- flores %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- flores %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU)),
-            simF = list(mat_mean(simF))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 flores_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_flores)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(flores_out, file = "analysis/sd_flores.RData")
+save(flores_out, file = "analysis/sd_flores.RData")
 
 
 
@@ -1211,33 +979,24 @@ shryock <- compadre %>%
   left_join(shryock_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
   group_by(MatrixPopulation) %>% 
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_shryock <- shryock %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- shryock %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 shryock_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_shryock)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(shryock_out, file = "analysis/sd_shryock.RData")
+save(shryock_out, file = "analysis/sd_shryock.RData")
 
 
 
@@ -1260,84 +1019,64 @@ csergo <- compadre %>%
          posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_csergo <- csergo %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- csergo %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 csergo_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_csergo)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(csergo_out, file = "analysis/sd_csergo.RData")
+save(csergo_out, file = "analysis/sd_csergo.RData")
 
 
 
-### Keller
-spp <- "Leontopodium_alpinum"
-
-keller_n <- read_csv("data/studies/keller_n.csv") %>%
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  summarize(N = list(N)) %>% 
-  ungroup() %>% 
-  select(MatrixPopulation, MatrixStartYear, N)
-
-keller <- compadre %>% 
-  filter(SpeciesAuthor == spp) %>% 
-  filter(MatrixComposite == "Individual") %>% 
-  cdb_unnest() %>% 
-  mutate(matF = map2(matF, matC, ~ .x + .y)) %>% 
-  mutate(matC = map(matC, ~ matrix(0, nrow(.x), ncol(.x)))) %>% 
-  left_join(keller_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
-  group_by(MatrixPopulation) %>% 
-  mutate(posU = list(mat_mean(matU) > 0),
-         posF = list(mat_mean(matF) > 0)) %>% 
-  ungroup()
-
-# sampling distribution
-sd_keller <- keller %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
-  as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
-
-keller_out <- compadre %>% 
-  filter(SpeciesAuthor == spp) %>% 
-  filter(MatrixComposite == "Mean") %>% 
-  filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_keller)
-
-for (i in 1:nrow(keller_out)) {
-  keller_out$mat[[i]]@matF <- keller_out$mat[[i]]@matF + keller_out$mat[[i]]@matC
-  keller_out$mat[[i]]@matC[keller_out$mat[[i]]@matC > 0] <- 0
-}
-
+# ### Keller
+# spp <- "Leontopodium_alpinum"
+# 
+# keller_n <- read_csv("data/studies/keller_n.csv") %>%
+#   group_by(MatrixPopulation, MatrixStartYear) %>% 
+#   summarize(N = list(N)) %>% 
+#   ungroup() %>% 
+#   select(MatrixPopulation, MatrixStartYear, N)
+# 
+# keller <- compadre %>% 
+#   filter(SpeciesAuthor == spp) %>% 
+#   filter(MatrixComposite == "Individual") %>% 
+#   cdb_unnest() %>% 
+#   mutate(matF = map2(matF, matC, ~ .x + .y)) %>% 
+#   mutate(matC = map(matC, ~ matrix(0, nrow(.x), ncol(.x)))) %>% 
+#   left_join(keller_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
+#   group_by(MatrixPopulation) %>% 
+#   mutate(posU = list(mat_mean(matU) > 0),
+#          posF = list(mat_mean(matF) > 0)) %>% 
+#   ungroup()
+# 
+# npool <- keller %>% 
+#   as_tibble() %>% 
+#   group_by(MatrixPopulation) %>% 
+#   summarize(N = list(pool_counts(N)))
+# 
+# keller_out <- compadre %>% 
+#   filter(SpeciesAuthor == spp) %>% 
+#   filter(MatrixComposite == "Mean") %>% 
+#   filter(!grepl(";", MatrixPopulation)) %>% 
+#   left_join(npool) %>% 
+#   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+#   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+#   select(-N)
+# 
+# for (i in 1:nrow(keller_out)) {
+#   keller_out$mat[[i]]@matF <- keller_out$mat[[i]]@matF + keller_out$mat[[i]]@matC
+#   keller_out$mat[[i]]@matC[keller_out$mat[[i]]@matC > 0] <- 0
+# }
+# 
 # save(keller_out, file = "analysis/sd_keller.RData")
 
 
@@ -1362,31 +1101,21 @@ raghu <- compadre %>%
          posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_raghu <- raghu %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- raghu %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 raghu_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean", MatrixTreatment == "Unmanipulated") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_raghu)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(raghu_out, file = "analysis/sd_raghu.RData")
+save(raghu_out, file = "analysis/sd_raghu.RData")
 
 
 
@@ -1406,35 +1135,26 @@ martin <- compadre %>%
   cdb_unnest() %>% 
   left_join(martin_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
   group_by(MatrixPopulation) %>% 
-  mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posU = list(mat_mean(matU) > 0),
+         posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_martin <- martin %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- martin %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 martin_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_martin)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(martin_out, file = "analysis/sd_martin.RData")
+save(martin_out, file = "analysis/sd_martin.RData")
 
 
 
@@ -1462,38 +1182,23 @@ law <- compadre %>%
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_law <- law %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- law %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(mat_mean(simU))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU))
+  summarize(N = list(pool_counts(N)))
 
-law_fec <- compadre %>% 
-  filter(SpeciesAuthor == spp) %>% 
-  filter(MatrixComposite == "Mean") %>% 
-  cdb_unnest() %>% 
-  mutate(N = list(c(0, 0, 0, 0, 74))) %>% 
-  mutate(posF = list(mat_mean(matF) > 0)) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000)))
-
-sd_law$simF <- law_fec$simF
+npool$N[[1]][5] <- 38
 
 law_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_law)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(law_out, file = "analysis/sd_law.RData")
+save(law_out, file = "analysis/sd_law.RData")
 
 
 
@@ -1517,34 +1222,25 @@ jacq <- compadre %>%
   cdb_unnest() %>% 
   left_join(jacq_n) %>% 
   group_by(MatrixPopulation) %>% 
-  mutate(posU = list(mat_mean(matU) > 0)) %>% 
+  mutate(posU = list(mat_mean(matU) > 0),
+         posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_jacq <- jacq %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- jacq %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 jacq_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_jacq)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(jacq_out, file = "analysis/sd_jacq.RData")
+save(jacq_out, file = "analysis/sd_jacq.RData")
 
 
 
@@ -1568,30 +1264,20 @@ portela <- compadre %>%
          posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_portela <- portela %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = pmap(list(matF, posF, N), ~ SimMatFWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- portela %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 portela_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean", MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_portela)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(portela_out, file = "analysis/sd_portela.RData")
+save(portela_out, file = "analysis/sd_portela.RData")
 
 
 
@@ -1615,23 +1301,20 @@ lopez <- compadre %>%
   left_join(lopez_n) %>% 
   mutate(posU = map(matU, ~ .x > 0))
 
-# sampling distribution
-sd_lopez <- lopez %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- lopez %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 lopez_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
-  left_join(sd_lopez)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(lopez_out, file = "analysis/sd_lopez.RData")
+save(lopez_out, file = "analysis/sd_lopez.RData")
 
 
 
@@ -1653,24 +1336,23 @@ auestad <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_unnest() %>% 
   left_join(auestad_n) %>% 
-  mutate(posU = map(matU, ~ .x > 0))
+  mutate(posU = map(matU, ~ .x > 0)) %>% 
+  mutate(posF = map(matF, ~ .x > 0))
 
-# sampling distribution
-sd_auestad <- auestad %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
+npool <- auestad %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU) %>% 
-  unnest() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU))
+  summarize(N = list(pool_counts(N)))
 
 auestad_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
-  left_join(sd_auestad) %>% 
-  mutate(simF = map(matF(mat), ~ replicate(1000, .x, simplify = FALSE)))
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(auestad_out, file = "analysis/sd_auestad.RData")
+save(auestad_out, file = "analysis/sd_auestad.RData")
 
 
 
@@ -1697,29 +1379,19 @@ dias <- compadre %>%
   mutate(posU = list(mat_mean(matU) > 0)) %>% 
   ungroup()
 
-# sampling distribution
-sd_dias <- dias %>% 
-  mutate(simU = pmap(list(matU, posU, N), ~ SimMatUWrapper(..1, ..2, ..3, 1000))) %>% 
-  mutate(simF = map(matF, ~ replicate(1000, .x, simplify = FALSE))) %>% 
+npool <- dias %>% 
   as_tibble() %>% 
-  select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
-  mutate(rep = 1:n()) %>% 
-  ungroup() %>% 
-  group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
-  ungroup() %>% 
   group_by(MatrixPopulation) %>% 
-  summarize(simU = list(simU),
-            simF = list(simF))
+  summarize(N = list(pool_counts(N)))
 
 dias_out <- compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
   filter(MatrixComposite == "Mean") %>% 
   filter(!grepl(";", MatrixPopulation)) %>% 
-  left_join(sd_dias)
+  left_join(npool) %>% 
+  mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
+  select(-N)
 
-# save(dias_out, file = "analysis/sd_dias.RData")
+save(dias_out, file = "analysis/sd_dias.RData")
 

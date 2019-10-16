@@ -26,10 +26,10 @@ transformed parameters {
 }
 
 model {
-  mu_alpha ~ normal(0, 1);
-  mu_beta ~ normal(0, 2);
+  mu_alpha ~ normal(0, 10);
+  mu_beta ~ normal(0, 10);
   
-  sigma_y ~ normal(0, 2);
+  sigma_y ~ normal(0, 10);
   
   y_mean ~ normal(y, y_se);
   x_mean ~ normal(x, x_se);

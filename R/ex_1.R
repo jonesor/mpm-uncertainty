@@ -187,8 +187,8 @@ posA <- mean(kiviniemi$matA) > 0
 
 # generate MPMs based on sampling ditributions of transitions rates
 individ_sim <- kiviniemi %>%
-  mutate(simU = map2(matU, N, ~ SimMatUWrapper(.x, posU, .y, 2000))) %>%
-  mutate(simF = map2(matF, N, ~ SimMatFWrapper(.x, posF, .y, 2000))) %>%
+  mutate(simU = map2(matU, N, ~ sim_U_wrapper(.x, posU, .y, 2000))) %>%
+  mutate(simF = map2(matF, N, ~ sim_F_wrapper(.x, posF, .y, 2000))) %>%
   mutate(simA = map2(simF, simU, ~ map2(.x, .y, `+`))) %>%
   as_tibble() %>% 
   select(simU, simF, simA) %>%
@@ -198,26 +198,17 @@ individ_sim <- kiviniemi %>%
 
 # paramater factor levels
 par_lev <- c("lambda", "rho", "v[3]", "E[list(4,4)]", "T", "l[0]")
-# par_lev <- c("lambda", "w[4]", "v[4]", "R[0]", "T", "l[0]")
 par_lab <- paste0("italic(", par_lev, ")")
 
 # derived parameters, sampling distributions
 deriv_param <- individ_sim %>% 
   mutate(lambda = map_dbl(simA, lambda)) %>% 
   mutate(rho = map_dbl(simA, damping.ratio)) %>% 
-  # mutate(`w[1]` = map_dbl(simA, ~ stable.stage(.x)[1])) %>%
-  # mutate(`w[2]` = map_dbl(simA, ~ stable.stage(.x)[2])) %>%
-  # mutate(`w[3]` = map_dbl(simA, ~ stable.stage(.x)[3])) %>%
-  # mutate(`w[4]` = map_dbl(simA, ~ stable.stage(.x)[4])) %>%
-  # mutate(`v[2]` = map_dbl(simA, ~ reproductive.value(.x)[2])) %>%
   mutate(`v[3]` = map_dbl(simA, ~ reproductive.value(.x)[3])) %>%
-  # mutate(`v[4]` = map_dbl(simA, ~ reproductive.value(.x)[4])) %>%
-  # mutate(`E[list(1,4)]` = map_dbl(simA, ~ elasticity(.x)[1,4])) %>% 
   mutate(`E[list(4,4)]` = map_dbl(simA, ~ elasticity(.x)[4,4])) %>% 
-  mutate(`R[0]` = map2_dbl(simU, simF, R0)) %>%
-  mutate(`T` = log(`R[0]`) / log(lambda)) %>% 
-  mutate(`l[0]` = map_dbl(simU, lifeExpectancy)) %>%
-  # mutate(omega = map_dbl(simU, longevity)) %>% 
+  mutate(`R[0]` = map2_dbl(simU, simF, net_repro_rate)) %>%
+  mutate(`T` = map2_dbl(simU, simF, gen_time)) %>% 
+  mutate(`l[0]` = map_dbl(simU, life_expect)) %>%
   select(-matches("sim"), -`R[0]`) %>% 
   gather(par, value, lambda:`l[0]`) %>% 
   mutate(par = factor(par, levels = par_lev, labels = par_lab))
@@ -228,19 +219,11 @@ deriv_pt <- kiviniemi %>%
   select(matA, matU, matF) %>% 
   mutate(lambda = map_dbl(matA, lambda)) %>% 
   mutate(rho = map_dbl(matA, damping.ratio)) %>% 
-  # mutate(`w[1]` = map_dbl(matA, ~ stable.stage(.x)[1])) %>%
-  # mutate(`w[2]` = map_dbl(matA, ~ stable.stage(.x)[2])) %>%
-  # mutate(`w[3]` = map_dbl(matA, ~ stable.stage(.x)[3])) %>%
-  # mutate(`w[4]` = map_dbl(matA, ~ stable.stage(.x)[4])) %>%
-  # mutate(`v[2]` = map_dbl(matA, ~ reproductive.value(.x)[2])) %>%
   mutate(`v[3]` = map_dbl(matA, ~ reproductive.value(.x)[3])) %>%
-  # mutate(`v[4]` = map_dbl(matA, ~ reproductive.value(.x)[4])) %>%
-  # mutate(`E[list(1,4)]` = map_dbl(matA, ~ elasticity(.x)[1,4])) %>% 
   mutate(`E[list(4,4)]` = map_dbl(matA, ~ elasticity(.x)[4,4])) %>% 
-  mutate(`R[0]` = map2_dbl(matU, matF, R0)) %>%
-  mutate(`T` = log(`R[0]`) / log(lambda)) %>% 
-  mutate(`l[0]` = map_dbl(matU, lifeExpectancy)) %>%
-  # mutate(omega = map_dbl(matU, longevity)) %>% 
+  mutate(`R[0]` = map2_dbl(matU, matF, net_repro_rate)) %>%
+  mutate(`T` = map2_dbl(matU, matF, gen_time)) %>% 
+  mutate(`l[0]` = map_dbl(matU, life_expect)) %>%
   select(-starts_with("mat"), -`R[0]`) %>% 
   gather(par, value, lambda:`l[0]`) %>% 
   mutate(par = factor(par, levels = par_lev, labels = par_lab))
@@ -256,10 +239,12 @@ p3 <- ggplot(deriv_plot) +
   facet_wrap(~ par, scales = "free", labeller = label_parsed, nrow = 1) +
   labs(x = "Parameter estimate", y = "Probability density") +
   ggtitle("Derived parameters") +
-  theme(axis.text.y = element_blank(),
+  theme_bw() +
+  theme(panel.grid = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_line(size = 0.4),
         axis.ticks.y = element_blank(),
         axis.ticks.x = element_line(size = 0.3),
-        panel.grid = element_blank(),
         plot.title = element_text(hjust = 0, face = "bold", vjust = 0, size = 12),
         text = element_text(size = 11.7),
         strip.text = element_text(size = 12))

@@ -23,12 +23,15 @@ options(mc.cores = parallel::detectCores())
 compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
 
 
+
 ### load study-specific sampling distribution files
 sd_files <- paste0("analysis/", list.files("analysis"))
-sd_files <- sd_files[grep("sd_", sd_files)]
+sd_files <- sd_files[grep("analysis/sds_", sd_files)]
+
+
 
 ### bind sampling distributions into single tibble
-mpm_draws <- cdb_bind_rows(lapply(sd_files, rdata_load)) %>% 
+mpm_draws <- cdb_bind_rows(lapply(sd_files, rdata_load2)) %>% 
   mutate(id = as.factor(1:n())) %>% 
   cdb_unnest() %>% 
   mutate(matU = map(matU, scale_U)) %>% 
@@ -54,7 +57,9 @@ pt_shape <- mpm_draws %>%
   mutate(shape_pt = map2_dbl(lxs, q+1, shape_surv2)) %>% 
   mutate(shape_l0_pt = map2_dbl(lx, l0_pt_int, ~ 1 + log(.x[.y]))) %>% 
   as_tibble() %>% 
-  filter(!is.na(shape_pt)) %>%
+  filter(lx_n > 2) %>%
+  # filter(!is.na(shape_pt)) %>%
+  mutate(shape_pt = shape_l0_pt) %>% 
   mutate(id_shape = fct_reorder(fct_drop(id), shape_pt)) %>% 
   mutate(id_l0 = fct_reorder(fct_drop(id), l0_pt))
 
@@ -98,34 +103,48 @@ ggplot(pt_shape) +
 
 ## sampling distributions for derived parameters
 sd_shape <- pt_shape %>%
-  filter(!is.na(shape_pt)) %>% 
   select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
   unnest() %>%
-  left_join(select(as_tibble(pt_shape), id, start, rep_stages)) %>% 
-  mutate(rep_prop1 = pmap(list(simU, start, rep_stages), repro_prop_start)) %>% 
-  mutate(lx = map2(simU, rep_prop1, lx_from_mature)) %>% 
-  mutate(lx_min = map_dbl(lx, min)) %>% 
-  mutate(lx_n = map_int(lx, length)) %>% 
-  mutate(lxs = map2(lx, q, lx_submax)) %>% 
-  mutate(lxs_min = map_dbl(lxs, min)) %>% 
-  mutate(l0 = map_dbl(lx, sum)) %>% 
-  mutate(l0_int = as.integer(round(l0, 0))) %>% 
-  mutate(shape = map2_dbl(lxs, q+1, shape_surv2)) %>% 
-  mutate(shape_l0 = map2_dbl(lx, l0_int, ~ 1 + log(.x[.y]))) %>% 
+  left_join(select(as_tibble(pt_shape), id, start, rep_stages)) %>%
+  mutate(rep_prop1 = pmap(list(simU, start, rep_stages), repro_prop_start)) %>%
+  mutate(lx = map2(simU, rep_prop1, lx_from_mature)) %>%
+  mutate(lx_min = map_dbl(lx, min)) %>%
+  mutate(lx_n = map_int(lx, length)) %>%
+  mutate(lxs = map2(lx, q, lx_submax)) %>%
+  mutate(lxs_min = map_dbl(lxs, min)) %>%
+  mutate(l0 = map_dbl(lx, sum)) %>%
+  mutate(l0_int = as.integer(round(l0, 0))) %>%
+  mutate(shape = map2_dbl(lxs, q+1, shape_surv2)) %>%
+  mutate(shape_l0 = map2_dbl(lx, l0_int, ~ 1 + log(.x[.y]))) %>%
+  mutate(shape = shape_l0) %>% 
   left_join(select(pt_shape, id, id_l0, id_shape, ends_with("pt")), by = "id")
 
-sd_other <- pt_other %>%
-  select(id, SpeciesAuthor, MatrixPopulation, simU, simF) %>%
-  unnest() %>%
-  mutate(simA = pmap(list(simU, simF), ~ ..1 + ..2)) %>% 
-  left_join(select(as_tibble(pt_other), id, start, rep_stages), by = "id") %>% 
-  mutate(loglam = map_dbl(simA, ~ log(lambda(.x)))) %>% 
-  mutate(damp = map_dbl(simA, damping.ratio)) %>% 
-  mutate(R0 = map2_dbl(simU, simF, R0)) %>%
-  mutate(gen = log(R0) / loglam) %>% 
-  mutate(w = map(simA, stable.stage)) %>%
-  mutate(growth = map2_dbl(simU, w, ~ vr_growth(.x, weights_col = .y))) %>% 
-  left_join(select(pt_other, id, starts_with("id_"), ends_with("pt")), by = "id")
+# sd_other <- pt_other %>%
+#   select(id, SpeciesAuthor, MatrixPopulation, simU, simF) %>%
+#   unnest() %>%
+#   mutate(simA = pmap(list(simU, simF), ~ ..1 + ..2)) %>% 
+#   left_join(select(as_tibble(pt_other), id, start, rep_stages), by = "id") %>% 
+#   mutate(loglam = map_dbl(simA, ~ log(lambda(.x)))) %>% 
+#   mutate(damp = map_dbl(simA, damping.ratio)) %>% 
+#   mutate(R0 = map2_dbl(simU, simF, R0)) %>%
+#   mutate(gen = log(R0) / loglam) %>% 
+#   mutate(w = map(simA, stable.stage)) %>%
+#   mutate(growth = map2_dbl(simU, w, ~ vr_growth(.x, weights_col = .y))) %>% 
+#   left_join(select(pt_other, id, starts_with("id_"), ends_with("pt")), by = "id")
+# 
+# ## write to file
+# sd_shape <- sd_shape %>%
+#   select(which(sapply(sd_shape, class) != "list"))
+# 
+# sd_other <- sd_other %>%
+#   select(which(sapply(sd_other, class) != "list"))
+# 
+# save(sd_shape, file = "analysis/full_sd_spp_shape.RData")
+# save(sd_other, file = "analysis/full_sd_spp_other.RData")
+
+load(file = "analysis/full_sd_spp_shape.RData")
+load(file = "analysis/full_sd_spp_other.RData")
+
 
 
 
@@ -140,16 +159,17 @@ tt <- theme(panel.grid = element_blank(),
 p1 <- ggplot(sd_shape, aes(y = id_shape)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = shape), rel_min_height = 0.01,
-                      scale = 3, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
   geom_point(data = pt_shape, aes(x = shape_pt), size = 0.9) +
-  coord_flip(xlim = c(-0.3, 0.2)) +
+  # coord_flip(xlim = c(-0.3, 0.2)) +
+  coord_flip(xlim = c(-0.5, 0.5)) +
   labs(y = expression(paste("Population (ranked by ", italic(S), ")")),
        x = expression(paste("Mortality trajectory shape (", italic(S), ")"))) +
   tt
 
 p2 <- ggplot(sd_shape, aes(y = id_l0)) +
   geom_density_ridges(aes(x = l0), rel_min_height = 0.01,
-                      scale = 3, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
   geom_point(data = pt_shape, aes(x = l0_pt), size = 0.9) +
   scale_x_log10() +
   coord_flip() +
@@ -166,7 +186,8 @@ quartz(height = 5.5, width = 5.5, dpi = 120)
 grid.arrange(g)
 
 # save png
-# ggsave("img/sd_shape.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
+# ggsave("img/sds_shape_spp.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
+
 
 
 
@@ -181,7 +202,7 @@ tt <- theme(panel.grid = element_blank(),
 p1 <- ggplot(sd_other, aes(y = id_loglam)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = loglam), rel_min_height = 0.01,
-                      scale = 3, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
   geom_point(data = pt_other, aes(x = loglam_pt), size = 0.9) +
   scale_x_continuous(breaks = seq(-0.4, 0.6, 0.2)) +
   coord_flip(xlim = c(-0.4, 0.7)) +
@@ -201,7 +222,7 @@ p1 <- ggplot(sd_other, aes(y = id_loglam)) +
 
 p3 <- ggplot(sd_other, aes(y = id_growth)) +
   geom_density_ridges(aes(x = growth), rel_min_height = 0.01,
-                      scale = 3, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
   geom_point(data = pt_other, aes(x = growth_pt), size = 0.9) +
   coord_flip() +
   scale_x_continuous(breaks = seq(0, 1, 0.2)) +
@@ -211,7 +232,7 @@ p3 <- ggplot(sd_other, aes(y = id_growth)) +
 
 p4 <- ggplot(sd_other, aes(y = id_gen)) +
   geom_density_ridges(aes(x = gen), rel_min_height = 0.01,
-                      scale = 3, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
   geom_point(data = pt_other, aes(x = gen_pt), size = 0.9) +
   scale_x_log10() +
   coord_flip(xlim = c(1, 350)) +
@@ -224,11 +245,11 @@ g <- rbind(ggplotGrob(p1), ggplotGrob(p3), ggplotGrob(p4), size = "last")
 
 # print to screen
 dev.off()
-quartz(height = 7, width = 5, dpi = 130)
+quartz(height = 7, width = 5, dpi = 140)
 grid.arrange(g)
 
 # save png
-# ggsave("img/sd_other.png", g, height = 7, width = 5, units = "in", dpi = 300)
+# ggsave("img/sd_other_spp.png", g, height = 7, width = 5, units = "in", dpi = 300)
 
 
 
@@ -254,6 +275,8 @@ df_shape <- sd_shape %>%
   ungroup() %>% 
   left_join(pt_shape) %>% 
   mutate(spp_int = as.integer(as.factor(SpeciesAuthor)))
+
+
 
 
 ### variance components
@@ -358,7 +381,6 @@ stan_fit_error <- sampling(
 
 # posterior samples for intercept and slope
 mu_alpha_error <- rstan_extract(stan_fit_error, "mu_alpha")
-
 mu_beta_error <- rstan_extract(stan_fit_error, "mu_beta")
 
 quantile(mu_beta, c(0.025, 0.500, 0.975))
@@ -445,7 +467,7 @@ p1 <- ggplot(pred_full) +
 p2 <- ggplot(df_beta, aes(x = beta)) +
   geom_vline(xintercept = 0, linetype = 2, alpha = 0.5) +
   geom_density(fill = "darkred", alpha = 0.4, size = 0) +
-  coord_cartesian(xlim = c(-0.06, 0.06)) +
+  coord_cartesian(xlim = c(-0.12, 0.12)) +
   facet_wrap(~ model, ncol = 1) +
   labs(x = expression(paste("Slope coefficient (", italic(beta), ")")), y = "Posterior density") +
   tt
@@ -459,7 +481,7 @@ quartz(height = 4.5, width = 6.25, dpi = 160)
 print(p)
 
 # save to png
-# ggsave2("img/shape.png", p, height = 4.5, width = 6.25)
+# ggsave2("img/shape_spp.png", p, height = 4.5, width = 6.25)
 
 
 
@@ -477,4 +499,123 @@ median(mu_beta_error)
 
 length(mu_beta[mu_beta > 0]) / length(mu_beta)
 length(mu_beta_error[mu_beta_error > 0]) / length(mu_beta_error)
+
+
+
+
+### variance components model
+stan_varcomp <- stan_model("stan/varcomp.stan")
+
+df_other <- sd_other %>% 
+  group_by(SpeciesAuthor, MatrixPopulation) %>% 
+  summarize(loglam_mean = mean(loglam),
+            loglam_se = sd(loglam),
+            damp_mean = mean(damp),
+            damp_se = sd(damp),
+            gen_mean = mean(log(gen)),
+            gen_se = sd(log(gen)),
+            growth_mean = mean(logit(growth)),
+            growth_se = sd(logit(growth))) %>% 
+  ungroup() %>% 
+  left_join(pt_other)
+
+dat_stan <- list(N = nrow(df_shape),
+                 y_mean = df_shape$log_l0_mean,
+                 y_se = df_shape$log_l0_se)
+
+dat_stan <- list(N = nrow(df_shape),
+                 y_mean = df_shape$shape_mean,
+                 y_se = df_shape$shape_se)
+
+dat_stan <- list(N = nrow(df_other),
+                 y_mean = df_other$loglam_mean,
+                 y_se = df_other$loglam_se)
+
+dat_stan <- list(N = nrow(df_other),
+                 y_mean = df_other$damp_mean,
+                 y_se = df_other$damp_se)
+
+dat_stan <- list(N = nrow(df_other),
+                 y_mean = df_other$gen_mean,
+                 y_se = df_other$gen_se)
+
+df_growth <- filter(df_other, !is.na(growth_se))
+
+dat_stan <- list(N = nrow(df_growth),
+                 y_mean = df_growth$growth_mean,
+                 y_se = df_growth$growth_se)
+
+
+dat_stan <- list(N = nrow(df_shape),
+                 y_mean = df_shape$shape_mean,
+                 y_se = df_shape$shape_se)
+
+dat_stan <- list(N = nrow(df_shape),
+                 y_mean = df_shape$log_l0_mean,
+                 y_se = df_shape$log_l0_se)
+
+
+# fit stan model
+stan_fit_varcomp <- sampling(
+  stan_varcomp,
+  data = dat_stan,
+  warmup = 3000,
+  iter = 4000,
+  thin = 2,
+  chains = 2,
+  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12)
+)
+
+pvar_w <- rstan_extract(stan_fit_varcomp, "pvar_w")
+quantile(pvar_w, c(0.025, 0.500, 0.975))
+
+var_a_pt <- var(dat_stan$y_mean)
+var_a <- rstan_extract(stan_fit_varcomp, "var_a")
+quantile(var_a_pt / var_a, c(0.025, 0.500, 0.975))
+
+
+
+
+
+
+### examine hazard trajectories for select populations
+
+pt <- pt_shape %>% 
+  filter(shape_pt > 0.1) %>% 
+  mutate(lx = map(lx, ~ .x[1:11])) %>%
+  mutate(hx = map(lx, lx_to_px)) %>%
+  mutate(x = map(lx, ~ seq_along(.x) - 1)) %>% 
+  select(SpeciesAuthor, MatrixPopulation, x, hx) %>% 
+  unnest() #%>% 
+# filter(!is.na(hxs))
+
+sdist <- sd_shape %>% 
+  filter(shape_pt > 0.1) %>% 
+  mutate(lx = map(lx, ~ .x[1:11])) %>%
+  mutate(hx = map(lx, lx_to_px)) %>%
+  mutate(x = map(lx, ~ seq_along(.x) - 1)) %>% 
+  select(SpeciesAuthor, MatrixPopulation, x, hx) %>% 
+  group_by(SpeciesAuthor, MatrixPopulation) %>% 
+  mutate(rep = 1:n()) %>% 
+  slice(sample(rep, 50)) %>% 
+  ungroup() %>% 
+  unnest()# %>% 
+# filter(!is.na(hxs))
+
+pt$matF[[3]]
+pt$matU[[3]] %>% colSums()
+pt$Authors[2]
+
+lapply(pt$matU, colSums)
+
+
+ggplot(sdist, aes(x, hx)) +
+  geom_line(aes(group = rep), alpha = 0.4, size = 0.3) +
+  geom_line(data = pt, col = "darkred", size = 1.2) +
+  scale_x_continuous(limits = c(0, 10), breaks = seq(0, 10, 2)) +
+  # scale_y_log10() +
+  # coord_cartesian(ylim = c(0, 10)) +
+  facet_wrap(~ SpeciesAuthor, ncol = 1)
+
+
 

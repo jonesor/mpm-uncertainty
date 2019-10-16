@@ -38,8 +38,8 @@ round(n * (1 - colSums(matU))) # deaths
 
 # draw from sampling distribution
 set.seed(987654321)
-drawsU <- SimMatUWrapper(matU, N = n, nsim = 2000)
-drawsF <- SimMatUWrapper(matF, N = n, nsim = 2000)
+drawsU <- sim_U_wrapper(matU, N = n, nsim = 2000)
+drawsF <- sim_U_wrapper(matF, N = n, nsim = 2000)
 drawsA <- mapply(function(x, y) x + y, drawsU, drawsF, SIMPLIFY = F)
 
 # MPM sampling distributions (draws 1, 2, ..., 2000)
@@ -48,12 +48,12 @@ lapply(drawsA[c(1, 2, 2000)], function(m) round(m, 3))
 # derived param point estimates
 round(lambda(matA), 2)
 round(damping.ratio(matA), 2)
-round(lifeExpectancy(matU), 2)
+round(life_expect(matU), 2)
 
 # derived param sampling distributions (draws 1, 2, ..., 2000)
 round(sapply(drawsA[c(1, 2, 2000)], lambda), 2)
 round(sapply(drawsA[c(1, 2, 2000)], damping.ratio), 2)
-round(sapply(drawsU[c(1, 2, 2000)], lifeExpectancy), 2)
+round(sapply(drawsU[c(1, 2, 2000)], life_expect), 2)
 
 
 
@@ -91,20 +91,20 @@ round(mA3, 2)
 # point estimates for derived params from mean MPM
 round(lambda(mA), 2)
 round(damping.ratio(mA), 2)
-round(lifeExpectancy(mU), 2)
+round(life_expect(mU), 2)
 
 # draw from the sampling distributions of component MPMs
 set.seed(987654321)
-drawsU1 <- SimMatUWrapper(mU1, N = n1, nsim = 2000)
-drawsF1 <- SimMatUWrapper(mF1, N = n1, nsim = 2000)
+drawsU1 <- sim_U_wrapper(mU1, N = n1, nsim = 2000)
+drawsF1 <- sim_U_wrapper(mF1, N = n1, nsim = 2000)
 drawsA1 <- mapply(function(x, y) x + y, drawsU, drawsF, SIMPLIFY = F)
 
-drawsU2 <- SimMatUWrapper(mU2, N = n2, nsim = 2000)
-drawsF2 <- SimMatUWrapper(mF2, N = n2, nsim = 2000)
+drawsU2 <- sim_U_wrapper(mU2, N = n2, nsim = 2000)
+drawsF2 <- sim_U_wrapper(mF2, N = n2, nsim = 2000)
 drawsA2 <- mapply(function(x, y) x + y, drawsU, drawsF, SIMPLIFY = F)
 
-drawsU3 <- SimMatUWrapper(mU3, N = n3, nsim = 2000)
-drawsF3 <- SimMatUWrapper(mF3, N = n3, nsim = 2000)
+drawsU3 <- sim_U_wrapper(mU3, N = n3, nsim = 2000)
+drawsF3 <- sim_U_wrapper(mF3, N = n3, nsim = 2000)
 drawsA3 <- mapply(function(x, y) x + y, drawsU, drawsF, SIMPLIFY = F)
 
 # derive draws of mean MPM from draws of components
@@ -130,6 +130,6 @@ lapply(drawsA, function(m) round(m, 2))
 # draws from sampling distribution of derived params from mean MPM
 round(sapply(drawsA, lambda), 2)
 round(sapply(drawsA, damping.ratio), 2)
-round(sapply(drawsU, lifeExpectancy), 2)
+round(sapply(drawsU, life_expect), 2)
 
 

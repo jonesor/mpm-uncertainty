@@ -5,12 +5,7 @@ library(Rcompadre)
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X.RData")
-
-
-## fix Lemke et al. treatment (should be Unmanipulated)
-lemke_fix <- which(compadre$SpeciesAuthor == "Trollius_europaeus")
-compadre$MatrixTreatment[lemke_fix] <- "Unmanipulated"
+compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### function to collapse AdditionalSource column
@@ -21,16 +16,16 @@ collapse_fn <- function(x) {
 }
 
 
-## subset COMPADRE to studies of interest
+### subset COMPADRE to studies of interest
 studies_check <- compadre %>%
   filter(YearPublication >= 2010) %>% 
   filter(MatrixSplit == "Divided",
          MatrixFec == "Yes",
          is.na(MatrixTreatment) | MatrixTreatment == "Unmanipulated",
+         MatrixDimension > 2,
          MatrixCaptivity == "W",
          AnnualPeriodicity == "1",
          OrganismType %in% c("Herbaceous perennial",
-                             "Annual",
                              "Succulent",
                              "Shrub",
                              "Tree",

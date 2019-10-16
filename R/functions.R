@@ -32,7 +32,7 @@ rdirichlet <- function(alpha) {
 
 
 ### Helpers to convert MPMs from Ellis et al. 2012 #############################
-stringToMat <- function(A) {
+string_to_mat <- function(A) {
   A <- gsub(pattern = "\\[|\\]|\\;", "", A)
   A <- strsplit(x = A, split = " ")[[1]]
   mat <- matrix(as.numeric(A), nrow = sqrt(length(A)), byrow = TRUE)
@@ -40,7 +40,7 @@ stringToMat <- function(A) {
 }
 
 
-NxToVec <- function(x) {
+nx_to_vec <- function(x) {
   x <- gsub('\\[|\\]', '', x)
   x <- strsplit(x, ' ')[[1]]
   x <- gsub('NA', NA_integer_, x)
@@ -75,21 +75,31 @@ rdata_load <- function(path) {
   return(env[[x]])
 }
 
+rdata_load2 <- function(path) {
+  env <- new.env()
+  x <- load(path, env)[1]
+  out <- env[[x]]
+  out$Altitude <- NULL
+  out$MatrixStartYear <- NULL
+  out$MatrixEndYear <- NULL
+  return(out)
+}
+
 
 
 ### Confirm that stage-specific sample sizes match transition rates ############
-CheckFreqsMat <- function(matU, N, prec = 0.001) {
+check_freqs_mat <- function(matU, N, prec = 0.001) {
   dim <- nrow(matU)
-  out <- vector(mode = 'character', length = dim)
+  out <- character(dim)
   
   for (i in 1:dim) {
-    out[i] <- CheckFreqs(N[i], matU[,i], prec = prec) 
+    out[i] <- check_freqs(N[i], matU[,i], prec = prec) 
   }
   
   return(data.frame(N, x = out))
 }
 
-CheckFreqs <- function(n, x, prec = 0.001) {
+check_freqs <- function(n, x, prec = 0.001) {
   if(is.na(n) | n == 0) {
     return(NA)
   } else {
@@ -130,7 +140,7 @@ dens_fn <- function(x, n, fec) {
 }
 
 
-SimStageMatU <- function(x, vital_ind, n) {
+sim_stage_U <- function(x, vital_ind, n) {
   colsum <- sum(x)
   if(length(vital_ind) == 0) {
     out <- x
@@ -147,7 +157,7 @@ SimStageMatU <- function(x, vital_ind, n) {
 }
 
 
-SimStageMatF <- function(x, vital_ind, n) {
+sim_stage_F <- function(x, vital_ind, n) {
   if(length(vital_ind) == 0 | is.na(n)) {
     out <- x
   } else {
@@ -161,7 +171,7 @@ SimStageMatF <- function(x, vital_ind, n) {
 }
 
 
-SimMatU <- function(matU, posU, N) {
+sim_U <- function(matU, posU, N) {
   if (class(matU) == "list") matU <- matU[[1]]
   if (class(N) == "list") N <- unlist(N)
   
@@ -174,14 +184,14 @@ SimMatU <- function(matU, posU, N) {
       simU[,i] <- NA_real_
     } else {
       vital_ind <- which(posU[,i] > 0)
-      simU[,i] <- SimStageMatU(matU[,i], vital_ind, N[i])
+      simU[,i] <- sim_stage_U(matU[,i], vital_ind, N[i])
     }
   }
   return(simU)
 }
 
 
-SimMatF <- function(matF, posF, N) {
+sim_F <- function(matF, posF, N) {
   if (class(matF) == "list") matF <- matF[[1]]
   if (class(N) == "list") N <- unlist(N)
   
@@ -194,20 +204,20 @@ SimMatF <- function(matF, posF, N) {
       simF[,i] <- NA_real_
     } else {
       vital_ind <- which(posF[,i] > 0)
-      simF[,i] <- SimStageMatF(matF[,i], vital_ind, N[i])
+      simF[,i] <- sim_stage_F(matF[,i], vital_ind, N[i])
     }
   }
   return(simF)
 }
 
 
-SimMatUWrapper <- function(matU, posU = matU > 0, N, nsim) {
-  return(replicate(nsim, SimMatU(matU, posU, N), simplify = FALSE))
+sim_U_wrapper <- function(matU, posU = matU > 0, N, nsim) {
+  return(replicate(nsim, sim_U(matU, posU, N), simplify = FALSE))
 }
 
 
-SimMatFWrapper <- function(matF, posF = matF > 0, N, nsim) {
-  return(replicate(nsim, SimMatF(matF, posF, N), simplify = FALSE))
+sim_F_wrapper <- function(matF, posF = matF > 0, N, nsim) {
+  return(replicate(nsim, sim_F(matF, posF, N), simplify = FALSE))
 }
 
 
@@ -325,250 +335,7 @@ summarize_xval <- function(fit, label) {
 
 
 
-### Bayesian sampling distributions ############################################
-standardize_U <- function(U, j) {
-  u <- U[,j]
-  if (sum(u) > 1) { u <- u / sum(u) }
-  return(c(u, 1 - sum(u))) # add mortality
-}
-
-
-posterior_array <- function(p,
-                            names,
-                            v1 = seq_len(dim(p)[1]),
-                            v2 = seq_len(dim(p)[2]),
-                            v3 = seq_len(dim(p)[3])) {
-  
-  out <- expand.grid(v1 = v1, v2 = v2, v3 = v3)
-  out$p <- c(p)
-  names(out) <- names
-  return(as_tibble(out))
-}
-
-
-posterior_mat <- function(p,
-                          names,
-                          v1 = seq_len(dim(p)[1]),
-                          v2 = seq_len(dim(p)[2])) {
-  
-  out <- expand.grid(v1 = v1, v2 = v2)
-  out$p <- c(p)
-  names(out) <- names
-  return(as_tibble(out))
-}
-
-
-tr_bayes_U <- function(j, matU, N, poolU) {
-  
-  posU <- mean(matU) > 0  # possible tr
-  mat_dim <- nrow(posU)   # number of stage classes
-  
-  # possible transitions for column j
-  posU_col <- posU[,j]
-  posU_col_id <- which(posU_col)
-  
-  # transition rates for relevent columns, list format
-  colU <- lapply(matU, standardize_U, j = j)
-  
-  # column-specific sample sizes
-  colN <- vapply(N, function(x) x[j], numeric(1))
-  
-  # for which years are transitions based on pooled data
-  pooled_u <- sapply(poolU, function(x) x[j])
-  
-  # total number of years in dataset
-  n_year_tot <- length(matU)
-  
-  # check NA
-  check_NA_U <- all(is.na(colN))
-  
-  if(check_NA_U) {
-    
-    real_U <- sapply(matU, function(x) x[posU_col,j])
-    if (!is.matrix(real_U)) real_U <- t(matrix(real_U))
-    
-    fit_u_raw <- real_U %>% 
-      as_tibble(.name_repair = "minimal") %>% 
-      setNames(seq_len(n_year_tot)) %>% 
-      mutate(col = as.integer(j), row = posU_col_id) %>% 
-      gather(year, tr_U, -col, -row) %>% 
-      mutate(year = as.integer(year))
-    
-    fit_u_tidy <- tibble(rep = 1:1000, fit = list(fit_u_raw)) %>% 
-      unnest() %>% 
-      dplyr::select(rep, year, col, row, tr_U) %>% 
-      arrange(year, rep, col, row)
-    
-  } else {
-    
-    # were transition rates estimated in given year, or based on pooled/averaged data
-    year_est_u <- which(!pooled_u)
-    year_pool_u <- which(pooled_u)
-    
-    n_year_est_u <- length(year_est_u)
-    n_year_pool_u <- length(year_pool_u)
-    
-    # transition integer counts for all years
-    colU_counts <- mapply(function(x, y) round(x * y), colU, colN)
-    
-    # transition integer counts for possible transitions, and directly estimated years
-    colU_counts_use <- colU_counts[c(posU_col, TRUE), !pooled_u] # extra TRUE for mortality
-    
-    # transform count totals to individual observations
-    obs_u_l <- apply(colU_counts_use, 2, function(x) rep(1:length(x), x))
-    
-    # create year index for each observation
-    year_l <- lapply(1:length(obs_u_l), function(i) rep(i, length(obs_u_l[[i]])))
-    
-    # arrange data for stan
-    d <- list(N = length(unlist(obs_u_l)), K = nrow(colU_counts_use),
-              J = ncol(colU_counts_use), J_unobs = max(n_year_pool_u, 1),
-              group = unlist(year_l), y = unlist(obs_u_l))
-    
-    # fit stan model
-    stan_fit_u <- stanfn(stan_multinom_hier, data = d)
-    
-    # extract posterior samples for theta
-    fit_theta <- rstan_extract(stan_fit_u, "theta")
-    fit_theta_new <- rstan_extract(stan_fit_u, "theta_new")
-    
-    # arrange posterior samples
-    df_theta <- posterior_array(fit_theta,
-                           names = c("rep", "row", "year", "tr_U"),
-                           v3 = year_est_u)
-    
-    if (n_year_pool_u > 0) {
-      df_theta_new <- posterior_array(fit_theta_new,
-                                       names = c("rep", "row", "year", "tr_U"),
-                                       v3 = year_pool_u)
-    } else {
-      df_theta_new <- NULL
-    }
-    
-    fit_u_tidy <- bind_rows(df_theta, df_theta_new) %>% 
-      mutate(col = j) %>% 
-      select(rep, year, col, row, tr_U) %>% 
-      arrange(year, rep, col, row)
-  }
-  return(fit_u_tidy)
-}
-
-
-tr_bayes_col_F <- function(k, pooled, colN, colF_counts_use) {
-  
-  # which years pooled vs estimated
-  year_est <- which(!pooled)
-  year_pool <- which(pooled)
-  
-  n_year_est <- length(year_est)
-  n_year_pool <- length(year_pool)
-  
-  # arrange data for stan
-  d <- list(J = length(colF_counts_use[k,]), J_unobs = max(n_year_pool, 1),
-            group = year_est, y = colF_counts_use[k,],
-            offset = log(colN[!pooled]))
-  
-  # fit stan model
-  stan_fit_f <- stanfn(stan_poisson_hier, data = d)
-  
-  # extract posterior samples for alpha
-  fit_alpha <- rstan_extract(stan_fit_f, "alpha")
-  fit_alpha_new <- rstan_extract(stan_fit_f, "alpha_new")
-  
-  # arrange posterior samples
-  df_alpha <- posterior_mat(fit_alpha,
-                            names = c("rep", "year", "tr_F"),
-                            v2 = year_est)
-  
-  if (n_year_pool > 0) {
-    df_alpha_new <- posterior_mat(fit_alpha_new,
-                                  names = c("rep", "year", "tr_F"),
-                                  v2 = year_pool)
-  } else {
-    df_alpha_new <- NULL
-  }
-  
-  fit_f_tidy <- bind_rows(df_alpha, df_alpha_new) %>% 
-    mutate(row = k) %>% 
-    mutate(tr_F = exp(tr_F))
-  
-  return(fit_f_tidy)
-}
-
-
-
-tr_bayes_F <- function(j, matF, N, poolF, fecund) {
-  
-  posF <- mean(matF) > 0  # possible tr
-  mat_dim <- nrow(posF)   # number of stage classes
-  n_year_tot <- length(matF)  # total number of years in dataset
-  
-  # possible transitions for column j
-  posF_col <- posF[,j]
-  posF_col_id <- which(posF_col)
-  
-  # transition rates for relevent columns, list format
-  colF <- lapply(matF, function(x) x[,j])
-  
-  # column-specific sample sizes
-  colN <- sapply(N, function(x) x[j])
-  
-  if(!any(posF_col) | !fecund) {
-    
-    fit_f_tidy <- expand.grid(rep = 1:1000,
-                              year = 1:n_year_tot,
-                              col = j,
-                              row = 1:mat_dim) %>% 
-      as_tibble() %>% 
-      mutate(tr_F = NA_real_) %>% 
-      arrange(year, rep, col, row)
-    
-  } else {
-    
-    # for which years are transitions based on pooled data
-    pooled_f <- sapply(poolF, function(x) x[j])
-
-    # integer counts of new recruits
-    colF_counts <- mapply(function(x, y) round(x * y), colF, colN)
-    
-    # integer counts for possible transitions, and directly estimated years
-    colF_counts_use <- colF_counts[, !pooled_f]
-    
-    # fit stan models
-    fit_f_tidy <- bind_rows(lapply(posF_col_id,
-                                   tr_bayes_col_F,
-                                   pooled = pooled_f,
-                                   colN = colN,
-                                   colF_counts_use = colF_counts_use)) %>% 
-      mutate(col = j) %>% 
-      dplyr::select(rep, year, col, row, tr_F) %>% 
-      arrange(year, rep, col, row)
-  }
-  return(fit_f_tidy)
-}
-
-
-tr_bayes_wrap <- function(j, matU, matF, N, poolU, poolF, fecund = TRUE) {
-  
-  tr_U <- tr_bayes_U(j, matU, N, poolU)
-  tr_F <- tr_bayes_F(j, matF, N, poolF, fecund)
-  full_join(tr_U, tr_F, by = c("rep", "year", "col", "row"))
-}
-
-
-
 ### MPM manipulations ##########################################################
-MakeMat <- function(tr, mat_dim) {
-  return(matrix(tr, nrow = mat_dim, ncol = mat_dim))
-}
-
-
-GetReproN <- function(N, posF) {
-  which_repro <- apply(posF, 2, any)
-  return(sum(N[which_repro]))
-}
-
-
 mpm_flatten <- function(matA, matU, matF, matC, stage_names) {
   d <- nrow(matU)
   base_int <- expand.grid(to_col = seq_len(d), from_col = seq_len(d))
@@ -598,86 +365,11 @@ mat_mean2 <- function(l, na.rm = TRUE, replace_na = TRUE) {
 
 
 ### MPM and age-from-stage analyses ############################################
-repro_prop_start <- function(matU, start, repro_stages) {
-  
-  if (sum(repro_stages) == 1) {
-    n <- as.numeric(repro_stages)
-  } else {
-    primeU <- matU
-    primeU[,repro_stages] <- 0
-    N <- try(solve(diag(nrow(primeU)) - primeU))
-    if (class(N) == "try-error") {
-      n <- NA
-    } else {
-      n <- rep(0, nrow(matU))
-      n[repro_stages] <- N[repro_stages,start] / sum(N[repro_stages,start])
-    }
-  }
-  return(n)
-}
-
-
 lx_submax <- function(lx, tmax, strip_zero = TRUE) {
   upp <- min(tmax, length(lx))
   lx <- lx[1L:upp] / lx[1L]
   if (strip_zero) lx <- lx[lx > 0]
   return(lx)
-}
-
-
-lx_from_mature <- function(matU, n1, crit = 0.00001, nmax = 1e4) {
-  lx_vec <- numeric(1)
-  lx <- 1.0
-  n <- n1
-  t <- 0L
-  
-  while (lx > crit & t < nmax) {
-    n <- matU %*% n
-    lx <- sum(n)
-    t <- t + 1L
-    lx_vec[t] <- lx
-  }
-  
-  return(c(1, lx_vec[lx_vec > 0]))
-}
-
-
-qsd <- function(matU, n1, conv = 0.01, nmax = 1e4L) {
-
-  start <- which(n1 > 0)
-  
-  if (!isErgodic(matU)) {
-    
-    nonzero <- rep(FALSE, nrow(matU))
-    nonzero[start] <- TRUE
-    
-    n <- n1
-    t <- 1L
-    
-    while (!all(nonzero) & t < (nrow(matU) * 3)) {
-      n <- matU %*% n
-      nonzero[n > 0] <- TRUE
-      t <- t + 1L
-    }
-    
-    matU <- as.matrix(matU[nonzero,nonzero])
-    n1 <- n1[nonzero]
-    start <- which(which(nonzero) %in% start)
-  }
-  
-  w <- stable.stage(matU)
-  n <- n1
-  dist <- conv + 1
-  t <- 0L
-  
-  while (!is.na(dist) & dist > conv & t < nmax) {
-    dist <- 0.5 * (sum(abs(n - w)))
-    n <- matU %*% n
-    n <- n / sum(n)
-    t <- t + 1L
-  }
-  
-  return(ifelse(is.na(dist) | dist > conv, NA_integer_, t)) 
 }
 
 
@@ -687,17 +379,101 @@ shape_surv2 <- function(lx, q) {
 }
 
 
-# stages_reached <- function(matU, rep_stages) {
-#   n <- as.numeric(rep_stages)
-#   nonzero <- rep_stages
-#   t <- 1L
-#   
-#   while (!all(nonzero) & t < (nrow(matU) * 3)) {
-#     n <- matU %*% n
-#     nonzero[n > 0] <- TRUE
-#     t <- t + 1L
-#   }
-# 
-#   return(nonzero)
-# }
+sum2 <- function(x) {
+  ifelse(all(is.na(x)), NA_real_, sum(x, na.rm = TRUE))
+}
+
+
+pool_counts <- function(nl) {
+  X <- do.call(rbind, nl)
+  return(apply(X, 2, sum2))
+}
+
+
+make_mat <- function(df, d, tr) {
+  m <- matrix(0, nrow = d, ncol = d)
+  m[cbind(df$row, df$col)] <- df[[tr]]
+  return(m)
+}
+
+
+
+
+
+
+perturb_cust <- function(matU, matF, posU = matU > 0, posF = matF > 0,
+                         exclude = NULL, type = "sensitivity") {
+  
+  # validate arguments
+  type <- match.arg(type, c("sensitivity", "elasticity"))
+  
+  # matrix dimension
+  m <- nrow(matU)
+  
+  # excluded stage classes
+  posU[exclude,] <- FALSE
+  posU[,exclude] <- FALSE
+  
+  # combine components into matA 
+  matA <- matU + matF
+  
+  # lower and upper triangles (reflecting growth and retrogression)
+  lwr <- upr <- matrix(FALSE, nrow = m, ncol = m)
+  lwr[lower.tri(lwr)] <- TRUE
+  upr[upper.tri(upr)] <- TRUE
+  
+  posStasi <- posU & diag(m)
+  posRetro <- posU & upr
+  posProgr <- posU & lwr
+  
+  if (type == "sensitivity") {
+    
+    pertMat <- popbio::sensitivity(matA)
+    
+    stasis <- ifelse(!any(posStasi), NA_real_, sum(pertMat[posStasi]))
+    retro  <- ifelse(!any(posRetro), NA_real_, sum(pertMat[posRetro]))
+    progr <- ifelse(!any(posProgr), NA_real_, sum(pertMat[posProgr]))
+    fecund <- ifelse(!any(posF), NA_real_, sum(pertMat[posF]))
+    
+  } else {
+    
+    pertMat <- popbio::elasticity(matA)
+    
+    propU <- matU / matA
+    propU[!posU] <- NA_real_
+    propU[matA == 0 & posU] <- 1
+    
+    propProgr <- propRetro <- propU
+    propProgr[upper.tri(propU, diag = TRUE)] <- NA
+    propRetro[lower.tri(propU, diag = TRUE)] <- NA
+    
+    propStasi <- matrix(NA_real_, nrow = m, ncol = m)
+    diag(propStasi) <- diag(propU)
+    
+    propF <- matF / matA
+    propF[!posF] <- NA_real_
+    propF[matA == 0 & posF] <- 1
+    
+    stasis <- sum_elast(pertMat, posStasi, propStasi)
+    retro  <- sum_elast(pertMat, posRetro, propRetro)
+    progr <- sum_elast(pertMat, posProgr, propProgr)
+    fecund <- sum_elast(pertMat, posF, propF)
+  }
+  
+  return(list(stasis = stasis,
+              retro = retro,
+              progr = progr,
+              fecund = fecund))
+}
+
+
+
+# convenience function to sum elasticities given the perturbation matrix, the
+#  matrix of possible transitions, and the matrix reflecting the proportional
+#  contribution of the given process to the given element
+sum_elast <- function(pert_mat, pos_mat, prop_mat) {
+  ifelse(!any(pos_mat), NA_real_, sum(pert_mat * prop_mat, na.rm = TRUE))
+}
+
+
 

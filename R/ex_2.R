@@ -11,7 +11,7 @@ library(loo)
 source("R/functions.R")
 
 
-### set options for rstan library, and compile relevent models
+### set options for rstan library
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 
@@ -52,20 +52,20 @@ comp_time_series <- comp_sub %>%
 
 ### Model climate for Silene_spaldingii
 # load Ellis et al (2012) data
-ellis_data <- read.table('data/ellis/Transition_Matrices.txt', sep = '\t',
+ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
-  mutate(matA = lapply(Mx, stringToMat)) %>% 
-  mutate(matU = lapply(Tmx, stringToMat)) %>% 
-  mutate(matF = mapply(function(a, b) a - b, matA, matU, SIMPLIFY = F)) %>% 
-  mutate(N = lapply(Nx, NxToVec))
+  mutate(matA = lapply(Mx, string_to_mat)) %>% 
+  mutate(matU = lapply(Tmx, string_to_mat)) %>% 
+  mutate(matF = mapply(function(a, b) a - b, matA, matU, SIMPLIFY = FALSE)) %>% 
+  mutate(N = lapply(Nx, nx_to_vec))
 
 # stage-specific sample sizes for Silene
 silene_n <- ellis_data %>% 
   filter(SPP == "SISP") %>% 
   mutate(MatrixStartYear = YR,
          SpeciesAuthor = "Silene_spaldingii") %>% 
-  select(MatrixStartYear, SpeciesAuthor, N)
+  dplyr::select(MatrixStartYear, SpeciesAuthor, N)
 
 # load weather data
 wx <- read_csv("data/clim/species_clim_prism.csv") %>%
@@ -156,16 +156,12 @@ df_beta <- tibble(reg = beta_reg, err = beta_err) %>%
             low95 = quantile(val, 0.025),
             upp95 = quantile(val, 0.975))
 
-
 ggplot(df_beta, aes(x = model)) +
   geom_point(aes(y = med), size = 2.5) +
   geom_linerange(aes(ymin = low80, ymax = upp80), size = 1.5) +
   geom_linerange(aes(ymin = low95, ymax = upp95)) +
   geom_hline(yintercept = 0, alpha = 0.5, linetype = 2) +
   coord_flip()
-
-
-
 
 ## plot fit lines
 lev <- c("Model of point estimates", "Model with sampling uncertainty")
@@ -178,7 +174,7 @@ pred_full <- rbind(
 
 # points and error bars
 year_err <- silene %>% 
-  select(fecund, fec_low, fec_upp) %>% 
+  dplyr::select(fecund, fec_low, fec_upp) %>% 
   mutate(x = silene$tmp) %>% 
   mutate(model = lev[2])
 
@@ -188,6 +184,11 @@ year_full <- year_err %>%
   mutate(model = factor(model, levels = lev))
 
 # plot
+tt <- theme_bw() +
+  theme(panel.grid = element_blank(),
+        text = element_text(size = 11.5),
+        axis.ticks = element_line(size = 0.4))
+
 p1 <- ggplot(pred_full, aes(x = x)) +
   geom_line(aes(y = med)) +
   geom_ribbon(aes(ymin = low95, ymax = upp95), alpha = 0.25) +
@@ -195,9 +196,10 @@ p1 <- ggplot(pred_full, aes(x = x)) +
   geom_linerange(data = year_full, aes(ymin = fec_low, ymax = fec_upp)) +
   scale_y_log10(breaks = 10^(-2:0), labels = c("0.01", "0.1", "1")) +
   facet_wrap(~ model, ncol = 1) +
-  labs(x = "Spring temperature (Feb-Apr)", y = "Fecundity") +
-  theme(panel.grid = element_blank(),
-        text = element_text(size = 11.5))
+  labs(x = "Spring temperature (Feb-Apr)", y = "Recruitment") +
+  tt
+  # theme(panel.grid = element_blank(),
+  #       text = element_text(size = 11.5))
 
 dev.off()
 quartz(height = 4.5, width = 3.5, dpi = 150)
@@ -286,9 +288,10 @@ p2 <- ggplot(gprc_betas, aes(x = lag)) +
   scale_y_continuous(breaks = c(-0.6, -0.3, 0, 0.3, 0.6)) +
   facet_wrap(~ model, ncol = 1) +
   labs(x = "Months before survey",
-       y = expression(paste("Climate effect (", italic(b), ")"))) +
-  theme(panel.grid = element_blank(),
-        text = element_text(size = 11.5))
+       y = expression(paste("Monthly temperature coefficient (", italic(b), ")"))) +
+  tt
+  # theme(panel.grid = element_blank(),
+  #       text = element_text(size = 11.5))
 
 dev.off()
 quartz(height = 4.5, width = 3.5, dpi = 150)
@@ -324,5 +327,4 @@ print(p)
 #   geom_linerange(aes(x = y, ymin = yhat_low90, ymax = yhat_upp90)) +
 #   facet_wrap(~ model) +
 #   labs(x = "Observed", y = "Predicted")
-
 
