@@ -35,7 +35,7 @@ stage_names <- c('Sdl.', 'Juv.', 'Veg.', 'Rep.')
 kiviniemi_n1 <- kiviniemi_n %>% 
   filter(MatrixPopulation %in% kiviniemi$MatrixPopulation,
          MatrixStartYear %in% kiviniemi$MatrixStartYear) %>% 
-  unnest() %>% 
+  unnest(cols = "N") %>% 
   mutate(from_col = 1:n())
 
 # convert mpm to flat form
@@ -55,70 +55,6 @@ df_plot <- df_mpm %>%
   mutate(U = ifelse(U == 0, "", sprintf("%.2f", U))) %>% 
   mutate(F = ifelse(F == 0, "", sprintf("%.2f", F))) %>% 
   mutate(C = ifelse(C == 0, "", sprintf("%.2f", C)))
-  
-
-
-### Figure 1: MPM components
-# convenience function to create plot panels
-m_plot <- function(df, type) {
-  p <- ggplot(df) +
-    geom_text(aes_string(label = type, x = 1, y = 1), size = 3.2) +
-    facet_grid(to_name ~ from_name, switch = "y") +
-    labs(x = NULL, y = NULL) +
-    ggtitle(type) +
-    theme(axis.text = element_blank(),
-          axis.ticks = element_blank(),
-          panel.grid = element_blank(),
-          plot.title = element_text(hjust = 0.5, face = "bold", vjust = 0),
-          text = element_text(size = 11.7),
-          plot.margin = margin(2, 16, 2, 2),
-          panel.spacing = unit(1.3, "pt"))
-  return(ggplotGrob(p))
-}
-
-# plot
-p1a <- m_plot(df_plot, "A")
-p1u <- m_plot(df_plot, "U")
-p1f <- m_plot(df_plot, "F")
-p1 <- cbind(p1a, p1u, p1f, size = "last")
-
-dev.off()
-quartz(height = 2, width = 6.5, dpi = 140)
-grid.arrange(p1)
-
-# ggsave("img/fig1.png", p1, height = 2, width = 6.5, units = "in", dpi = 300)
-
-
-
-
-### Figure 2: MPM components
-p2a <- ggplot(df_plot) +
-  geom_text(aes(label = A, x = 1, y = 1), size = 3.2) +
-  facet_grid(to_name ~ from_name, switch = "y") +
-  labs(x = NULL, y = NULL) +
-  ggtitle("In COMPADRE") +
-  theme(axis.text = element_blank(),
-        axis.ticks = element_blank(),
-        panel.grid = element_blank(),
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, vjust = 0),
-        text = element_text(size = 11.7),
-        plot.margin = margin(5, 16, 2, 2),
-        panel.spacing = unit(1.3, "pt"))
-
-
-p2b <- ggplot(df_plot) +
-  geom_text(aes(label = n_lab, x = 1, y = 1), size = 3.2) +
-  facet_grid(to_name ~ from_name, switch = "y") +
-  labs(x = NULL, y = NULL) +
-  ggtitle("Raw data") +
-  theme(axis.text = element_blank(),
-        axis.ticks = element_blank(),
-        panel.grid = element_blank(),
-        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, vjust = 0),
-        text = element_text(size = 11.7),
-        plot.margin = margin(5, 16, 2, 2),
-        panel.spacing = unit(1.3, "pt"))
-
 
 df_sdist <- df_mpm %>% 
   left_join(kiviniemi_n1, by = "from_col") %>% 
@@ -139,9 +75,36 @@ df_rect <- df_mpm %>%
   mutate(x1 = ifelse(A == 0, -Inf, NA),
          x2 = ifelse(A == 0, Inf, NA)) %>% 
   mutate(y1 = x1, y2 = x2)
-  
 
-p2c <- ggplot(df_sdist) +
+
+### Figure 1 (top): MPM components
+p1a <- ggplot(df_plot) +
+  geom_text(aes(label = A, x = 1, y = 1), size = 3.2) +
+  facet_grid(to_name ~ from_name, switch = "y") +
+  labs(x = NULL, y = NULL) +
+  ggtitle("In COMPADRE") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, vjust = 0),
+        text = element_text(size = 11.7),
+        plot.margin = margin(5, 16, 2, 2),
+        panel.spacing = unit(1.3, "pt"))
+
+p1b <- ggplot(df_plot) +
+  geom_text(aes(label = n_lab, x = 1, y = 1), size = 3.2) +
+  facet_grid(to_name ~ from_name, switch = "y") +
+  labs(x = NULL, y = NULL) +
+  ggtitle("Raw data") +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 12, vjust = 0),
+        text = element_text(size = 11.7),
+        plot.margin = margin(5, 16, 2, 2),
+        panel.spacing = unit(1.3, "pt"))
+
+p1c <- ggplot(df_sdist) +
   geom_ribbon(aes(x = p, ymin = 0, ymax = pp), fill = "darkred", alpha = 0.5) +
   geom_segment(data = df_pt, aes(x = p, y = 0, xend = p, yend = pp + 0.1), size = 0.3) +
   geom_rect(data = df_rect, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2),
@@ -167,18 +130,17 @@ p2c <- ggplot(df_sdist) +
         plot.margin = margin(5, 2, 2, 2),
         panel.spacing = unit(1.3, "pt"))
 
-p2 <- cbind(ggplotGrob(p2a), ggplotGrob(p2b), ggplotGrob(p2c), size = "first")
+p1 <- cbind(ggplotGrob(p1a), ggplotGrob(p1b), ggplotGrob(p1c), size = "first")
 
 dev.off()
 quartz(height = 2.2, width = 6.5, dpi = 140)
-grid.arrange(p2)
+grid.arrange(p1)
 
-# ggsave("img/fig2.png", p2, height = 2.2, width = 6.5, units = "in", dpi = 300)
-
-
+# ggsave("img/raw/Fig_1a.png", p1, height = 2.2, width = 6.5, units = "in", dpi = 300)
 
 
-### Figure 3: Derived parameters
+
+### Figure 1 (bottom): Derived parameters
 
 # possible transitions
 posU <- mean(kiviniemi$matU) > 0
@@ -233,7 +195,7 @@ deriv_plot <- deriv_param %>%
   filter(!(par == "italic(v[3])" & value > 18)) %>% 
   filter(!(par == "italic(T)" & value > 90))
 
-p3 <- ggplot(deriv_plot) +
+p2 <- ggplot(deriv_plot) +
   geom_density(aes(value), fill = "darkred", alpha = 0.5, size = 0) +
   geom_vline(data = deriv_pt, aes(xintercept = value)) +
   facet_wrap(~ par, scales = "free", labeller = label_parsed, nrow = 1) +
@@ -252,13 +214,13 @@ p3 <- ggplot(deriv_plot) +
 
 dev.off()
 quartz(height = 2, width = 6.5, dpi = 120)
-print(p3)
+print(p2)
 
-# ggsave("img/fig3.png", p3, height = 2, width = 6.5, units = "in", dpi = 300)
+# ggsave("img/raw/Fig_1b.png", p2, height = 2, width = 6.5, units = "in", dpi = 300)
 
 
 
-### table
+### table of posterior quantiles for derived parameters
 deriv_param %>% 
   group_by(par) %>% 
   summarize(med = quantile(value, 0.500),
