@@ -22,116 +22,10 @@ options(mc.cores = parallel::detectCores())
 compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-### load study-specific sampling distribution files
-sd_files <- paste0("analysis/", list.files("analysis"))
-sd_files <- sd_files[grep("/sd_", sd_files)]
-
-
-### bind sampling distributions into single tibble
-mpm_draws <- cdb_bind_rows(lapply(sd_files, rdata_load)) %>% 
-  mutate(id = as.factor(1:n())) %>% 
-  cdb_unnest() %>% 
-  mutate(any_repro = map_lgl(matF, ~ any(.x > 0))) %>% 
-  filter(any_repro == TRUE) %>% # make sure some repro
-  mutate(matU = map(matU, scale_U)) %>% 
-  mutate(matA = pmap(list(matU, matF, matC), ~ ..1 + ..2 + ..3)) %>% 
-  mutate(start = map_int(mat, Rcompadre::mpm_first_active)) %>% 
-  mutate(rep_stages = map(matF, ~ colSums(.x) > 0)) %>% 
-  mutate(exclude_stages = map(MatrixClassOrganized,
-                              ~ ifelse(.x == "active", FALSE, TRUE)))
-
-# summary counts
-length(unique(mpm_draws$Authors))
-length(unique(mpm_draws$MatrixPopulation))
-length(unique(mpm_draws$SpeciesAccepted))
-
-# n_pops by species
-mpm_draws %>% 
-  as_tibble() %>% 
-  count(SpeciesAuthor) %>% 
-  arrange(desc(n))
-
-
-### point estimates for parameters of interest
-pt_shape <- mpm_draws %>% 
-  as_tibble() %>% 
-  mutate(rep_prop1 = pmap(list(matU, start, rep_stages), Rage::mature_distrib)) %>% 
-  mutate(lx4 = map2_dbl(matU, rep_prop1,
-                        ~ Rage::mpm_to_lx(.x, .y, lx_crit = -1, xmax = 3)[4])) %>% 
-  filter(lx4 > 0) %>% # check perennial
-  mutate(q = map2_int(matU, rep_prop1, Rage::qsd_converge, conv = 0.01, N = 1e5)) %>% 
-  filter(q >= 3) %>%   # make sure at least 3 time steps
-  mutate(lx = pmap(list(matU, rep_prop1, q),
-                   ~ Rage::mpm_to_lx(..1, ..2, xmax = ..3), lx_crit = -1)) %>% 
-  mutate(L_pt = map2_dbl(matU, rep_prop1, Rage::life_expect)) %>% 
-  mutate(lx_min = map_dbl(lx, min)) %>% 
-  mutate(S_pt = map_dbl(lx, Rage::shape_surv)) %>% 
-  mutate(id_L = fct_reorder(fct_drop(id), L_pt)) %>% 
-  mutate(id_S = fct_reorder(fct_drop(id), S_pt))
-
-pt_other <- mpm_draws %>% 
-  mutate(loglam_pt = map_dbl(matA, ~ log(popbio::lambda(.x)))) %>% 
-  mutate(damp_pt = map_dbl(matA, popbio::damping.ratio)) %>% 
-  mutate(gen_pt = map2_dbl(matU, matF, Rage::gen_time)) %>%
-  mutate(pmature_pt = pmap_dbl(list(matU, matF, start), Rage::mature_prob)) %>% 
-  mutate(growth_pt = pmap_dbl(list(matU, exclude_stages),
-                              ~ Rage::vr_growth(..1, exclude = ..2))) %>% 
-  mutate(elast_pt = pmap_dbl(list(matU, matF, exclude_stages),
-                             ~ perturb_cust(..1, ..2, exclude = ..3,
-                                            type = "elasticity")$progr)) %>% 
-  as_tibble() %>% 
-  mutate(id_loglam = fct_reorder(fct_drop(id), loglam_pt)) %>% 
-  mutate(id_damp = fct_reorder(fct_drop(id), damp_pt)) %>% 
-  mutate(id_gen = fct_reorder(fct_drop(id), gen_pt)) %>% 
-  mutate(id_pmature = fct_reorder(fct_drop(id), pmature_pt)) %>% 
-  mutate(id_growth = fct_reorder(fct_drop(id), growth_pt)) %>% 
-  mutate(id_elast = fct_reorder(fct_drop(id), elast_pt))
-
-
-
-### sampling distributions for derived parameters
-sd_shape <- pt_shape %>%
-  select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
-  unnest() %>%
-  left_join(select(pt_shape, id, start, rep_stages)) %>%
-  mutate(rep_prop1 = pmap(list(simU, start, rep_stages), Rage::mature_distrib)) %>%
-  mutate(lx = pmap(list(simU, rep_prop1, q),
-                   ~ Rage::mpm_to_lx(..1, ..2, xmax = ..3), lx_crit = -1)) %>%
-  mutate(L = map2_dbl(simU, rep_prop1, Rage::life_expect)) %>%
-  mutate(S = map_dbl(lx, Rage::shape_surv)) %>%
-  left_join(select(pt_shape, id, id_L, id_S, ends_with("pt")), by = "id")
-
-sd_other <- pt_other %>%
-  select(id, SpeciesAuthor, MatrixPopulation, simU, simF) %>%
-  unnest() %>%
-  left_join(select(pt_other, id, exclude_stages), by = "id") %>%
-  mutate(simA = pmap(list(simU, simF), ~ ..1 + ..2)) %>%
-  left_join(select(as_tibble(pt_other), id, start, rep_stages), by = "id") %>%
-  mutate(loglam = map_dbl(simA, ~ log(popbio::lambda(.x)))) %>%
-  mutate(damp = map_dbl(simA, popbio::damping.ratio)) %>%
-  mutate(gen = map2_dbl(simU, simF, Rage::gen_time)) %>%
-  mutate(pmature = pmap_dbl(list(simU, simF, start), Rage::mature_prob)) %>%
-  mutate(growth = pmap_dbl(list(simU, exclude_stages),
-                           ~ Rage::vr_growth(..1, exclude = ..2))) %>%
-  mutate(elast = pmap_dbl(list(simU, simF, exclude_stages),
-                          ~ perturb_cust(..1, ..2, exclude = ..3,
-                                         type = "elasticity")$progr)) %>%
-  left_join(select(pt_other, id, starts_with("id_"), ends_with("pt")), by = "id")
-
-
-# ### write to file
-# sd_shape <- sd_shape %>%
-#   select(which(sapply(sd_shape, class) != "list"))
-# 
-# sd_other <- sd_other %>%
-#   select(which(sapply(sd_other, class) != "list"))
-# 
-# save(sd_shape, file = "analysis/full_sd_shape.RData")
-# save(sd_other, file = "analysis/full_sd_other.RData")
-
-
-
 ### load sampling distributions
+load(file = "analysis/full_pt_shape.RData")
+load(file = "analysis/full_pt_other.RData")
+
 load(file = "analysis/full_sd_shape.RData")
 load(file = "analysis/full_sd_other.RData")
 
@@ -145,21 +39,21 @@ tt <- theme(panel.grid = element_blank(),
             panel.background = element_blank(),
             panel.border = element_rect(size = 0.5, fill = NA))
 
-p1 <- ggplot(sd_shape, aes(y = id_S)) +
+p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = S), rel_min_height = 1e-2,
                       scale = 3, fill = "#9ebcda", size = 0.4) +
-  geom_point(data = pt_shape, aes(x = S_pt), size = 0.9) +
+  geom_point(data = pt_shape_out, aes(x = S_pt), size = 0.9) +
   annotate("text", x = Inf, y = 2.6, label = "A", vjust = 1.5, size = 5, fontface = "bold") +
   coord_flip(xlim = c(-0.3, 0.2)) +
   labs(y = expression(paste("Population (ranked by ", italic(S), ")")),
        x = expression(paste("Mortality trajectory shape (", italic(S), ")"))) +
   tt
 
-p2 <- ggplot(sd_shape, aes(y = id_L)) +
+p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
   geom_density_ridges(aes(x = L), rel_min_height = 1e-2,
                       scale = 3, fill = "#9ebcda", size = 0.4) +
-  geom_point(data = pt_shape, aes(x = L_pt), size = 0.9) +
+  geom_point(data = pt_shape_out, aes(x = L_pt), size = 0.9) +
   annotate("text", x = Inf, y = 2.6, label = "B", vjust = 1.5, size = 5, fontface = "bold") +
   scale_x_log10(limits = c(1.2, 1500)) +
   coord_flip() +
@@ -176,7 +70,7 @@ quartz(height = 5.5, width = 5.5, dpi = 160)
 grid.arrange(g)
 
 # save png
-# ggsave("img/sd_shape.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
+# ggsave("img/raw/Fig_2.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
 
 
 
@@ -194,11 +88,11 @@ pt_shp <- 19
 rdg_scale <- 7
 rdg_size <- 0.2
 
-p1 <- ggplot(sd_other, aes(y = id_loglam)) +
+p1 <- ggplot(sd_other_out, aes(y = id_loglam)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = loglam), rel_min_height = 0.01,
                       scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
-  geom_point(data = pt_other, aes(x = loglam_pt), size = pt_size, shape = pt_shp) +
+  geom_point(data = pt_other_out, aes(x = loglam_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "A", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_continuous(breaks = seq(-0.4, 0.6, 0.2)) +
   coord_flip(xlim = c(-0.4, 0.7)) +
@@ -206,10 +100,10 @@ p1 <- ggplot(sd_other, aes(y = id_loglam)) +
        x = expression(paste("Population growth (", log~italic(lambda), ")"))) +
   tt
 
-p2 <- ggplot(sd_other, aes(y = id_damp)) +
+p2 <- ggplot(sd_other_out, aes(y = id_damp)) +
   geom_density_ridges(aes(x = damp), rel_min_height = 0.01,
                       scale = rdg_scale, fill = "#9ebcda", size = 0.3) +
-  geom_point(data = pt_other, aes(x = damp_pt), size = pt_size, shape = pt_shp) +
+  geom_point(data = pt_other_out, aes(x = damp_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "B", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_log10() +
   coord_flip() +
@@ -217,10 +111,10 @@ p2 <- ggplot(sd_other, aes(y = id_damp)) +
        x = expression(paste("Damping ratio (", italic(rho), ")"))) +
   tt
 
-p3 <- ggplot(sd_other, aes(y = id_pmature)) +
+p3 <- ggplot(sd_other_out, aes(y = id_pmature)) +
   geom_density_ridges(aes(x = pmature), rel_min_height = 0.01,
                       scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
-  geom_point(data = pt_other, aes(x = pmature_pt), size = pt_size, shape = pt_shp) +
+  geom_point(data = pt_other_out, aes(x = pmature_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "C", vjust = 1.5, size = 4, fontface = "bold") +
   coord_flip() +
   scale_x_continuous(breaks = seq(0, 1, 0.2)) +
@@ -228,10 +122,10 @@ p3 <- ggplot(sd_other, aes(y = id_pmature)) +
        x = expression(paste("Pr[Maturity]"))) +
   tt
 
-p4 <- ggplot(sd_other, aes(y = id_gen)) +
+p4 <- ggplot(sd_other_out, aes(y = id_gen)) +
   geom_density_ridges(aes(x = gen), rel_min_height = 0.01,
                       scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
-  geom_point(data = pt_other, aes(x = gen_pt), size = pt_size, shape = pt_shp) +
+  geom_point(data = pt_other_out, aes(x = gen_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "D", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_log10() +
   coord_flip() +
@@ -239,20 +133,20 @@ p4 <- ggplot(sd_other, aes(y = id_gen)) +
        x = expression(paste("Generation time (", italic(T), ")"))) +
   tt
 
-p5 <- ggplot(sd_other, aes(y = id_growth)) +
+p5 <- ggplot(sd_other_out, aes(y = id_growth)) +
   geom_density_ridges(aes(x = growth), rel_min_height = 0.01,
                       scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
-  geom_point(data = pt_other, aes(x = growth_pt), size = pt_size, shape = pt_shp) +
+  geom_point(data = pt_other_out, aes(x = growth_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "E", vjust = 1.5, size = 4, fontface = "bold") +
   coord_flip() +
   labs(y = expression(paste("Population (ranked by ", italic(gamma), ")")),
        x = expression(paste("Pr[Growth|Survival] (", italic(gamma), ")"))) +
   tt
 
-p6 <- ggplot(sd_other, aes(y = id_elast)) +
+p6 <- ggplot(sd_other_out, aes(y = id_elast)) +
   geom_density_ridges(aes(x = elast), rel_min_height = 0.01,
                       scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
-  geom_point(data = pt_other, aes(x = elast_pt), size = pt_size, shape = pt_shp) +
+  geom_point(data = pt_other_out, aes(x = elast_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "F", vjust = 1.5, size = 4, fontface = "bold") +
   coord_flip() +
   labs(y = expression(paste("Population (ranked by ", italic(E[pi]), ")")),
@@ -270,7 +164,7 @@ quartz(height = 6, width = 6.5, dpi = 150)
 grid.arrange(g)
 
 # save png
-# ggsave("img/sd_other.png", g, height = 6, width = 6.5, units = "in", dpi = 300)
+# ggsave("img/sd_other_out.png", g, height = 6, width = 6.5, units = "in", dpi = 300)
 
 
 
@@ -278,35 +172,35 @@ grid.arrange(g)
 
 
 ### prep df for shape vs. pace analysis
-df_shape <- sd_shape %>% 
-  mutate(log_l0 = log10(l0)) %>% 
+df_shape <- sd_shape_out %>% 
+  mutate(log_L = log10(L)) %>% 
   group_by(SpeciesAuthor, MatrixPopulation) %>% 
-  summarize(shape_med = quantile(shape, 0.500),
-            shape_mean = mean(shape),
-            shape_se = sd(shape),
-            shape_low = quantile(shape, 0.025),
-            shape_upp = quantile(shape, 0.975),
-            l0_med = quantile(l0, 0.500),
-            l0_mean = mean(l0),
-            l0_se = sd(l0),
-            log_l0_med = quantile(log_l0, 0.500),
-            log_l0_mean = mean(log_l0),
-            log_l0_se = sd(log_l0),
-            l0_low = quantile(l0, 0.025),
-            l0_upp = quantile(l0, 0.975),
-            log_l0_low = quantile(log_l0, 0.025),
-            log_l0_upp = quantile(log_l0, 0.975)) %>% 
+  summarize(S_med = quantile(S, 0.500),
+            S_mean = mean(S),
+            S_se = sd(S),
+            S_low = quantile(S, 0.025),
+            S_upp = quantile(S, 0.975),
+            L_med = quantile(L, 0.500),
+            L_mean = mean(L),
+            L_se = sd(L),
+            log_L_med = quantile(log_L, 0.500),
+            log_L_mean = mean(log_L),
+            log_L_se = sd(log_L),
+            L_low = quantile(L, 0.025),
+            L_upp = quantile(L, 0.975),
+            log_L_low = quantile(log_L, 0.025),
+            log_L_upp = quantile(log_L, 0.975)) %>% 
   ungroup() %>% 
-  left_join(pt_shape) %>% 
+  left_join(pt_shape_out) %>% 
   mutate(spp_int = as.integer(as.factor(SpeciesAuthor)))
 
 
 
 ### plot pace vs. shape, point estimates vs posterior means
 ggplot(df_shape) +
-  geom_segment(aes(x = l0_pt, y = shape_pt, xend = l0_mean, yend = shape_mean),
+  geom_segment(aes(x = L_pt, y = S_pt, xend = L_mean, yend = S_mean),
                size = 0.3, arrow = arrow(length = unit(0.02, "npc"))) +
-  geom_point(aes(l0_pt, shape_pt)) +
+  geom_point(aes(L_pt, S_pt)) +
   scale_x_log10()
 
 
@@ -513,7 +407,7 @@ stan_varcomp <- stan_model("stan/varcomp.stan")
 
 
 
-df_other <- sd_other %>% 
+df_other <- sd_other_out %>% 
   group_by(SpeciesAuthor, MatrixPopulation) %>% 
   summarize(loglam_mean = mean(loglam),
             loglam_se = sd(loglam),
@@ -528,7 +422,7 @@ df_other <- sd_other %>%
             elast_mean = mean(elast),
             elast_se = sd(elast)) %>% 
   ungroup() %>% 
-  left_join(pt_other) %>% 
+  left_join(pt_other_out) %>% 
   mutate(damp_pt = log10(damp_pt)) %>% 
   mutate(gen_pt = log10(gen_pt)) %>% 
   mutate(pmature_pt = logit(pmature_pt)) %>% 

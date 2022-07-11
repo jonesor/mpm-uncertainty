@@ -75,18 +75,18 @@ pt_other <- mpm_draws %>%
 
 
 
-# ### sampling distributions for derived parameters
-# sd_shape <- pt_shape %>%
-#   select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
-#   unnest() %>%
-#   left_join(select(pt_shape, id, start, rep_stages)) %>%
-#   mutate(rep_prop1 = pmap(list(simU, start, rep_stages), Rage::mature_distrib)) %>%
-#   mutate(lx = pmap(list(simU, rep_prop1, q),
-#                    ~ Rage::mpm_to_lx(..1, ..2, xmax = ..3), lx_crit = -1)) %>%
-#   mutate(L = map2_dbl(simU, rep_prop1, Rage::life_expect)) %>%
-#   mutate(S = map_dbl(lx, Rage::shape_surv)) %>%
-#   left_join(select(pt_shape, id, id_L, id_S, ends_with("pt")), by = "id")
-# 
+### sampling distributions for derived parameters
+sd_shape <- pt_shape %>%
+  select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
+  unnest(cols = c(simU, simF)) %>%
+  left_join(select(pt_shape, id, start, rep_stages)) %>%
+  mutate(rep_prop1 = pmap(list(simU, start, rep_stages), Rage::mature_distrib)) %>%
+  mutate(lx = pmap(list(simU, rep_prop1, q),
+                   ~ Rage::mpm_to_lx(..1, ..2, xmax = ..3), lx_crit = -1)) %>%
+  mutate(L = map2_dbl(simU, rep_prop1, Rage::life_expect)) %>%
+  mutate(S = map_dbl(lx, Rage::shape_surv)) %>%
+  left_join(select(pt_shape, id, id_L, id_S, ends_with("pt")), by = "id")
+
 # sd_other <- pt_other %>%
 #   select(id, SpeciesAuthor, MatrixPopulation, simU, simF) %>%
 #   unnest() %>%
@@ -123,6 +123,7 @@ sd_full <- full_join()
 ### load sampling distributions
 load(file = "analysis/full_sd_shape.RData")
 load(file = "analysis/full_sd_other.RData")
+
 
 
 

@@ -30,7 +30,6 @@ rdirichlet <- function(alpha) {
 }
 
 
-
 ### Helpers to convert MPMs from Ellis et al. 2012 #############################
 string_to_mat <- function(A) {
   A <- gsub(pattern = "\\[|\\]|\\;", "", A)
@@ -172,8 +171,8 @@ sim_stage_F <- function(x, vital_ind, n) {
 
 
 sim_U <- function(matU, posU, N) {
-  if (class(matU) == "list") matU <- matU[[1]]
-  if (class(N) == "list") N <- unlist(N)
+  if ("list" %in% class(matU)) matU <- matU[[1]]
+  if ("list" %in% class(N)) N <- unlist(N)
   
   simU <- matrix(0, nrow = nrow(matU), ncol = ncol(matU))
   
@@ -192,8 +191,8 @@ sim_U <- function(matU, posU, N) {
 
 
 sim_F <- function(matF, posF, N) {
-  if (class(matF) == "list") matF <- matF[[1]]
-  if (class(N) == "list") N <- unlist(N)
+  if ("list" %in% class(matF)) matF <- matF[[1]]
+  if ("list" %in% class(N)) N <- unlist(N)
   
   simF <- matrix(0, nrow = nrow(matF), ncol = ncol(matF))
   

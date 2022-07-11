@@ -559,7 +559,6 @@ save(torres_out, file = "analysis/sd_torres.RData")
 
 
 ##### Andrieu
-# some stages use pooled for every single year... figure out how to assess
 spp <- "Paeonia_officinalis"
 pops <- c("Open habitat", "Woodland")
 # "Open habitat", "Woodland", (Managed habitat doesn't have pooled)
@@ -607,7 +606,6 @@ save(andrieu_out, file = "analysis/sd_andrieu.RData")
 
 
 ##### Eriksson
-# some stages use pooled for every single year... figure out how to assess
 spp <- "Plantago_media"
 # pop <- "Site B" # Site A, Site B
 

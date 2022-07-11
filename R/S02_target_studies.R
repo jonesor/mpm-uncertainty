@@ -18,6 +18,7 @@ collapse_fn <- function(x) {
 
 ### subset COMPADRE to studies of interest
 studies_check <- compadre %>%
+  as_tibble() %>% 
   filter(YearPublication >= 2010) %>% 
   filter(MatrixSplit == "Divided",
          MatrixFec == "Yes",
@@ -30,18 +31,17 @@ studies_check <- compadre %>%
                              "Shrub",
                              "Tree",
                              "Palm")) %>% 
-  as_tibble() %>% 
   group_by(Authors, Journal, YearPublication, DOI.ISBN) %>% 
   summarize(AdditionalSource = collapse_fn(AdditionalSource),
             n_spp = length(unique(SpeciesAccepted)),
             n_pop = length(unique(paste(SpeciesAccepted, MatrixPopulation))),
-            n_mat = n()) %>% 
-  ungroup() %>% 
+            n_mat = n(),
+            .groups = "drop") %>% 
   arrange(YearPublication, Authors)
 
 
 ### write to file
-write.csv("studies_check.csv", row.names = FALSE)
+write.csv(studies_check, "studies_check.csv", row.names = FALSE)
 
 
 
