@@ -25,7 +25,7 @@ ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
 
 ### Draw from MPM sampling distributions by study ##############################
 
-### Aschero
+### Aschero ----
 spp <- "Prosopis_ﬂexuosa"
 aschero_n <- read_csv("data/studies/aschero_n.csv")
 
@@ -46,9 +46,15 @@ aschero_out <- compadre %>%
 
 save(aschero_out, file = "analysis/sd_aschero.RData")
 
+dataf <- aschero %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = FALSE)
 
 
-### Kiviniemi
+### Kiviniemi ----
 spp <- "Agrimonia_eupatoria"
 
 compadre %>% 
@@ -72,6 +78,14 @@ kiviniemi <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>% 
   ungroup()
 
+dataf <- kiviniemi %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
+
+
 npool <- kiviniemi %>% 
   as_tibble() %>% 
   group_by(MatrixPopulation) %>% 
@@ -91,7 +105,7 @@ save(kiviniemi_out, file = "analysis/sd_kiviniemi.RData")
 
 
 
-### Satterthwaite
+### Satterthwaite ----
 spp <- "Eriogonum_longifolium_var._gnaphalifolium_2"
 pop <- "Unburned"
 
@@ -134,9 +148,14 @@ satterthwaite_out <- compadre %>%
 
 save(satterthwaite_out, file = "analysis/sd_satterthwaite.RData")
 
+dataf <- satterthwaite %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
-## Andrello
+## Andrello ----
 spp <- "Eryngium_alpinum"
 pop <- "PRD" # DES, BER, BOU, PRA, PRB, PRC, PRD
 
@@ -189,9 +208,15 @@ andrello_out <- compadre %>%
 
 save(andrello_out, file = "analysis/sd_andrello.RData")
 
+dataf <- andrello %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Liatris_scariosa
+### Liatris_scariosa ----
 spp <- "Liatris_scariosa"
 # Ellis: LISC_0, LISC_1, LISC_2
 # Comp: "Lisc 0", "Lisc 1", "Lisc 2"
@@ -237,9 +262,15 @@ lisc_out <- compadre %>%
 
 save(lisc_out, file = "analysis/sd_lisc.RData")
 
+dataf <- lisc %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Cirsium_pitcheri_4
+### Cirsium_pitcheri_4 ----
 # Compadre has CiPi 1, CiPi 2, CiPi 3; Ellis has CIPI_1, CIPI_2, CIPI_3, CIPI_4
 # I think Cirsium_pitcheri_6 from Bell et al 2013, corresponds to CIPI 4 from
 #  Ellis et al 2012 (Cirsium_pitcheri_4), but they use diff stage classes
@@ -290,9 +321,15 @@ cipi_out <- compadre %>%
 
 save(cipi_out, file = "analysis/sd_cipi.RData")
 
+dataf <- cipi %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Scanga
+### Scanga ----
 spp <- "Trollius_laxus_2"
 pop <- c("CfCh", "Cb", "EEFF", "H66cont", "MM", "T")
 
@@ -337,9 +374,15 @@ scanga_out <- compadre %>%
 
 save(scanga_out, file = "analysis/sd_scanga.RData")
 
+dataf <- scanga %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Lazaro
+### Lazaro ----
 spp <- "Dioon_merolae"
 
 compadre %>% 
@@ -380,9 +423,15 @@ lazaro_out <- compadre %>%
 
 save(lazaro_out, file = "analysis/sd_lazaro.RData")
 
+dataf <- lazaro %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Arroyo
+### Arroyo ----
 spp <- "Neobuxbaumia_polylopha"
 
 compadre %>% 
@@ -422,9 +471,15 @@ arroyo_out <- compadre %>%
 
 save(arroyo_out, file = "analysis/sd_arroyo.RData")
 
+dataf <- arroyo %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Plank
+### Plank----
 spp <- "Trillium_persistens"
 # "Battle Creek", "Moccasin Creek", "Moody Creek", "Panther Creek"
 
@@ -469,9 +524,15 @@ plank_out <- compadre %>%
 
 save(plank_out, file = "analysis/sd_plank.RData")
 
+dataf <- plank %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Jolls
+### Jolls ----
 spp <- "Cirsium_pitcheri_8"
 
 compadre %>% 
@@ -513,9 +574,15 @@ jolls_out <- compadre %>%
 
 save(jolls_out, file = "analysis/sd_jolls.RData")
 
+dataf <- jolls %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Torres
+### Torres ----
 spp <- "Agave_potatorum"
 # "Xochiltepec", "Machiche"
 
@@ -556,9 +623,15 @@ torres_out <- compadre %>%
 
 save(torres_out, file = "analysis/sd_torres.RData")
 
+dataf <- torres %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-##### Andrieu
+### Andrieu----
 spp <- "Paeonia_officinalis"
 pops <- c("Open habitat", "Woodland")
 # "Open habitat", "Woodland", (Managed habitat doesn't have pooled)
@@ -603,9 +676,15 @@ andrieu_out <- compadre %>%
 
 save(andrieu_out, file = "analysis/sd_andrieu.RData")
 
+dataf <- andrieu %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-##### Eriksson
+### Eriksson----
 spp <- "Plantago_media"
 # pop <- "Site B" # Site A, Site B
 
@@ -647,9 +726,15 @@ eriksson_out <- compadre %>%
 
 save(eriksson_out, file = "analysis/sd_eriksson.RData")
 
+dataf <- eriksson %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Astragalus_scaphoides_2, Haynes Creek, Sheep Corral Gulch, McDevitt Creek
+### Astragalus_scaphoides_2, Haynes Creek, Sheep Corral Gulch, McDevitt Creek ----
 # sometimes 0 fecund
 # negative relationship between fecundity and sample size
 spp <- "Astragalus_scaphoides_2"
@@ -698,9 +783,15 @@ assc_out <- compadre %>%
 
 save(assc_out, file = "analysis/sd_assc.RData")
 
+dataf <- assc %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-#### Lemke
+### Lemke ----
 spp <- "Trollius_europaeus"
 # "HAS; JAG", "RDGm; GTH; SPW; NEV", "RDGab; JAGab"
 ### *NOTE* "HAS; JAG" has N = 0 repro, so only use for surv analyses
@@ -745,9 +836,15 @@ lemke_out <- compadre %>%
 
 save(lemke_out, file = "analysis/sd_lemke.RData")
 
+dataf <- lemke %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Toledo
+### Toledo ----
 # matrix values based on bootstrapping, so won't necessarily match
 spp <- "Tillandsia_butzii"
 # "San Antonio, Veracruz"
@@ -788,9 +885,15 @@ toledo_out <- compadre %>%
 
 save(toledo_out, file = "analysis/sd_toledo.RData")
 
+dataf <- toledo %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Crone
+### Crone ----
 spp <- "Balsamorhiza_sagittata"
 # "Mount Jumbo"
 # fecundity based on number of flowers, not plants
@@ -831,9 +934,15 @@ crone_out <- compadre %>%
 
 save(crone_out, file = "analysis/sd_crone.RData")
 
+dataf <- crone %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Dostalek
+### Dostalek----
 spp <- "Dracocephalum_austriacum_2"
 # Cisarska rokle (C1), Haknovec (C2), Kodska stena (C3)
 # Zadielsky kamen (S1), Domicke skrapy (S2), Zelezne vrata (S3)
@@ -876,9 +985,15 @@ dostalek_out <- compadre %>%
 
 save(dostalek_out, file = "analysis/sd_dostalek.RData")
 
+dataf <- dostalek %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Evju
+### Evju ----
 spp <- "Viola_biflora"
 
 compadre %>% 
@@ -918,9 +1033,16 @@ evju_out <- compadre %>%
 
 save(evju_out, file = "analysis/sd_evju.RData")
 
+dataf <- evju %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Flores
+
+### Flores ----
 spp <- "Mammillaria_huitzilopochtli"
 
 compadre %>% 
@@ -960,9 +1082,15 @@ flores_out <- compadre %>%
 
 save(flores_out, file = "analysis/sd_flores.RData")
 
+dataf <- flores %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Shryock
+### Shryock ----
 spp <- "Pediocactus_bradyi"
 
 shryock_n <- read_csv("data/studies/shryock_n.csv") %>%
@@ -996,9 +1124,15 @@ shryock_out <- compadre %>%
 
 save(shryock_out, file = "analysis/sd_shryock.RData")
 
+dataf <- shryock %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Csergo
+### Csergo ----
 spp <- "Saponaria_bellidifolia"
 
 csergo_n <- read_csv("data/studies/csergo_n.csv") %>%
@@ -1033,6 +1167,12 @@ csergo_out <- compadre %>%
 
 save(csergo_out, file = "analysis/sd_csergo.RData")
 
+dataf <- csergo %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
 # ### Keller
@@ -1079,7 +1219,7 @@ save(csergo_out, file = "analysis/sd_csergo.RData")
 
 
 
-### Raghu
+### Raghu----
 spp <- "Lantana_camara_2"
 
 raghu_n <- read_csv("data/studies/raghu_n.csv") %>%
@@ -1115,9 +1255,15 @@ raghu_out <- compadre %>%
 
 save(raghu_out, file = "analysis/sd_raghu.RData")
 
+dataf <- raghu %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Martin
+### Martin----
 spp <- "Astragalus_peckii"
 
 martin_n <- read_csv("data/studies/martin_n.csv") %>%
@@ -1154,9 +1300,15 @@ martin_out <- compadre %>%
 
 save(martin_out, file = "analysis/sd_martin.RData")
 
+dataf <- martin %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Law
+### Law----
 # single pooled value of fecundity, from 38 individs
 spp <- "Saussurea_medusa"
 
@@ -1198,9 +1350,14 @@ law_out <- compadre %>%
 
 save(law_out, file = "analysis/sd_law.RData")
 
+dataf <- law %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
-### Jacquemyns
+### Jacquemyns ----
 spp <- "Orchis_purpurea"
 
 compadre %>% 
@@ -1240,9 +1397,15 @@ jacq_out <- compadre %>%
 
 save(jacq_out, file = "analysis/sd_jacq.RData")
 
+dataf <- jacq %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Portela
+### Portela----
 spp <- "Astrocaryum_aculeatissimum"
 
 portela_n <- read_csv("data/studies/portela_n.csv") %>%
@@ -1277,9 +1440,15 @@ portela_out <- compadre %>%
 
 save(portela_out, file = "analysis/sd_portela.RData")
 
+dataf <- portela %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Lopez-mata
+### Lopez-mata ----
 spp <- "Pinus_maximartinezii"
 
 compadre %>% 
@@ -1314,9 +1483,15 @@ lopez_out <- compadre %>%
 
 save(lopez_out, file = "analysis/sd_lopez.RData")
 
+dataf <- lopez %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Auestad
+### Auestad ----
 spp <- "Pimpinella_saxifraga"
 
 compadre %>% 
@@ -1352,9 +1527,15 @@ auestad_out <- compadre %>%
 
 save(auestad_out, file = "analysis/sd_auestad.RData")
 
+dataf <- auestad %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
 
 
-### Dias Segura
+### Dias Segura ----
 spp <- "Lophophora_diffusa"
 
 compadre %>% 
@@ -1393,3 +1574,9 @@ dias_out <- compadre %>%
 
 save(dias_out, file = "analysis/sd_dias.RData")
 
+dataf <- dias %>% cdb_metadata() %>% 
+  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+dataf <- unique(dataf)
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+
+write(mdata, file = "data/studies/_output.csv", append = TRUE)
