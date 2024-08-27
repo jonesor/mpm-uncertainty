@@ -51,7 +51,7 @@ dataf <- aschero %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = FALSE)
+write(mdata, file = "data/studies/_data_sources.csv", append = FALSE)
 
 
 ### Kiviniemi ----
@@ -83,7 +83,7 @@ dataf <- kiviniemi %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 npool <- kiviniemi %>% 
@@ -153,7 +153,7 @@ dataf <- satterthwaite %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 ## Andrello ----
 spp <- "Eryngium_alpinum"
@@ -213,7 +213,7 @@ dataf <- andrello %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Liatris_scariosa ----
@@ -267,7 +267,7 @@ dataf <- lisc %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Cirsium_pitcheri_4 ----
@@ -326,7 +326,7 @@ dataf <- cipi %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Scanga ----
@@ -379,7 +379,7 @@ dataf <- scanga %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Lazaro ----
@@ -428,7 +428,7 @@ dataf <- lazaro %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Arroyo ----
@@ -476,7 +476,7 @@ dataf <- arroyo %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Plank----
@@ -529,7 +529,7 @@ dataf <- plank %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Jolls ----
@@ -579,7 +579,7 @@ dataf <- jolls %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Torres ----
@@ -628,7 +628,7 @@ dataf <- torres %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Andrieu----
@@ -681,7 +681,7 @@ dataf <- andrieu %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Eriksson----
@@ -731,7 +731,7 @@ dataf <- eriksson %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Astragalus_scaphoides_2, Haynes Creek, Sheep Corral Gulch, McDevitt Creek ----
@@ -788,7 +788,7 @@ dataf <- assc %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Lemke ----
@@ -841,7 +841,7 @@ dataf <- lemke %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Toledo ----
@@ -890,7 +890,7 @@ dataf <- toledo %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Crone ----
@@ -939,7 +939,7 @@ dataf <- crone %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Dostalek----
@@ -990,7 +990,7 @@ dataf <- dostalek %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Evju ----
@@ -1038,7 +1038,7 @@ dataf <- evju %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 
@@ -1087,7 +1087,7 @@ dataf <- flores %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Shryock ----
@@ -1129,7 +1129,7 @@ dataf <- shryock %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Csergo ----
@@ -1172,7 +1172,7 @@ dataf <- csergo %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 # ### Keller
@@ -1260,7 +1260,7 @@ dataf <- raghu %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Martin----
@@ -1305,7 +1305,7 @@ dataf <- martin %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Law----
@@ -1355,7 +1355,7 @@ dataf <- law %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 ### Jacquemyns ----
 spp <- "Orchis_purpurea"
@@ -1402,7 +1402,7 @@ dataf <- jacq %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Portela----
@@ -1445,7 +1445,7 @@ dataf <- portela %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Lopez-mata ----
@@ -1488,7 +1488,7 @@ dataf <- lopez %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Auestad ----
@@ -1532,7 +1532,7 @@ dataf <- auestad %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 
 
 ### Dias Segura ----
@@ -1579,4 +1579,4 @@ dataf <- dias %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_output.csv", append = TRUE)
+write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
