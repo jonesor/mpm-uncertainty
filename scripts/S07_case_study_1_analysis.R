@@ -32,7 +32,7 @@ tt <- theme(panel.grid = element_blank(),
             axis.text.x = element_blank(),
             axis.ticks.x = element_blank(),
             panel.background = element_blank(),
-            panel.border = element_rect(size = 0.5, fill = NA))
+            panel.border = element_rect(linewidth = 0.5, fill = NA))
 
 p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
@@ -76,7 +76,7 @@ tt <- theme(panel.grid = element_blank(),
             axis.text.y = element_text(size = 8.5, angle = 90, hjust = 0.5),
             axis.ticks.x = element_blank(),
             panel.background = element_blank(),
-            panel.border = element_rect(size = 0.5, fill = NA))
+            panel.border = element_rect(linewidth = 0.5, fill = NA))
 
 pt_size <- 0.7
 pt_shp <- 19
