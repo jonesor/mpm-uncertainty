@@ -83,9 +83,8 @@ p1a <- ggplot(df_plot) +
   ggtitle("In COMPADRE") +
   theme_bw() +
   theme(
-    strip.background = element_rect(color = "grey80", fill = "grey85", size = 0.4),
+    strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
     strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
-    # strip.background = element_blank(),
     panel.border = element_rect(color = "grey80"),
     axis.text = element_blank(),
     axis.ticks = element_blank(),
@@ -103,7 +102,7 @@ p1b <- ggplot(df_plot) +
   ggtitle("Raw data") +
   theme_bw() +
   theme(
-    strip.background = element_rect(color = "grey80", fill = "grey85", size = 0.4),
+    strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
     strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
     panel.border = element_rect(color = "grey80"),
     axis.text = element_blank(),
@@ -133,7 +132,7 @@ p1c <- ggplot(df_sdist) +
   ggtitle("Sampling distributions") +
   theme_bw() +
   theme(
-    strip.background = element_rect(color = "grey80", fill = "grey85", size = 0.4),
+    strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
     strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
     panel.border = element_rect(color = "grey80"),
     axis.text.x = element_blank(),
@@ -236,7 +235,7 @@ p2 <- ggplot(deriv_plot) +
   ggtitle("Derived parameters") +
   theme_bw() +
   theme(
-    strip.background = element_rect(color = "grey80", fill = "grey85", size = 0.4),
+    strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
     panel.border = element_rect(color = "grey80"),
     panel.grid = element_blank(),
     axis.text.y = element_blank(),
@@ -275,7 +274,7 @@ print(p2)
 #     # ggtitle(title) +
 #     theme_bw() +
 #     theme(
-#       strip.background = element_rect(color = "grey80", fill = "grey85", size = 0.4),
+#       strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
 #       panel.border = element_rect(color = "grey80"),
 #       panel.grid = element_blank(),
 #       axis.text.y = element_blank(),
