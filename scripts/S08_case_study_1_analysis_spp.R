@@ -149,7 +149,7 @@ tt <- theme(panel.grid = element_blank(),
             axis.text.x = element_blank(),
             axis.ticks.x = element_blank(),
             panel.background = element_blank(),
-            panel.border = element_rect(size = 0.5, fill = NA))
+            panel.border = element_rect(linewidth = 0.5, fill = NA))
 
 p1 <- ggplot(sd_shape, aes(y = id_shape)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
@@ -192,7 +192,7 @@ tt <- theme(panel.grid = element_blank(),
             axis.text.x = element_blank(),
             axis.ticks.x = element_blank(),
             panel.background = element_blank(),
-            panel.border = element_rect(size = 0.5, fill = NA))
+            panel.border = element_rect(linewidth = 0.5, fill = NA))
 
 p1 <- ggplot(sd_other, aes(y = id_loglam)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
