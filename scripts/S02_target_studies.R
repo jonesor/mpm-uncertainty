@@ -10,20 +10,19 @@ compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 ### subset COMPADRE to studies of interest
 studies_check <- compadre %>%
-  as_tibble() %>% 
   filter(YearPublication >= 2010) %>% 
   filter(MatrixSplit == "Divided",
          MatrixFec == "Yes",
          is.na(MatrixTreatment) | MatrixTreatment == "Unmanipulated",
          MatrixDimension > 2,
          MatrixCaptivity == "W",
-         AnnualPeriodicity == "1",
+         ProjectionInterval == "1",
          OrganismType %in% c("Herbaceous perennial",
                              "Succulent",
                              "Shrub",
                              "Tree",
                              "Palm")) %>% 
-  group_by(Authors, Journal, YearPublication, DOI.ISBN) %>% 
+  group_by(Authors, Journal, YearPublication, DOI_ISBN) %>% 
   summarize(AdditionalSource = collapse_fn(AdditionalSource),
             n_spp = length(unique(SpeciesAccepted)),
             n_pop = length(unique(paste(SpeciesAccepted, MatrixPopulation))),
@@ -51,3 +50,4 @@ write.csv(studies_check, "studies_check.csv", row.names = FALSE)
 # 
 # table(comp_rep$n)
 # median(comp_rep$n)
+
