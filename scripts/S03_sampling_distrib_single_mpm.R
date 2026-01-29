@@ -1,10 +1,7 @@
 
 ### libraries
-library(tidyverse)
-library(Rcompadre)
-library(Rage)
-library(popbio)
-library(gridExtra)
+source("code/setup.R")
+setup_packages(c("tidyverse", "Rcompadre", "Rage", "popbio", "gridExtra"))
 source("code/functions.R")
 set.seed(12345)
 

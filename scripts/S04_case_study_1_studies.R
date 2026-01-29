@@ -1,9 +1,8 @@
 
 
 ### libraries
-library(tidyverse)
-library(Rcompadre)
-library(popbio)
+source("code/setup.R")
+setup_packages(c("tidyverse", "Rcompadre", "popbio"))
 source("code/functions.R")
 set.seed(12345)
 

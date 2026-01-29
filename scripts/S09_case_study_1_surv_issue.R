@@ -1,10 +1,7 @@
 
 ### libraries
-library(tidyverse)
-library(Rcompadre)
-library(Rage)
-library(popbio)
-library(popdemo)
+source("code/setup.R")
+setup_packages(c("tidyverse", "Rcompadre", "Rage", "popbio", "popdemo"))
 
 
 ### load COMPADRE
@@ -122,7 +119,6 @@ sum(out_shape$lxs_min > 0.1) / nrow(out_shape)
   # mutate(shape_pt = shape_l0_pt) %>%
   mutate(id_shape = fct_reorder(fct_drop(id), shape_pt)) %>% 
   mutate(id_l0 = fct_reorder(fct_drop(id), l0_pt))
-
 
 
 

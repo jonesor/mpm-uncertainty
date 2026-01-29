@@ -1,8 +1,7 @@
 
 ### libraries
-library(tidyverse)
-library(rgdal)
-library(raster)
+source("code/setup.R")
+setup_packages(c("tidyverse", "rgdal", "raster", "sp"))
 
 
 ### create shell scripts to download prism climate rasters

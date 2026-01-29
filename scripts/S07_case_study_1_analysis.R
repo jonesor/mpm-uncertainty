@@ -1,23 +1,16 @@
 
 ### libraries
-library(tidyverse)
-library(popbio)
-library(popdemo)
-library(Rcompadre)
-library(Rage)
-library(ggridges)
-library(cowplot)
-library(gridExtra)
-library(rstan)
-library(loo)
+source("code/setup.R")
+setup_packages(c("tidyverse", "popbio", "popdemo", "Rcompadre", "Rage",
+                 "ggridges", "cowplot", "gridExtra", "rstan", "loo"))
+setup_rstan()
 source("code/functions.R")
 seed <- 12345
 set.seed(seed)
 
 
 ### set options for rstan library
-rstan_options(auto_write = TRUE)
-options(mc.cores = parallel::detectCores())
+# handled in setup_rstan()
 
 
 ### load compadre data

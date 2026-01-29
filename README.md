@@ -7,6 +7,7 @@ This repository is organized to support replicability and FAIR principles. The m
 
 Quick start
 -----------
+- Run `scripts/00_check_setup.R` to verify packages and required inputs.
 - Start with `scripts/` in numeric order (S01 ... S13). Each script is intended to be run after prior steps.
 - Outputs that are reused across scripts are cached under `data/derived/analysis_cache/`.
 - Figures are written to `figures/` (commented `ggsave` calls indicate intended outputs).

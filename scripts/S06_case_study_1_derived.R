@@ -1,10 +1,7 @@
 
 ### libraries
-library(tidyverse)
-library(popbio)
-library(popdemo)
-library(Rcompadre)
-library(Rage)
+source("code/setup.R")
+setup_packages(c("tidyverse", "popbio", "popdemo", "Rcompadre", "Rage", "patchwork"))
 source("code/functions.R")
 
 
@@ -193,8 +190,6 @@ p3 <- ggplot(df_lx, aes(x, hx)) +
   theme_bw() +
   theme(panel.grid = element_blank())
 
-
-library(patchwork)
 
 g <- p1 / p2 / p3 + patchwork::plot_annotation(tag_levels = c("A", "B", "C"))
 

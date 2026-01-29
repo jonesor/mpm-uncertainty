@@ -1,14 +1,9 @@
 
 
 ### libraries
-library(ggplot2)
-library(grid)
-library(gridExtra)
-library(patchwork)
-library(popbio)
-library(Rage)
-library(tidyverse)
-library(Rcompadre)
+source("code/setup.R")
+setup_packages(c("ggplot2", "grid", "gridExtra", "patchwork", "popbio",
+                 "Rage", "tidyverse", "Rcompadre"))
 source("code/functions.R")
 
 
@@ -309,4 +304,3 @@ kiviniemi_out <- compadre %>%
   filter(MatrixComposite == "Mean") %>% 
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(npool)
-

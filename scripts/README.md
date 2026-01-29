@@ -22,3 +22,8 @@ Outputs
 -------
 - Intermediate artifacts are written to `data/derived/analysis_cache/`.
 - Figures are written to `figures/` (many `ggsave` calls are commented).
+
+Setup
+-----
+- Run `scripts/00_check_setup.R` to verify packages and required input files.
+- Scripts load packages via `code/setup.R` using `setup_packages(...)`.

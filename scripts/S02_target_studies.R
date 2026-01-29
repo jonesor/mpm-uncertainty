@@ -1,7 +1,7 @@
 
 ### libraries
-library(tidyverse)
-library(Rcompadre)
+source("code/setup.R")
+setup_packages(c("tidyverse", "Rcompadre"))
 
 
 ### load compadre data
