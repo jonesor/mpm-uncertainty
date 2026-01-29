@@ -9,4 +9,4 @@ Contents
 
 Notes
 -----
-PRISM raster downloads are handled by scripts in `scripts/download/`.
+PRISM raster downloads are handled by scripts in `scripts/download/`. Extraction uses `sf` + `terra`.

@@ -92,16 +92,17 @@ collapse_fn <- function(x) {
 }
 
 fetch_prism <- function(file_tmp, file_ppt, spp) {
-  prism_tmp <- raster::raster(x = file_tmp)
-  prism_ppt <- raster::raster(x = file_ppt)
+  prism_tmp <- terra::rast(file_tmp)
+  prism_ppt <- terra::rast(file_ppt)
   if (!is.data.frame(spp)) spp <- spp[[1]]
-  sp::coordinates(spp) <- c("Lon", "Lat")
-  pbase <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  sp::proj4string(spp) <- pbase
-  spp <- sp::spTransform(spp, raster::crs(prism_tmp))
-  spp$tmp <- prism_tmp[raster::cellFromXY(prism_tmp, spp)]
-  spp$ppt <- prism_ppt[raster::cellFromXY(prism_ppt, spp)]
-  return(tibble::as_tibble(spp))
+  spp_sf <- sf::st_as_sf(spp, coords = c("Lon", "Lat"), crs = 4326, remove = FALSE)
+  spp_sf <- sf::st_transform(spp_sf, terra::crs(prism_tmp))
+  tmp_vals <- terra::extract(prism_tmp, terra::vect(spp_sf))[, 2]
+  ppt_vals <- terra::extract(prism_ppt, terra::vect(spp_sf))[, 2]
+  out <- sf::st_drop_geometry(spp_sf)
+  out$tmp <- tmp_vals
+  out$ppt <- ppt_vals
+  return(tibble::as_tibble(out))
 }
 
 

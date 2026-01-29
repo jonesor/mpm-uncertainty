@@ -12,9 +12,8 @@ required_pkgs <- c(
   "ggridges",
   "rstan",
   "loo",
-  "rgdal",
-  "raster",
-  "sp"
+  "sf",
+  "terra"
 )
 
 setup_packages(required_pkgs)

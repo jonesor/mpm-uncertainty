@@ -27,3 +27,4 @@ Setup
 -----
 - Run `scripts/00_check_setup.R` to verify packages and required input files.
 - Scripts load packages via `code/setup.R` using `setup_packages(...)`.
+- PRISM extraction uses the `sf` + `terra` stack (no `rgdal`).

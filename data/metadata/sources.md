@@ -21,6 +21,7 @@ PRISM climate data
 - Source: PRISM Climate Group, Oregon State University (monthly tmean and ppt rasters)
 - Download helpers: `scripts/download/fetch_prism_tmp.sh`, `scripts/download/fetch_prism_ppt.sh`
 - Derived outputs: `data/derived/climate/species_clim_prism.csv`
+- Processing stack: uses `sf` + `terra` (replacing legacy `rgdal`/`raster`/`sp`).
 
 Study-level inputs
 ------------------
