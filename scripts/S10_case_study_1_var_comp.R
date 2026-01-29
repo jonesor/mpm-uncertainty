@@ -7,7 +7,9 @@ library(Rcompadre)
 library(Rage)
 library(rstan)
 library(loo)
-source("R/functions.R")
+source("code/functions.R")
+seed <- 12345
+set.seed(seed)
 
 
 ### set options for rstan library
@@ -16,11 +18,11 @@ options(mc.cores = parallel::detectCores())
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### load study-specific sampling distribution files
-sd_files <- paste0("analysis/", list.files("analysis"))
+sd_files <- paste0("data/derived/analysis_cache/", list.files("data/derived/analysis_cache"))
 sd_files <- sd_files[grep("/sd_", sd_files)]
 
 
@@ -112,8 +114,8 @@ sd_shape <- pt_shape %>%
 # sd_other <- sd_other %>%
 #   select(which(sapply(sd_other, class) != "list"))
 # 
-# save(sd_shape, file = "analysis/full_sd_shape.RData")
-# save(sd_other, file = "analysis/full_sd_other.RData")
+# save(sd_shape, file = "data/derived/analysis_cache/full_sd_shape.RData")
+# save(sd_other, file = "data/derived/analysis_cache/full_sd_other.RData")
 
 
 sd_shape
@@ -121,8 +123,8 @@ sd_full <- full_join()
 
 
 ### load sampling distributions
-load(file = "analysis/full_sd_shape.RData")
-load(file = "analysis/full_sd_other.RData")
+load(file = "data/derived/analysis_cache/full_sd_shape.RData")
+load(file = "data/derived/analysis_cache/full_sd_other.RData")
 
 
 
@@ -174,7 +176,7 @@ df_other <- sd_other %>%
 
 
 ### Variance components analysis
-stan_varcomp <- stan_model("stan/varcomp.stan")
+stan_varcomp <- stan_model("models/varcomp.stan")
 
 
 
@@ -226,7 +228,8 @@ stan_fit_varcomp <- sampling(
   iter = 4000,
   thin = 2,
   chains = 2,
-  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12)
+  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12),
+  seed = seed
 )
 
 pvar_w <- rstan_extract(stan_fit_varcomp, "pvar_w")
@@ -257,6 +260,3 @@ var(df_other$loglam_pt) / var(df_other$loglam_mean)
 var(df_other$damp_pt) / var(df_other$damp_mean)
 var(df_other$gen_pt) / var(df_other$gen_mean)
 var(df_growth$growth_pt) / var(df_growth$growth_mean)
-
-
-

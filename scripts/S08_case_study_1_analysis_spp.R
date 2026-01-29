@@ -11,7 +11,9 @@ library(popdemo)
 library(gridExtra)
 library(rstan)
 library(loo)
-source("R/functions.R")
+source("code/functions.R")
+seed <- 12345
+set.seed(seed)
 
 
 ### set options for rstan library
@@ -20,13 +22,13 @@ options(mc.cores = parallel::detectCores())
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 
 ### load study-specific sampling distribution files
-sd_files <- paste0("analysis/", list.files("analysis"))
-sd_files <- sd_files[grep("analysis/sds_", sd_files)]
+sd_files <- paste0("data/derived/analysis_cache/", list.files("data/derived/analysis_cache"))
+sd_files <- sd_files[grep("data/derived/analysis_cache/sds_", sd_files)]
 
 
 
@@ -139,11 +141,11 @@ sd_shape <- pt_shape %>%
 # sd_other <- sd_other %>%
 #   select(which(sapply(sd_other, class) != "list"))
 # 
-# save(sd_shape, file = "analysis/full_sd_spp_shape.RData")
-# save(sd_other, file = "analysis/full_sd_spp_other.RData")
+# save(sd_shape, file = "data/derived/analysis_cache/full_sd_spp_shape.RData")
+# save(sd_other, file = "data/derived/analysis_cache/full_sd_spp_other.RData")
 
-load(file = "analysis/full_sd_spp_shape.RData")
-load(file = "analysis/full_sd_spp_other.RData")
+load(file = "data/derived/analysis_cache/full_sd_spp_shape.RData")
+load(file = "data/derived/analysis_cache/full_sd_spp_other.RData")
 
 
 
@@ -186,7 +188,7 @@ quartz(height = 5.5, width = 5.5, dpi = 120)
 grid.arrange(g)
 
 # save png
-# ggsave("img/sds_shape_spp.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
+# ggsave("figures/sds_shape_spp.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
 
 
 
@@ -249,7 +251,7 @@ quartz(height = 7, width = 5, dpi = 140)
 grid.arrange(g)
 
 # save png
-# ggsave("img/sd_other_spp.png", g, height = 7, width = 5, units = "in", dpi = 300)
+# ggsave("figures/sd_other_spp.png", g, height = 7, width = 5, units = "in", dpi = 300)
 
 
 
@@ -310,8 +312,8 @@ vw / (va + vw)
 ### Model relationship between l0 and shape, assuming no sampling uncertainty
 
 # compile stan models
-stan_regress_hier <- stan_model("stan/regress2.stan")
-stan_regress_hier_error <- stan_model("stan/regress_error2.stan")
+stan_regress_hier <- stan_model("models/regress2.stan")
+stan_regress_hier_error <- stan_model("models/regress_error2.stan")
 
 # arrange data for stan
 x_cent <- mean(log10(df_shape$l0_pt))
@@ -328,7 +330,8 @@ stan_fit <- sampling(
   warmup = 2000,
   iter = 4000,
   thin = 2,
-  chains = 2
+  chains = 2,
+  seed = seed
 )
 
 # model diagnostics
@@ -373,7 +376,8 @@ stan_fit_error <- sampling(
   iter = 4000,
   thin = 2,
   chains = 2,
-  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12)
+  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12),
+  seed = seed
 )
 
 # model diagnostics
@@ -481,7 +485,7 @@ quartz(height = 4.5, width = 6.25, dpi = 160)
 print(p)
 
 # save to png
-# ggsave2("img/shape_spp.png", p, height = 4.5, width = 6.25)
+# ggsave2("figures/shape_spp.png", p, height = 4.5, width = 6.25)
 
 
 
@@ -504,7 +508,7 @@ length(mu_beta_error[mu_beta_error > 0]) / length(mu_beta_error)
 
 
 ### variance components model
-stan_varcomp <- stan_model("stan/varcomp.stan")
+stan_varcomp <- stan_model("models/varcomp.stan")
 
 df_other <- sd_other %>% 
   group_by(SpeciesAuthor, MatrixPopulation) %>% 
@@ -563,7 +567,8 @@ stan_fit_varcomp <- sampling(
   iter = 4000,
   thin = 2,
   chains = 2,
-  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12)
+  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12),
+  seed = seed
 )
 
 pvar_w <- rstan_extract(stan_fit_varcomp, "pvar_w")
@@ -616,6 +621,3 @@ ggplot(sdist, aes(x, hx)) +
   # scale_y_log10() +
   # coord_cartesian(ylim = c(0, 10)) +
   facet_wrap(~ SpeciesAuthor, ncol = 1)
-
-
-

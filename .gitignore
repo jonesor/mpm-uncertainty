@@ -2,11 +2,11 @@
 .Rapp.history
 .DS_Store
 old/
-data/studies/raw/
-analysis/
+data/derived/studies/raw/
+data/derived/analysis_cache/
 chelsa/
 prism/
-stan/*.rds
+models/*.rds
 studies_check*
 studies_emails*
 *.png

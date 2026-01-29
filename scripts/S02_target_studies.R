@@ -5,15 +5,7 @@ library(Rcompadre)
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
-
-
-### function to collapse AdditionalSource column
-collapse_fn <- function(x) {
-  ifelse(all(is.na(x)),
-         NA_character_,
-         paste(unique(x[!is.na(x)]), collapse = "; "))
-}
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### subset COMPADRE to studies of interest
@@ -59,4 +51,3 @@ write.csv(studies_check, "studies_check.csv", row.names = FALSE)
 # 
 # table(comp_rep$n)
 # median(comp_rep$n)
-

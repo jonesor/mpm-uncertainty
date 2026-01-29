@@ -5,15 +5,16 @@ library(Rcompadre)
 library(Rage)
 library(popbio)
 library(gridExtra)
-source("R/functions.R")
+source("code/functions.R")
+set.seed(12345)
 
 
 ### load compadre
-compadre <- Rcompadre::cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- Rcompadre::cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### kiviniemi example
-kiviniemi_n <- readr::read_csv("data/studies/kiviniemi_n.csv", show_col_types = FALSE) %>% 
+kiviniemi_n <- readr::read_csv("data/derived/studies/kiviniemi_n.csv", show_col_types = FALSE) %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N), .groups = "drop")
 
@@ -157,7 +158,7 @@ graphics.off()
 quartz(height = 2.2, width = 6.5, dpi = 240)
 grid.arrange(p1)
 
-# ggsave("img/raw/Fig_1a.png", p1, height = 2.2, width = 6.5, units = "in", dpi = 400)
+# ggsave("supplement/fig_raw/Fig_1a.png", p1, height = 2.2, width = 6.5, units = "in", dpi = 400)
 
 
 
@@ -255,7 +256,7 @@ graphics.off()
 quartz(height = 2, width = 6.5, dpi = 220)
 print(p2)
 
-# ggsave("img/raw/Fig_1b.png", p2, height = 2, width = 6.5, units = "in", dpi = 300)
+# ggsave("supplement/fig_raw/Fig_1b.png", p2, height = 2, width = 6.5, units = "in", dpi = 300)
 
 
 
@@ -345,7 +346,7 @@ print(p2)
 # quartz(height = 4, width = 6.5, dpi = 220)
 # print(g)
 # 
-# ggsave("img/fig_1_new.png", g, height = 4, width = 6.5, units = "in", dpi = 600)
+# ggsave("figures/fig_1_new.png", g, height = 4, width = 6.5, units = "in", dpi = 600)
 
 
 
@@ -356,4 +357,3 @@ deriv_param %>%
             low = quantile(value, 0.025),
             upp = quantile(value, 0.975)) %>% 
   left_join(deriv_pt, by = "par")
-

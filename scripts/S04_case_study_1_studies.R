@@ -4,15 +4,16 @@
 library(tidyverse)
 library(Rcompadre)
 library(popbio)
-source("R/functions.R")
+source("code/functions.R")
+set.seed(12345)
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### Load data from Ellis et al. (2012)
-ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
+ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
   mutate(matA = lapply(Mx, string_to_mat)) %>% 
@@ -27,7 +28,7 @@ ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
 
 ### Aschero ----
 spp <- "Prosopis_ﬂexuosa"
-aschero_n <- read_csv("data/studies/aschero_n.csv")
+aschero_n <- read_csv("data/derived/studies/aschero_n.csv")
 
 aschero <- compadre %>% 
   filter(SpeciesAuthor == spp, MatrixTreatment == "Unmanipulated") %>% 
@@ -44,14 +45,14 @@ aschero_out <- compadre %>%
   filter(SpeciesAuthor == spp, MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_aschero)
 
-save(aschero_out, file = "analysis/sd_aschero.RData")
+save(aschero_out, file = "data/derived/analysis_cache/sd_aschero.RData")
 
 dataf <- aschero %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = FALSE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = FALSE)
 
 
 ### Kiviniemi ----
@@ -62,7 +63,7 @@ compadre %>%
   filter(MatrixTreatment == 'Unmanipulated') %>%
   cdb_glimpse("MatrixComposite")
 
-kiviniemi_n <- read_csv("data/studies/kiviniemi_n.csv") %>% 
+kiviniemi_n <- read_csv("data/derived/studies/kiviniemi_n.csv") %>% 
   group_by(SpeciesAccepted, MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -83,7 +84,7 @@ dataf <- kiviniemi %>% cdb_metadata() %>%
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 npool <- kiviniemi %>% 
@@ -101,7 +102,7 @@ kiviniemi_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(kiviniemi_out, file = "analysis/sd_kiviniemi.RData")
+save(kiviniemi_out, file = "data/derived/analysis_cache/sd_kiviniemi.RData")
 
 
 
@@ -114,7 +115,7 @@ compadre %>%
   filter(MatrixTreatment == 'Unmanipulated') %>%
   cdb_glimpse("MatrixComposite")
 
-satterthwaite_n <- read_csv("data/studies/satterthwaite_n.csv") %>% 
+satterthwaite_n <- read_csv("data/derived/studies/satterthwaite_n.csv") %>% 
   mutate(Nf = N) %>% 
   mutate(Nu = ifelse(Pool, 0, N)) %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
@@ -146,20 +147,20 @@ satterthwaite_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(satterthwaite_out, file = "analysis/sd_satterthwaite.RData")
+save(satterthwaite_out, file = "data/derived/analysis_cache/sd_satterthwaite.RData")
 
 dataf <- satterthwaite %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 ## Andrello ----
 spp <- "Eryngium_alpinum"
 pop <- "PRD" # DES, BER, BOU, PRA, PRB, PRC, PRD
 
-# load("data/studies/raw/andrello_matrices.RData")
+# load("data/derived/studies/raw/andrello_matrices.RData")
 # 
 # andrello_n <- apply(M, c(2, 3, 4), sum) %>%
 #   as.data.frame() %>% 
@@ -171,9 +172,9 @@ pop <- "PRD" # DES, BER, BOU, PRA, PRB, PRC, PRD
 #   mutate(SpeciesAuthor = spp) %>% 
 #   select(SpeciesAuthor, Stage, MatrixPopulation, MatrixStartYear, N)
 # 
-# write.csv(andrello_n, "data/studies/andrello_n.csv", row.names = FALSE)
+# write.csv(andrello_n, "data/derived/studies/andrello_n.csv", row.names = FALSE)
 
-andrello_n <- read_csv("data/studies/andrello_n.csv") %>% 
+andrello_n <- read_csv("data/derived/studies/andrello_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -206,14 +207,14 @@ andrello_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(andrello_out, file = "analysis/sd_andrello.RData")
+save(andrello_out, file = "data/derived/analysis_cache/sd_andrello.RData")
 
 dataf <- andrello %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Liatris_scariosa ----
@@ -260,14 +261,14 @@ lisc_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(lisc_out, file = "analysis/sd_lisc.RData")
+save(lisc_out, file = "data/derived/analysis_cache/sd_lisc.RData")
 
 dataf <- lisc %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Cirsium_pitcheri_4 ----
@@ -319,14 +320,14 @@ cipi_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(cipi_out, file = "analysis/sd_cipi.RData")
+save(cipi_out, file = "data/derived/analysis_cache/sd_cipi.RData")
 
 dataf <- cipi %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Scanga ----
@@ -339,7 +340,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-scanga_n <- read_csv("data/studies/scanga_n.csv") %>% 
+scanga_n <- read_csv("data/derived/studies/scanga_n.csv") %>% 
   rename(MatrixPopulation = Group) %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
@@ -372,14 +373,14 @@ scanga_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(scanga_out, file = "analysis/sd_scanga.RData")
+save(scanga_out, file = "data/derived/analysis_cache/sd_scanga.RData")
 
 dataf <- scanga %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Lazaro ----
@@ -390,7 +391,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse("MatrixComposite")
 
-lazaro_n <- read_csv("data/studies/lazaro_n.csv") %>% 
+lazaro_n <- read_csv("data/derived/studies/lazaro_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -421,14 +422,14 @@ lazaro_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(lazaro_out, file = "analysis/sd_lazaro.RData")
+save(lazaro_out, file = "data/derived/analysis_cache/sd_lazaro.RData")
 
 dataf <- lazaro %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Arroyo ----
@@ -439,7 +440,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-arroyo_n <- read_csv("data/studies/arroyo_n.csv") %>% 
+arroyo_n <- read_csv("data/derived/studies/arroyo_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -469,14 +470,14 @@ arroyo_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(arroyo_out, file = "analysis/sd_arroyo.RData")
+save(arroyo_out, file = "data/derived/analysis_cache/sd_arroyo.RData")
 
 dataf <- arroyo %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Plank----
@@ -488,7 +489,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse("MatrixComposite")
 
-plank_n <- read_csv("data/studies/plank_n.csv") %>% 
+plank_n <- read_csv("data/derived/studies/plank_n.csv") %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -522,14 +523,14 @@ plank_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(plank_out, file = "analysis/sd_plank.RData")
+save(plank_out, file = "data/derived/analysis_cache/sd_plank.RData")
 
 dataf <- plank %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Jolls ----
@@ -540,7 +541,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-jolls_n <- read_csv("data/studies/jolls_n.csv") %>% 
+jolls_n <- read_csv("data/derived/studies/jolls_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -572,14 +573,14 @@ jolls_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(jolls_out, file = "analysis/sd_jolls.RData")
+save(jolls_out, file = "data/derived/analysis_cache/sd_jolls.RData")
 
 dataf <- jolls %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Torres ----
@@ -591,7 +592,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse("MatrixComposite")
 
-torres_n <- read_csv("data/studies/torres_n.csv") %>% 
+torres_n <- read_csv("data/derived/studies/torres_n.csv") %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -621,14 +622,14 @@ torres_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(torres_out, file = "analysis/sd_torres.RData")
+save(torres_out, file = "data/derived/analysis_cache/sd_torres.RData")
 
 dataf <- torres %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Andrieu----
@@ -642,7 +643,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-andrieu_n <- read_csv("data/studies/andrieu_n.csv") %>% 
+andrieu_n <- read_csv("data/derived/studies/andrieu_n.csv") %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -674,14 +675,14 @@ andrieu_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(andrieu_out, file = "analysis/sd_andrieu.RData")
+save(andrieu_out, file = "data/derived/analysis_cache/sd_andrieu.RData")
 
 dataf <- andrieu %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Eriksson----
@@ -693,7 +694,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-eriksson_n <- read_csv("data/studies/eriksson_n.csv") %>% 
+eriksson_n <- read_csv("data/derived/studies/eriksson_n.csv") %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -724,14 +725,14 @@ eriksson_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(eriksson_out, file = "analysis/sd_eriksson.RData")
+save(eriksson_out, file = "data/derived/analysis_cache/sd_eriksson.RData")
 
 dataf <- eriksson %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Astragalus_scaphoides_2, Haynes Creek, Sheep Corral Gulch, McDevitt Creek ----
@@ -781,14 +782,14 @@ assc_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(assc_out, file = "analysis/sd_assc.RData")
+save(assc_out, file = "data/derived/analysis_cache/sd_assc.RData")
 
 dataf <- assc %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Lemke ----
@@ -803,7 +804,7 @@ compadre %>%
   filter(Observation == "Pooled by habitat and year") %>%
   cdb_glimpse(c("Observation", "MatrixComposite"))
 
-lemke_n <- read_csv("data/studies/lemke_n.csv") %>% 
+lemke_n <- read_csv("data/derived/studies/lemke_n.csv") %>% 
   group_by(MatrixPopulation, Observation, MatrixStartYear) %>% 
   summarize(N = list(N))
 
@@ -834,14 +835,14 @@ lemke_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(lemke_out, file = "analysis/sd_lemke.RData")
+save(lemke_out, file = "data/derived/analysis_cache/sd_lemke.RData")
 
 dataf <- lemke %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Toledo ----
@@ -854,7 +855,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-toledo_n <- read_csv("data/studies/toledo_n.csv") %>% 
+toledo_n <- read_csv("data/derived/studies/toledo_n.csv") %>% 
   group_by(MatrixStartYear) %>% 
   summarize(N = list(N))
 
@@ -883,14 +884,14 @@ toledo_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(toledo_out, file = "analysis/sd_toledo.RData")
+save(toledo_out, file = "data/derived/analysis_cache/sd_toledo.RData")
 
 dataf <- toledo %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Crone ----
@@ -903,7 +904,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-crone_n <- read_csv("data/studies/crone_n.csv") %>% 
+crone_n <- read_csv("data/derived/studies/crone_n.csv") %>% 
   group_by(MatrixStartYear) %>% 
   summarize(N = list(N))
 
@@ -932,14 +933,14 @@ crone_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(crone_out, file = "analysis/sd_crone.RData")
+save(crone_out, file = "data/derived/analysis_cache/sd_crone.RData")
 
 dataf <- crone %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Dostalek----
@@ -953,7 +954,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-dostalek_n <- read_csv("data/studies/dostalek_n.csv") %>% 
+dostalek_n <- read_csv("data/derived/studies/dostalek_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -983,14 +984,14 @@ dostalek_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(dostalek_out, file = "analysis/sd_dostalek.RData")
+save(dostalek_out, file = "data/derived/analysis_cache/sd_dostalek.RData")
 
 dataf <- dostalek %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Evju ----
@@ -1001,7 +1002,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-evju_n <- read_csv("data/studies/evju_n.csv") %>% 
+evju_n <- read_csv("data/derived/studies/evju_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1031,14 +1032,14 @@ evju_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(evju_out, file = "analysis/sd_evju.RData")
+save(evju_out, file = "data/derived/analysis_cache/sd_evju.RData")
 
 dataf <- evju %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 
@@ -1050,7 +1051,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-flores_n <- read_csv("data/studies/flores_n.csv") %>% 
+flores_n <- read_csv("data/derived/studies/flores_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1080,20 +1081,20 @@ flores_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(flores_out, file = "analysis/sd_flores.RData")
+save(flores_out, file = "data/derived/analysis_cache/sd_flores.RData")
 
 dataf <- flores %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Shryock ----
 spp <- "Pediocactus_bradyi"
 
-shryock_n <- read_csv("data/studies/shryock_n.csv") %>%
+shryock_n <- read_csv("data/derived/studies/shryock_n.csv") %>%
   mutate(N = pmap(list(S1, S2, S3), ~ c(..1, ..2, ..3))) %>% 
   mutate(PU = map(N, function(x) ifelse(x == 0, TRUE, FALSE))) %>% 
   select(MatrixPopulation, MatrixStartYear, N, PU)
@@ -1122,20 +1123,20 @@ shryock_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(shryock_out, file = "analysis/sd_shryock.RData")
+save(shryock_out, file = "data/derived/analysis_cache/sd_shryock.RData")
 
 dataf <- shryock %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Csergo ----
 spp <- "Saponaria_bellidifolia"
 
-csergo_n <- read_csv("data/studies/csergo_n.csv") %>%
+csergo_n <- read_csv("data/derived/studies/csergo_n.csv") %>%
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup() %>% 
@@ -1165,20 +1166,20 @@ csergo_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(csergo_out, file = "analysis/sd_csergo.RData")
+save(csergo_out, file = "data/derived/analysis_cache/sd_csergo.RData")
 
 dataf <- csergo %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 # ### Keller
 # spp <- "Leontopodium_alpinum"
 # 
-# keller_n <- read_csv("data/studies/keller_n.csv") %>%
+# keller_n <- read_csv("data/derived/studies/keller_n.csv") %>%
 #   group_by(MatrixPopulation, MatrixStartYear) %>% 
 #   summarize(N = list(N)) %>% 
 #   ungroup() %>% 
@@ -1215,14 +1216,14 @@ write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
 #   keller_out$mat[[i]]@matC[keller_out$mat[[i]]@matC > 0] <- 0
 # }
 # 
-# save(keller_out, file = "analysis/sd_keller.RData")
+# save(keller_out, file = "data/derived/analysis_cache/sd_keller.RData")
 
 
 
 ### Raghu----
 spp <- "Lantana_camara_2"
 
-raghu_n <- read_csv("data/studies/raghu_n.csv") %>%
+raghu_n <- read_csv("data/derived/studies/raghu_n.csv") %>%
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup() %>% 
@@ -1253,20 +1254,20 @@ raghu_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(raghu_out, file = "analysis/sd_raghu.RData")
+save(raghu_out, file = "data/derived/analysis_cache/sd_raghu.RData")
 
 dataf <- raghu %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Martin----
 spp <- "Astragalus_peckii"
 
-martin_n <- read_csv("data/studies/martin_n.csv") %>%
+martin_n <- read_csv("data/derived/studies/martin_n.csv") %>%
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup() %>% 
@@ -1298,14 +1299,14 @@ martin_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(martin_out, file = "analysis/sd_martin.RData")
+save(martin_out, file = "data/derived/analysis_cache/sd_martin.RData")
 
 dataf <- martin %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Law----
@@ -1317,7 +1318,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-law_n <- read_csv("data/studies/law_n.csv") %>% 
+law_n <- read_csv("data/derived/studies/law_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1348,14 +1349,14 @@ law_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(law_out, file = "analysis/sd_law.RData")
+save(law_out, file = "data/derived/analysis_cache/sd_law.RData")
 
 dataf <- law %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 ### Jacquemyns ----
 spp <- "Orchis_purpurea"
@@ -1365,7 +1366,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-jacq_n <- read_csv("data/studies/jacquemyns_n.csv") %>% 
+jacq_n <- read_csv("data/derived/studies/jacquemyns_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1395,20 +1396,20 @@ jacq_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(jacq_out, file = "analysis/sd_jacq.RData")
+save(jacq_out, file = "data/derived/analysis_cache/sd_jacq.RData")
 
 dataf <- jacq %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Portela----
 spp <- "Astrocaryum_aculeatissimum"
 
-portela_n <- read_csv("data/studies/portela_n.csv") %>%
+portela_n <- read_csv("data/derived/studies/portela_n.csv") %>%
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup() %>% 
@@ -1438,14 +1439,14 @@ portela_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(portela_out, file = "analysis/sd_portela.RData")
+save(portela_out, file = "data/derived/analysis_cache/sd_portela.RData")
 
 dataf <- portela %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Lopez-mata ----
@@ -1456,7 +1457,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-lopez_n <- read_csv("data/studies/lopez_n.csv") %>% 
+lopez_n <- read_csv("data/derived/studies/lopez_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1481,14 +1482,14 @@ lopez_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(lopez_out, file = "analysis/sd_lopez.RData")
+save(lopez_out, file = "data/derived/analysis_cache/sd_lopez.RData")
 
 dataf <- lopez %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Auestad ----
@@ -1499,7 +1500,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-auestad_n <- read_csv("data/studies/auestad_n.csv") %>% 
+auestad_n <- read_csv("data/derived/studies/auestad_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1525,14 +1526,14 @@ auestad_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(auestad_out, file = "analysis/sd_auestad.RData")
+save(auestad_out, file = "data/derived/analysis_cache/sd_auestad.RData")
 
 dataf <- auestad %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 ### Dias Segura ----
@@ -1543,7 +1544,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-dias_n <- read_csv("data/studies/dias_n.csv") %>% 
+dias_n <- read_csv("data/derived/studies/dias_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1572,11 +1573,11 @@ dias_out <- compadre %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
   select(-N)
 
-save(dias_out, file = "analysis/sd_dias.RData")
+save(dias_out, file = "data/derived/analysis_cache/sd_dias.RData")
 
 dataf <- dias %>% cdb_metadata() %>% 
   select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
 
-write(mdata, file = "data/studies/_data_sources.csv", append = TRUE)
+write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)

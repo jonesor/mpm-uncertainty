@@ -84,6 +84,26 @@ rdata_load2 <- function(path) {
   return(out)
 }
 
+### Script helpers #############################################################
+collapse_fn <- function(x) {
+  ifelse(all(is.na(x)),
+         NA_character_,
+         paste(unique(x[!is.na(x)]), collapse = "; "))
+}
+
+fetch_prism <- function(file_tmp, file_ppt, spp) {
+  prism_tmp <- raster::raster(x = file_tmp)
+  prism_ppt <- raster::raster(x = file_ppt)
+  if (!is.data.frame(spp)) spp <- spp[[1]]
+  sp::coordinates(spp) <- c("Lon", "Lat")
+  pbase <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
+  sp::proj4string(spp) <- pbase
+  spp <- sp::spTransform(spp, raster::crs(prism_tmp))
+  spp$tmp <- prism_tmp[raster::cellFromXY(prism_tmp, spp)]
+  spp$ppt <- prism_ppt[raster::cellFromXY(prism_ppt, spp)]
+  return(tibble::as_tibble(spp))
+}
+
 
 
 ### Confirm that stage-specific sample sizes match transition rates ############
@@ -244,16 +264,16 @@ stan_diagnostics <- function(fit) {
 
 
 stanfn <- function(object, data, control = ctrl1, iter = 3000,
-                   pars_excl = NULL) {
+                   pars_excl = NULL, seed = 12345) {
   fit <- sampling(object = object, data = data, warmup = 2000,
                   iter = iter, thin = 2, chains = 2, control = control,
-                  pars = pars_excl, include = FALSE)
+                  pars = pars_excl, include = FALSE, seed = seed)
   
   # if signs of poor convergence, re-fit with ctrl2
   if (any(stan_diagnostics(fit) > 0)) {
     fit <- sampling(object = object, data = data, warmup = 2000,
                     iter = iter, thin = 2, chains = 2, control = ctrl2,
-                    pars = pars_excl, include = FALSE)
+                    pars = pars_excl, include = FALSE, seed = seed)
   }
   
   return(fit)
@@ -473,6 +493,3 @@ perturb_cust <- function(matU, matF, posU = matU > 0, posF = matF > 0,
 sum_elast <- function(pert_mat, pos_mat, prop_mat) {
   ifelse(!any(pos_mat), NA_real_, sum(pert_mat * prop_mat, na.rm = TRUE))
 }
-
-
-

@@ -5,15 +5,15 @@ library(popbio)
 library(popdemo)
 library(Rcompadre)
 library(Rage)
-source("R/functions.R")
+source("code/functions.R")
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### load study-specific sampling distribution files
-sd_files <- paste0("analysis/", list.files("analysis"))
+sd_files <- paste0("data/derived/analysis_cache/", list.files("data/derived/analysis_cache"))
 sd_files <- sd_files[grep("/sd_", sd_files)]
 
 
@@ -126,11 +126,11 @@ sd_other_out <- sd_other %>%
                 loglam, damp, gen, pmature, starts_with("id_"))
 
 
-save(pt_shape_out, file = "analysis/full_pt_shape.RData")
-save(pt_other_out, file = "analysis/full_pt_other.RData")
+save(pt_shape_out, file = "data/derived/analysis_cache/full_pt_shape.RData")
+save(pt_other_out, file = "data/derived/analysis_cache/full_pt_other.RData")
 
-save(sd_shape_out, file = "analysis/full_sd_shape.RData")
-save(sd_other_out, file = "analysis/full_sd_other.RData")
+save(sd_shape_out, file = "data/derived/analysis_cache/full_sd_shape.RData")
+save(sd_other_out, file = "data/derived/analysis_cache/full_sd_other.RData")
 
 
 
@@ -203,5 +203,4 @@ graphics.off()
 quartz(height = 6, width = 6.5, dpi = 150); print(g)
 
 # save png
-# ggsave("img/appendix_qsd.png", g, height = 6, width = 6.5, units = "in", dpi = 600)
-
+# ggsave("figures/appendix_qsd.png", g, height = 6, width = 6.5, units = "in", dpi = 600)

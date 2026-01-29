@@ -3,15 +3,15 @@
 ### libraries
 library(tidyverse)
 library(Rcompadre)
-source("R/functions.R")
+source("code/functions.R")
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X.RData")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X.RData")
 
 
 ### Load data from Ellis et al. (2012)
-ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
+ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
   mutate(matA = lapply(Mx, string_to_mat)) %>% 
@@ -75,7 +75,7 @@ aschero_fix <- which(
     compadre$MatrixTreatment == "Unmanipulated"
 )
 
-load("data/studies/aschero_U.RData")
+load("data/derived/studies/aschero_U.RData")
 compadre$mat[[aschero_fix]]@matU <- U
 compadre$mat[[aschero_fix]]@matA <- compadre$mat[[aschero_fix]]@matU +
   compadre$mat[[aschero_fix]]@matF + compadre$mat[[aschero_fix]]@matC
@@ -147,5 +147,5 @@ for (i in portela_fix1) {
 
 
 ### write corrected db to file
-save(compadre, file = "data/COMPADRE_v.X.X.X_Corrected.RData")
+save(compadre, file = "data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 

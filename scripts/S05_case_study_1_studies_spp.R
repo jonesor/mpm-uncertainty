@@ -4,15 +4,16 @@
 library(tidyverse)
 library(Rcompadre)
 library(popbio)
-source("R/functions.R")
+source("code/functions.R")
+set.seed(12345)
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### Load data from Ellis et al. (2012)
-ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
+ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
   mutate(matA = lapply(Mx, string_to_mat)) %>% 
@@ -26,7 +27,7 @@ ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
 
 ### Aschero
 spp <- "Prosopis_ﬂexuosa"
-aschero_n <- read_csv("data/studies/aschero_n.csv")
+aschero_n <- read_csv("data/derived/studies/aschero_n.csv")
 
 aschero <- compadre %>% 
   filter(SpeciesAuthor == spp, MatrixTreatment == "Unmanipulated") %>% 
@@ -43,7 +44,7 @@ aschero_out <- compadre %>%
   filter(SpeciesAuthor == spp, MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_aschero)
 
-save(aschero_out, file = "analysis/sds_aschero.RData")
+save(aschero_out, file = "data/derived/analysis_cache/sds_aschero.RData")
 
 
 
@@ -55,7 +56,7 @@ compadre %>%
   filter(MatrixTreatment == 'Unmanipulated') %>%
   cdb_glimpse("MatrixComposite")
 
-kiviniemi_n <- read_csv("data/studies/kiviniemi_n.csv") %>% 
+kiviniemi_n <- read_csv("data/derived/studies/kiviniemi_n.csv") %>% 
   group_by(SpeciesAccepted, MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -94,7 +95,7 @@ kiviniemi_out <- compadre %>%
   filter(MatrixPopulation == "A; B") %>% 
   left_join(sd_kiviniemi)
 
-save(kiviniemi_out, file = "analysis/sds_kiviniemi.RData")
+save(kiviniemi_out, file = "data/derived/analysis_cache/sds_kiviniemi.RData")
 
 
 
@@ -107,7 +108,7 @@ compadre %>%
   filter(MatrixTreatment == 'Unmanipulated') %>%
   cdb_glimpse("MatrixComposite")
 
-satterthwaite_n <- read_csv("data/studies/satterthwaite_n.csv") %>% 
+satterthwaite_n <- read_csv("data/derived/studies/satterthwaite_n.csv") %>% 
   mutate(Nf = N) %>% 
   mutate(Nu = ifelse(Pool, 0, N)) %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
@@ -149,7 +150,7 @@ satterthwaite_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_satterthwaite)
 
-save(satterthwaite_out, file = "analysis/sds_satterthwaite.RData")
+save(satterthwaite_out, file = "data/derived/analysis_cache/sds_satterthwaite.RData")
 
 
 
@@ -157,7 +158,7 @@ save(satterthwaite_out, file = "analysis/sds_satterthwaite.RData")
 spp <- "Eryngium_alpinum"
 pop <- "PRD" # DES, BER, BOU, PRA, PRB, PRC, PRD
 
-andrello_n <- read_csv("data/studies/andrello_n.csv") %>% 
+andrello_n <- read_csv("data/derived/studies/andrello_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -199,7 +200,7 @@ andrello_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_andrello)
 
-save(andrello_out, file = "analysis/sds_andrello.RData")
+save(andrello_out, file = "data/derived/analysis_cache/sds_andrello.RData")
 
 
 
@@ -255,7 +256,7 @@ lisc_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_lisc)
 
-save(lisc_out, file = "analysis/sds_lisc.RData")
+save(lisc_out, file = "data/derived/analysis_cache/sds_lisc.RData")
 
 
 
@@ -317,7 +318,7 @@ cipi_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_cipi)
 
-save(cipi_out, file = "analysis/sds_cipi.RData")
+save(cipi_out, file = "data/derived/analysis_cache/sds_cipi.RData")
 
 
 
@@ -331,7 +332,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-scanga_n <- read_csv("data/studies/scanga_n.csv") %>% 
+scanga_n <- read_csv("data/derived/studies/scanga_n.csv") %>% 
   rename(MatrixPopulation = Group) %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
@@ -373,7 +374,7 @@ scanga_out <- compadre %>%
   cdb_collapse("SpeciesAuthor") %>% 
   left_join(sd_scanga)
 
-save(scanga_out, file = "analysis/sds_scanga.RData")
+save(scanga_out, file = "data/derived/analysis_cache/sds_scanga.RData")
 
 
 
@@ -385,7 +386,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse("MatrixComposite")
 
-lazaro_n <- read_csv("data/studies/lazaro_n.csv") %>% 
+lazaro_n <- read_csv("data/derived/studies/lazaro_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -424,7 +425,7 @@ lazaro_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_lazaro)
 
-save(lazaro_out, file = "analysis/sds_lazaro.RData")
+save(lazaro_out, file = "data/derived/analysis_cache/sds_lazaro.RData")
 
 
 
@@ -436,7 +437,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-arroyo_n <- read_csv("data/studies/arroyo_n.csv") %>% 
+arroyo_n <- read_csv("data/derived/studies/arroyo_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -474,7 +475,7 @@ arroyo_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_arroyo)
 
-save(arroyo_out, file = "analysis/sds_arroyo.RData")
+save(arroyo_out, file = "data/derived/analysis_cache/sds_arroyo.RData")
 
 
 
@@ -487,7 +488,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse("MatrixComposite")
 
-plank_n <- read_csv("data/studies/plank_n.csv") %>% 
+plank_n <- read_csv("data/derived/studies/plank_n.csv") %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -530,7 +531,7 @@ plank_out <- compadre %>%
   cdb_collapse("SpeciesAuthor") %>% 
   left_join(sd_plank)
 
-save(plank_out, file = "analysis/sds_plank.RData")
+save(plank_out, file = "data/derived/analysis_cache/sds_plank.RData")
 
 
 
@@ -542,7 +543,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-jolls_n <- read_csv("data/studies/jolls_n.csv") %>% 
+jolls_n <- read_csv("data/derived/studies/jolls_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -582,7 +583,7 @@ jolls_out <- compadre %>%
   cdb_collapse("SpeciesAuthor") %>% 
   left_join(sd_jolls)
 
-save(jolls_out, file = "analysis/sds_jolls.RData")
+save(jolls_out, file = "data/derived/analysis_cache/sds_jolls.RData")
 
 
 
@@ -595,7 +596,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse("MatrixComposite")
 
-torres_n <- read_csv("data/studies/torres_n.csv") %>% 
+torres_n <- read_csv("data/derived/studies/torres_n.csv") %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -634,7 +635,7 @@ torres_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_torres)
 
-save(torres_out, file = "analysis/sds_torres.RData")
+save(torres_out, file = "data/derived/analysis_cache/sds_torres.RData")
 
 
 
@@ -649,7 +650,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-andrieu_n <- read_csv("data/studies/andrieu_n.csv") %>% 
+andrieu_n <- read_csv("data/derived/studies/andrieu_n.csv") %>% 
   group_by(MatrixPopulation) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -690,7 +691,7 @@ andrieu_out <- compadre %>%
   cdb_collapse("SpeciesAuthor") %>% 
   left_join(sd_andrieu)
 
-save(andrieu_out, file = "analysis/sds_andrieu.RData")
+save(andrieu_out, file = "data/derived/analysis_cache/sds_andrieu.RData")
 
 
 
@@ -703,7 +704,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   cdb_glimpse("MatrixComposite")
 
-eriksson_n <- read_csv("data/studies/eriksson_n.csv") %>% 
+eriksson_n <- read_csv("data/derived/studies/eriksson_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -742,7 +743,7 @@ eriksson_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_eriksson)
 
-save(eriksson_out, file = "analysis/sds_eriksson.RData")
+save(eriksson_out, file = "data/derived/analysis_cache/sds_eriksson.RData")
 
 
 
@@ -801,7 +802,7 @@ assc_out <- compadre %>%
   filter(!grepl(";", MatrixPopulation)) %>% 
   left_join(sd_assc)
 
-save(assc_out, file = "analysis/sds_assc.RData")
+save(assc_out, file = "data/derived/analysis_cache/sds_assc.RData")
 
 
 
@@ -852,7 +853,7 @@ lemke_out <- compadre %>%
   filter(grepl("Overall summary matrix", Observation)) %>%
   left_join(sd_lemke)
 
-save(lemke_out, file = "analysis/sds_lemke.RData")
+save(lemke_out, file = "data/derived/analysis_cache/sds_lemke.RData")
 
 
 
@@ -866,7 +867,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-toledo_n <- read_csv("data/studies/toledo_n.csv") %>% 
+toledo_n <- read_csv("data/derived/studies/toledo_n.csv") %>% 
   group_by(MatrixStartYear) %>% 
   summarize(N = list(N))
 
@@ -903,7 +904,7 @@ toledo_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_toledo)
 
-save(toledo_out, file = "analysis/sds_toledo.RData")
+save(toledo_out, file = "data/derived/analysis_cache/sds_toledo.RData")
 
 
 
@@ -917,7 +918,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-crone_n <- read_csv("data/studies/crone_n.csv") %>% 
+crone_n <- read_csv("data/derived/studies/crone_n.csv") %>% 
   group_by(MatrixStartYear) %>% 
   summarize(N = list(N))
 
@@ -954,7 +955,7 @@ crone_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_crone)
 
-save(crone_out, file = "analysis/sds_crone.RData")
+save(crone_out, file = "data/derived/analysis_cache/sds_crone.RData")
 
 
 
@@ -969,7 +970,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-dostalek_n <- read_csv("data/studies/dostalek_n.csv") %>% 
+dostalek_n <- read_csv("data/derived/studies/dostalek_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1008,7 +1009,7 @@ dostalek_out <- compadre %>%
   cdb_collapse("SpeciesAuthor") %>% 
   left_join(sd_dostalek)
 
-save(dostalek_out, file = "analysis/sds_dostalek.RData")
+save(dostalek_out, file = "data/derived/analysis_cache/sds_dostalek.RData")
 
 
 
@@ -1020,7 +1021,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-evju_n <- read_csv("data/studies/evju_n.csv") %>% 
+evju_n <- read_csv("data/derived/studies/evju_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1058,7 +1059,7 @@ evju_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_evju)
 
-save(evju_out, file = "analysis/sds_evju.RData")
+save(evju_out, file = "data/derived/analysis_cache/sds_evju.RData")
 
 
 
@@ -1070,7 +1071,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-flores_n <- read_csv("data/studies/flores_n.csv") %>% 
+flores_n <- read_csv("data/derived/studies/flores_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1108,7 +1109,7 @@ flores_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_flores)
 
-save(flores_out, file = "analysis/sds_flores.RData")
+save(flores_out, file = "data/derived/analysis_cache/sds_flores.RData")
 
 
 
@@ -1120,7 +1121,7 @@ compadre %>%
   filter(MatrixComposite == "Mean") %>% 
   cdb_glimpse()
 
-shryock_n <- read_csv("data/studies/shryock_n.csv") %>%
+shryock_n <- read_csv("data/derived/studies/shryock_n.csv") %>%
   mutate(N = pmap(list(S1, S2, S3), ~ c(..1, ..2, ..3))) %>% 
   mutate(PU = map(N, function(x) ifelse(x == 0, TRUE, FALSE))) %>% 
   select(MatrixPopulation, MatrixStartYear, N, PU)
@@ -1157,14 +1158,14 @@ shryock_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_shryock)
 
-save(shryock_out, file = "analysis/sds_shryock.RData")
+save(shryock_out, file = "data/derived/analysis_cache/sds_shryock.RData")
 
 
 
 ### Csergo
 spp <- "Saponaria_bellidifolia"
 
-csergo_n <- read_csv("data/studies/csergo_n.csv") %>%
+csergo_n <- read_csv("data/derived/studies/csergo_n.csv") %>%
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup() %>% 
@@ -1212,7 +1213,7 @@ csergo_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_csergo)
 
-save(csergo_out, file = "analysis/sds_csergo.RData")
+save(csergo_out, file = "data/derived/analysis_cache/sds_csergo.RData")
 
 
 
@@ -1224,7 +1225,7 @@ save(csergo_out, file = "analysis/sds_csergo.RData")
 #   filter(MatrixComposite == "Mean") %>% 
 #   cdb_glimpse()
 # 
-# keller_n <- read_csv("data/studies/keller_n.csv") %>%
+# keller_n <- read_csv("data/derived/studies/keller_n.csv") %>%
 #   group_by(MatrixPopulation, MatrixStartYear) %>% 
 #   summarize(N = list(N)) %>% 
 #   ungroup() %>% 
@@ -1269,14 +1270,14 @@ save(csergo_out, file = "analysis/sds_csergo.RData")
 #   keller_out$mat[[i]]@matC[keller_out$mat[[i]]@matC > 0] <- 0
 # }
 # 
-# save(keller_out, file = "analysis/sds_keller.RData")
+# save(keller_out, file = "data/derived/analysis_cache/sds_keller.RData")
 
 
 
 ### Raghu
 spp <- "Lantana_camara_2"
 
-raghu_n <- read_csv("data/studies/raghu_n.csv") %>%
+raghu_n <- read_csv("data/derived/studies/raghu_n.csv") %>%
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup() %>% 
@@ -1314,14 +1315,14 @@ raghu_out <- compadre %>%
   filter(MatrixComposite == "Mean", MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_raghu)
 
-save(raghu_out, file = "analysis/sds_raghu.RData")
+save(raghu_out, file = "data/derived/analysis_cache/sds_raghu.RData")
 
 
 
 ### Martin
 spp <- "Astragalus_peckii"
 
-martin_n <- read_csv("data/studies/martin_n.csv") %>%
+martin_n <- read_csv("data/derived/studies/martin_n.csv") %>%
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup() %>% 
@@ -1361,7 +1362,7 @@ martin_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_martin)
 
-save(martin_out, file = "analysis/sds_martin.RData")
+save(martin_out, file = "data/derived/analysis_cache/sds_martin.RData")
 
 
 
@@ -1374,7 +1375,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-law_n <- read_csv("data/studies/law_n.csv") %>% 
+law_n <- read_csv("data/derived/studies/law_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1420,7 +1421,7 @@ law_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_law)
 
-save(law_out, file = "analysis/sds_law.RData")
+save(law_out, file = "data/derived/analysis_cache/sds_law.RData")
 
 
 
@@ -1432,7 +1433,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-jacq_n <- read_csv("data/studies/jacquemyns_n.csv") %>% 
+jacq_n <- read_csv("data/derived/studies/jacquemyns_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1470,14 +1471,14 @@ jacq_out <- compadre %>%
   filter(grepl(";", MatrixPopulation)) %>% 
   left_join(sd_jacq)
 
-save(jacq_out, file = "analysis/sds_jacq.RData")
+save(jacq_out, file = "data/derived/analysis_cache/sds_jacq.RData")
 
 
 
 ### Portela
 spp <- "Astrocaryum_aculeatissimum"
 
-portela_n <- read_csv("data/studies/portela_n.csv") %>%
+portela_n <- read_csv("data/derived/studies/portela_n.csv") %>%
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup() %>% 
@@ -1515,7 +1516,7 @@ portela_out <- compadre %>%
   filter(MatrixComposite == "Mean", MatrixTreatment == "Unmanipulated") %>% 
   left_join(sd_portela)
 
-save(portela_out, file = "analysis/sds_portela.RData")
+save(portela_out, file = "data/derived/analysis_cache/sds_portela.RData")
 
 
 
@@ -1527,7 +1528,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-lopez_n <- read_csv("data/studies/lopez_n.csv") %>% 
+lopez_n <- read_csv("data/derived/studies/lopez_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1556,7 +1557,7 @@ lopez_out <- compadre %>%
   filter(MatrixComposite == "Mean") %>% 
   left_join(sd_lopez)
 
-save(lopez_out, file = "analysis/sds_lopez.RData")
+save(lopez_out, file = "data/derived/analysis_cache/sds_lopez.RData")
 
 
 
@@ -1568,7 +1569,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-auestad_n <- read_csv("data/studies/auestad_n.csv") %>% 
+auestad_n <- read_csv("data/derived/studies/auestad_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1603,7 +1604,7 @@ auestad_out <- compadre %>%
   cdb_collapse("SpeciesAuthor") %>% 
   left_join(sd_auestad)
 
-save(auestad_out, file = "analysis/sds_auestad.RData")
+save(auestad_out, file = "data/derived/analysis_cache/sds_auestad.RData")
 
 
 
@@ -1615,7 +1616,7 @@ compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>% 
   cdb_glimpse()
 
-dias_n <- read_csv("data/studies/dias_n.csv") %>% 
+dias_n <- read_csv("data/derived/studies/dias_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 
   ungroup()
@@ -1652,5 +1653,4 @@ dias_out <- compadre %>%
   filter(MatrixComposite == "Mean") %>% 
   left_join(sd_dias)
 
-save(dias_out, file = "analysis/sds_dias.RData")
-
+save(dias_out, file = "data/derived/analysis_cache/sds_dias.RData")

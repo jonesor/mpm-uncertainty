@@ -8,7 +8,9 @@ library(popbio)
 library(gridExtra)
 library(rstan)
 library(loo)
-source("R/functions.R")
+source("code/functions.R")
+seed <- 12345
+set.seed(seed)
 
 
 ### set options for rstan library
@@ -17,7 +19,7 @@ options(mc.cores = parallel::detectCores())
 
 
 ### load compadre data
-compadre <- cdb_fetch('data/COMPADRE_v.X.X.X_Corrected.RData')
+compadre <- cdb_fetch('data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData')
 
 
 
@@ -52,7 +54,7 @@ comp_time_series <- comp_sub %>%
 
 ### Model climate for Silene_spaldingii
 # load Ellis et al (2012) data
-ellis_data <- read.table("data/ellis/Transition_Matrices.txt", sep = "\t",
+ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
   mutate(matA = lapply(Mx, string_to_mat)) %>% 
@@ -68,7 +70,7 @@ silene_n <- ellis_data %>%
   dplyr::select(MatrixStartYear, SpeciesAuthor, N)
 
 # load weather data
-wx <- read_csv("data/clim/species_clim_prism.csv") %>%
+wx <- read_csv("data/derived/climate/species_clim_prism.csv") %>%
   filter(SpeciesAuthor == "Silene_spaldingii")
 
 wx_spring <- wx %>% 
@@ -106,8 +108,8 @@ ggplot(silene, aes(tmp, fecund)) +
 ### Simple regression of fecundity vs. spring temperature
 
 # compile stan models
-stan_regress <- stan_model("stan/regress.stan")
-stan_regress_err <- stan_model("stan/regress_log_err.stan")
+stan_regress <- stan_model("models/regress.stan")
+stan_regress_err <- stan_model("models/regress_log_err.stan")
 
 # sequence of x values for prediction line
 xpred <- seq(min(silene$tmp), max(silene$tmp), length.out = 100)
@@ -127,8 +129,8 @@ dat_raw$offset <- silene$n_repro
 
 
 # fit stan models
-fit_reg <- stanfn(stan_regress, data = dat_reg, iter = 5000)
-fit_err <- stanfn(stan_regress_err, data = dat_raw, iter = 5000)
+fit_reg <- stanfn(stan_regress, data = dat_reg, iter = 5000, seed = seed)
+fit_err <- stanfn(stan_regress_err, data = dat_raw, iter = 5000, seed = seed)
 
 
 # extract posterior samples for intercept and slope
@@ -210,10 +212,10 @@ print(p1)
 ### Moving beta model
 
 # compile stan models
-mod_null_reg <- stan_model("stan/null.stan")
-mod_null_err <- stan_model("stan/null_err.stan")
-mod_gprc_reg <- stan_model("stan/movbeta_gprc.stan")
-mod_gprc_err <- stan_model("stan/movbeta_gprc_err.stan")
+mod_null_reg <- stan_model("models/null.stan")
+mod_null_err <- stan_model("models/null_err.stan")
+mod_gprc_reg <- stan_model("models/movbeta_gprc.stan")
+mod_gprc_err <- stan_model("models/movbeta_gprc_err.stan")
 
 # focal years for Silene series
 focal_yrs <- seq(min(silene_n$MatrixStartYear) - 1,
@@ -253,10 +255,10 @@ dat_err <- list(N = N, K = K, X = X, y = silene$n_offsp, offset = silene$n_repro
 
 
 ## fit stan models
-fit_null_reg <- stanfn(mod_null_reg, data = dat_reg)
-fit_null_err <- stanfn(mod_null_err, data = dat_err)
-fit_gprc_reg <- stanfn(mod_gprc_reg, data = dat_reg, control = ctrl2)
-fit_gprc_err <- stanfn(mod_gprc_err, data = dat_err, control = ctrl2)
+fit_null_reg <- stanfn(mod_null_reg, data = dat_reg, seed = seed)
+fit_null_err <- stanfn(mod_null_err, data = dat_err, seed = seed)
+fit_gprc_reg <- stanfn(mod_gprc_reg, data = dat_reg, control = ctrl2, seed = seed)
+fit_gprc_err <- stanfn(mod_gprc_err, data = dat_err, control = ctrl2, seed = seed)
 
 
 ## diagnostics
@@ -297,7 +299,7 @@ dev.off()
 quartz(height = 4.5, width = 3.5, dpi = 150)
 print(p2)
 
-# ggsave("img/clim_2.png", p2, height = 6, width = 5, units = "in", dpi = 300)
+# ggsave("figures/clim_2.png", p2, height = 6, width = 5, units = "in", dpi = 300)
 
 
 
@@ -308,7 +310,7 @@ dev.off()
 quartz(height = 4.5, width = 6.25, dpi = 160)
 print(p)
 
-# ggsave2("img/clim.png", p, height = 4.5, width = 6.25)
+# ggsave2("figures/clim.png", p, height = 4.5, width = 6.25)
 
 
 
@@ -327,4 +329,3 @@ print(p)
 #   geom_linerange(aes(x = y, ymin = yhat_low90, ymax = yhat_upp90)) +
 #   facet_wrap(~ model) +
 #   labs(x = "Observed", y = "Predicted")
-

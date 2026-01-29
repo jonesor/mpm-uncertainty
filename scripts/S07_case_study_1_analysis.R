@@ -10,7 +10,9 @@ library(cowplot)
 library(gridExtra)
 library(rstan)
 library(loo)
-source("R/functions.R")
+source("code/functions.R")
+seed <- 12345
+set.seed(seed)
 
 
 ### set options for rstan library
@@ -19,15 +21,15 @@ options(mc.cores = parallel::detectCores())
 
 
 ### load compadre data
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ### load sampling distributions
-load(file = "analysis/full_pt_shape.RData")
-load(file = "analysis/full_pt_other.RData")
+load(file = "data/derived/analysis_cache/full_pt_shape.RData")
+load(file = "data/derived/analysis_cache/full_pt_other.RData")
 
-load(file = "analysis/full_sd_shape.RData")
-load(file = "analysis/full_sd_other.RData")
+load(file = "data/derived/analysis_cache/full_sd_shape.RData")
+load(file = "data/derived/analysis_cache/full_sd_other.RData")
 
 
 
@@ -70,7 +72,7 @@ quartz(height = 5.5, width = 5.5, dpi = 160)
 grid.arrange(g)
 
 # save png
-# ggsave("img/raw/Fig_2.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
+# ggsave("supplement/fig_raw/Fig_2.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
 
 
 
@@ -164,7 +166,7 @@ quartz(height = 6, width = 6.5, dpi = 150)
 grid.arrange(g)
 
 # save png
-# ggsave("img/sd_other_out.png", g, height = 6, width = 6.5, units = "in", dpi = 300)
+# ggsave("figures/sd_other_out.png", g, height = 6, width = 6.5, units = "in", dpi = 300)
 
 
 
@@ -209,8 +211,8 @@ ggplot(df_shape) +
 ### model relationship between l0 and shape, assuming no sampling uncertainty
 
 # compile stan models
-stan_regress_hier <- stan_model("stan/regress2.stan")
-stan_regress_hier_error <- stan_model("stan/regress_hier_error.stan")
+stan_regress_hier <- stan_model("models/regress2.stan")
+stan_regress_hier_error <- stan_model("models/regress_hier_error.stan")
 
 # arrange data for stan
 x_cent <- mean(log10(df_shape$l0_pt))
@@ -227,7 +229,8 @@ stan_fit <- sampling(
   warmup = 2000,
   iter = 4000,
   thin = 2,
-  chains = 2
+  chains = 2,
+  seed = seed
 )
 
 # model diagnostics
@@ -272,7 +275,8 @@ stan_fit_error <- sampling(
   iter = 4000,
   thin = 2,
   chains = 2,
-  control = list(adapt_delta = 0.9, stepsize  = 0.1, max_treedepth = 12)
+  control = list(adapt_delta = 0.9, stepsize  = 0.1, max_treedepth = 12),
+  seed = seed
 )
 
 
@@ -380,7 +384,7 @@ quartz(height = 4.5, width = 6.25, dpi = 160)
 print(p)
 
 # save to png
-# ggsave2("img/shape.png", p, height = 4.5, width = 6.25)
+# ggsave2("figures/shape.png", p, height = 4.5, width = 6.25)
 
 
 
@@ -403,7 +407,7 @@ length(mu_beta_error[mu_beta_error > 0]) / length(mu_beta_error)
 
 
 ### Variance components analysis
-stan_varcomp <- stan_model("stan/varcomp.stan")
+stan_varcomp <- stan_model("models/varcomp.stan")
 
 
 
@@ -480,7 +484,8 @@ stan_fit_varcomp <- sampling(
   iter = 4000,
   thin = 2,
   chains = 2,
-  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12)
+  control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12),
+  seed = seed
 )
 
 pvar_w <- rstan_extract(stan_fit_varcomp, "pvar_w")
@@ -511,6 +516,3 @@ var(df_other$loglam_pt) / var(df_other$loglam_mean)
 var(df_other$damp_pt) / var(df_other$damp_mean)
 var(df_other$gen_pt) / var(df_other$gen_mean)
 var(df_growth$growth_pt) / var(df_growth$growth_mean)
-
-
-

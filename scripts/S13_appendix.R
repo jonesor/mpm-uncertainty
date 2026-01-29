@@ -9,7 +9,7 @@ library(popbio)
 library(Rage)
 library(tidyverse)
 library(Rcompadre)
-source("R/functions.R")
+source("code/functions.R")
 
 
 # rbeta(1, shape1 = 1 + k, shape2 = 1 + (n-k))
@@ -136,7 +136,7 @@ round(sapply(drawsU, life_expect), 2)
 
 
 ### boundary estimates of survival
-load("analysis/sd_scanga.RData")
+load("data/derived/analysis_cache/sd_scanga.RData")
 
 scanga_t <- scanga_out %>% 
   filter(MatrixPopulation == "T")
@@ -178,8 +178,8 @@ sigma_sim <- scanga_t %>%
   unnest(c("sigma", "stage"))
 
 
-load("analysis/full_pt_shape.RData")
-load("analysis/full_sd_shape.RData")
+load("data/derived/analysis_cache/full_pt_shape.RData")
+load("data/derived/analysis_cache/full_sd_shape.RData")
 
 life_point <- pt_shape_out %>% 
   filter(SpeciesAuthor == "Trollius_laxus_2", MatrixPopulation == "T")
@@ -221,7 +221,7 @@ dev.off()
 quartz(height = 4, width = 6.25, dpi = 160)
 print(g1)
 
-ggsave("img/boundary.png", g1, height = 4, width = 6.25, units = "in", dpi = 300)
+ggsave("figures/boundary.png", g1, height = 4, width = 6.25, units = "in", dpi = 300)
 
 
 
@@ -268,7 +268,7 @@ dev.off()
 quartz(height = 6, width = 6.25, dpi = 160)
 print(g2)
 
-ggsave("img/boundary2.png", g2, height = 6, width = 6.25, units = "in", dpi = 300)
+ggsave("figures/boundary2.png", g2, height = 6, width = 6.25, units = "in", dpi = 300)
 
 
 
@@ -282,7 +282,7 @@ compadre %>%
   filter(MatrixTreatment == 'Unmanipulated') %>%
   cdb_glimpse("MatrixComposite")
 
-kiviniemi_n <- read_csv("data/studies/kiviniemi_n.csv") %>% 
+kiviniemi_n <- read_csv("data/derived/studies/kiviniemi_n.csv") %>% 
   filter(SpeciesAccepted == "Agrimonia eupatoria", MatrixPopulation == "A") %>% 
   group_by(SpeciesAccepted, MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N)) %>% 

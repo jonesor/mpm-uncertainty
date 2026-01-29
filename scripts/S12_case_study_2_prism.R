@@ -14,29 +14,9 @@ library(raster)
 # end <- "_all_bil.zip"
 # 
 # cat(c("#!/usr/bin/env bash", paste0(base_ppt, year, mid_ppt, year, end)),
-#     file = "bash/fetch_prism_ppt.sh", sep = "\n")
+#     file = "scripts/download/fetch_prism_ppt.sh", sep = "\n")
 # cat(c("#!/usr/bin/env bash", paste0(base_tmp, year, mid_tmp, year, end)),
-#     file = "bash/fetch_prism_tmp.sh", sep = "\n")
-
-
-### function to get clim data from raster file for given set of coordinates
-fetch_prism <- function(file_tmp, file_ppt, spp) {
-  prism_tmp <- raster(x = file_tmp)
-  prism_ppt <- raster(x = file_ppt)
-  if (!is.data.frame(spp)) spp <- spp[[1]]
-  coordinates(spp) <- c('Lon', 'Lat')
-  pbase <- "+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"
-  proj4string(spp) <- pbase
-  spp <- spTransform(spp, crs(prism_tmp))
-  # spp$ppt <- vapply(raster::extract(prism_ppt, spp, buffer = 4000),
-  #                   mean, na.rm = TRUE, numeric(1))
-  # spp$tmp <- vapply(raster::extract(prism_tmp, spp, buffer = 4000),
-  #                   mean, na.rm = TRUE, numeric(1))
-  spp$tmp <- prism_tmp[cellFromXY(prism_tmp, spp)]
-  spp$ppt <- prism_ppt[cellFromXY(prism_ppt, spp)]
-  # spp$ppt[spp$ppt > 65000] <- NA_real_
-  return(as_tibble(spp))
-}
+#     file = "scripts/download/fetch_prism_tmp.sh", sep = "\n")
 
 
 ### prism raster files
@@ -48,7 +28,7 @@ files_tmp <- bil_files[grepl("tmean", bil_files)]
 
 
 ### coordinates for each species/pop of interest
-spp_df <- read_csv("data/clim/species_coords.csv") %>% 
+spp_df <- read_csv("data/derived/climate/species_coords.csv") %>% 
   filter(SpeciesAuthor == "Silene_spaldingii")
 
 
@@ -63,5 +43,4 @@ df_clim <- tibble(file_tmp = files_tmp, file_ppt = files_ppt) %>%
   arrange(SpeciesAuthor, MatrixPopulation, Year, Month) %>% 
   filter(!(is.na(tmp) & is.na(ppt)))
 
-write.csv(df_clim, "data/clim/species_clim_prism.csv", row.names = FALSE)
-
+write.csv(df_clim, "data/derived/climate/species_clim_prism.csv", row.names = FALSE)

@@ -8,7 +8,7 @@ library(popdemo)
 
 
 ### load COMPADRE
-compadre <- cdb_fetch("data/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ## possible columns to collapse on
