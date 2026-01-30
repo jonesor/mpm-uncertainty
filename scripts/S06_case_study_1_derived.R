@@ -15,7 +15,7 @@ sd_files <- sd_files[grep("/sd_", sd_files)]
 
 
 ### bind sampling distributions into single tibble
-mpm_draws <- cdb_bind_rows(lapply(sd_files, rdata_load)) %>% 
+mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load)) %>% 
   mutate(id = as.factor(1:n())) %>% 
   cdb_unnest() %>% 
   mutate(any_repro = map_lgl(matF, ~ any(.x > 0))) %>% 
@@ -148,9 +148,9 @@ df_lx <- tibble(
 ) %>% filter(x <= 9)
 
 proj <- popbio::pop.projection(matU, N1, iterations = 10)$stage.vectors %>% 
-  t() %>% 
-  apply(., 1, function(x) x / sum(x)) %>% 
-  t() %>% 
+  t()
+
+proj <- sweep(proj, 1, rowSums(proj), "/") %>% 
   as.data.frame() %>% 
   setNames(stages) %>% 
   as_tibble() %>% 
@@ -159,7 +159,7 @@ proj <- popbio::pop.projection(matU, N1, iterations = 10)$stage.vectors %>%
   mutate(stage = factor(stage, levels = stages))
 
 p1 <- ggplot(proj, aes(x, tr, col = stage)) +
-  geom_line(size = 2) +
+  geom_line(linewidth = 2) +
   geom_vline(xintercept = q, linetype = 2) +
   scale_color_brewer(direction = 2, name = "Stage class") +
   scale_x_continuous(limits = c(0, 9), breaks = seq(0, 8, 1)) +
@@ -173,7 +173,6 @@ p2 <- ggplot(df_lx, aes(x, lx)) +
   geom_line() +
   geom_vline(xintercept = q, linetype = 2) +
   scale_x_continuous(limits = c(0, 9), breaks = seq(0, 8, 1)) +
-  # scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   scale_y_log10(labels = formatC) +
   labs(x = NULL, y = "Survivorship") +
   theme_bw() +
@@ -185,13 +184,9 @@ p3 <- ggplot(df_lx, aes(x, hx)) +
   geom_vline(xintercept = q, linetype = 2) +
   scale_x_continuous(limits = c(0, 9), breaks = seq(0, 8, 1)) +
   scale_y_continuous(limits = c(0.5, 1), breaks = seq(0.5, 1, 0.1)) +
-  # scale_y_log10(labels = formatC) +
   labs(x = "Time", y = "Mortality hazard") +
   theme_bw() +
   theme(panel.grid = element_blank())
 
 
 g <- p1 / p2 / p3 + patchwork::plot_annotation(tag_levels = c("A", "B", "C"))
-
-# save png
-# ggsave("figures/appendix_qsd.png", g, height = 6, width = 6.5, units = "in", dpi = 600)

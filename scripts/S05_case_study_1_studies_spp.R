@@ -15,10 +15,10 @@ compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
-  mutate(matA = lapply(Mx, string_to_mat)) %>% 
-  mutate(matU = lapply(Tmx, string_to_mat)) %>% 
-  mutate(matF = mapply(function(a, b) a - b, matA, matU, SIMPLIFY = FALSE)) %>% 
-  mutate(N = lapply(Nx, nx_to_vec))
+  mutate(matA = map(Mx, string_to_mat)) %>% 
+  mutate(matU = map(Tmx, string_to_mat)) %>% 
+  mutate(matF = map2(matA, matU, ~ .x - .y)) %>% 
+  mutate(N = map(Nx, nx_to_vec))
 
 
 
@@ -78,7 +78,7 @@ sd_kiviniemi <- kiviniemi %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -131,7 +131,7 @@ sd_satterthwaite <- satterthwaite %>%
   mutate(simF = pmap(list(matF, posF, Nf), ~ sim_F_wrapper(..1, ..2, ..3, 1000))) %>% 
   as_tibble() %>% 
   select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   mutate(rep = 1:n()) %>% 
   ungroup() %>% 
@@ -183,7 +183,7 @@ sd_andrello <- andrello %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -240,7 +240,7 @@ sd_lisc <- lisc %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -302,7 +302,7 @@ sd_cipi <- cipi %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -356,7 +356,7 @@ sd_scanga <- scanga %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -408,7 +408,7 @@ sd_lazaro <- lazaro %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -459,7 +459,7 @@ sd_arroyo <- arroyo %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(MatrixPopulation, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -514,7 +514,7 @@ sd_plank <- plank %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean2(simU)),
             simF = list(mat_mean2(simF))) %>% 
@@ -566,7 +566,7 @@ sd_jolls <- jolls %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -619,7 +619,7 @@ sd_torres <- torres %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(MatrixPopulation, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -673,7 +673,7 @@ sd_andrieu <- andrieu %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -696,7 +696,6 @@ save(andrieu_out, file = "data/derived/analysis_cache/sds_andrieu.RData")
 
 ##### Eriksson
 spp <- "Plantago_media"
-# pop <- "Site B" # Site A, Site B
 
 compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
@@ -726,7 +725,7 @@ sd_eriksson <- eriksson %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -785,7 +784,7 @@ sd_assc <- assc %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean2(simU)),
             simF = list(mat_mean2(simF))) %>% 
@@ -836,7 +835,7 @@ sd_lemke <- lemke %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean2(simU)),
             simF = list(mat_mean2(simF))) %>% 
@@ -888,7 +887,7 @@ sd_toledo <- toledo %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -939,7 +938,7 @@ sd_crone <- crone %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -992,7 +991,7 @@ sd_dostalek <- dostalek %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -1043,7 +1042,7 @@ sd_evju <- evju %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -1093,7 +1092,7 @@ sd_flores <- flores %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(mat_mean(simU)),
             simF = list(mat_mean(simF))) %>% 
@@ -1142,7 +1141,7 @@ sd_shryock <- shryock %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -1172,7 +1171,7 @@ csergo_n <- read_csv("data/derived/studies/csergo_n.csv") %>%
 
 csergo_n %>% 
   mutate(stage = list(1:4)) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(MatrixPopulation, stage) %>% 
   summarize(x = mean(N))
 
@@ -1188,7 +1187,6 @@ csergo <- compadre %>%
 
 cdb_glimpse(csergo)
 
-lapply(csergo$matU, colSums)
 
 # sampling distribution
 sd_csergo <- csergo %>% 
@@ -1197,7 +1195,7 @@ sd_csergo <- csergo %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -1216,60 +1214,6 @@ save(csergo_out, file = "data/derived/analysis_cache/sds_csergo.RData")
 
 
 
-# ### Keller
-# spp <- "Leontopodium_alpinum"
-# 
-# compadre %>% 
-#   filter(SpeciesAuthor == spp) %>% 
-#   filter(MatrixComposite == "Mean") %>% 
-#   cdb_glimpse()
-# 
-# keller_n <- read_csv("data/derived/studies/keller_n.csv") %>%
-#   group_by(MatrixPopulation, MatrixStartYear) %>% 
-#   summarize(N = list(N)) %>% 
-#   ungroup() %>% 
-#   select(MatrixPopulation, MatrixStartYear, N)
-# 
-# keller <- compadre %>% 
-#   filter(SpeciesAuthor == spp) %>% 
-#   filter(MatrixComposite == "Individual") %>% 
-#   cdb_unnest() %>% 
-#   mutate(matF = map2(matF, matC, ~ .x + .y)) %>% 
-#   mutate(matC = map(matC, ~ matrix(0, nrow(.x), ncol(.x)))) %>% 
-#   left_join(keller_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
-#   group_by(MatrixPopulation) %>% 
-#   mutate(posU = list(mat_mean(matU) > 0),
-#          posF = list(mat_mean(matF) > 0)) %>% 
-#   ungroup()
-# 
-# # sampling distribution
-# sd_keller <- keller %>% 
-#   mutate(simU = pmap(list(matU, posU, N), ~ sim_U_wrapper(..1, ..2, ..3, 1000))) %>% 
-#   mutate(simF = pmap(list(matF, posF, N), ~ sim_F_wrapper(..1, ..2, ..3, 1000))) %>% 
-#   mutate(rep = list(1:1000)) %>% 
-#   as_tibble() %>% 
-#   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-#   unnest() %>% 
-#   group_by(SpeciesAuthor, rep) %>% 
-#   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
-#             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
-#   ungroup() %>% 
-#   group_by(SpeciesAuthor) %>% 
-#   summarize(simU = list(simU),
-#             simF = list(simF))
-# 
-# keller_out <- compadre %>% 
-#   filter(SpeciesAuthor == spp) %>% 
-#   filter(MatrixComposite == "Mean") %>% 
-#   filter(grepl(";", MatrixPopulation)) %>% 
-#   left_join(sd_keller)
-# 
-# for (i in 1:nrow(keller_out)) {
-#   keller_out$mat[[i]]@matF <- keller_out$mat[[i]]@matF + keller_out$mat[[i]]@matC
-#   keller_out$mat[[i]]@matC[keller_out$mat[[i]]@matC > 0] <- 0
-# }
-# 
-# save(keller_out, file = "data/derived/analysis_cache/sds_keller.RData")
 
 
 
@@ -1300,7 +1244,7 @@ sd_raghu <- raghu %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -1345,7 +1289,7 @@ sd_martin <- martin %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -1394,7 +1338,7 @@ sd_law <- law %>%
   mutate(simU = pmap(list(matU, posU, N), ~ sim_U_wrapper(..1, ..2, ..3, 1000))) %>% 
   as_tibble() %>% 
   select(MatrixPopulation, MatrixStartYear, simU) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   mutate(rep = 1:n()) %>% 
   ungroup() %>% 
@@ -1455,7 +1399,7 @@ sd_jacq <- jacq %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -1501,7 +1445,7 @@ sd_portela <- portela %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -1546,7 +1490,7 @@ sd_lopez <- lopez %>%
   mutate(simF = pmap(list(matF, posF, N), ~ sim_F_wrapper(..1, ..2, ..3, 1000))) %>% 
   as_tibble() %>% 
   select(MatrixPopulation, MatrixStartYear, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(MatrixPopulation) %>% 
   summarize(simU = list(simU),
             simF = list(simF))
@@ -1588,7 +1532,7 @@ sd_auestad <- auestad %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(SpeciesAuthor, rep) %>% 
   summarize(simU = list(list_mean(simU)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
@@ -1638,7 +1582,7 @@ sd_dias <- dias %>%
   mutate(rep = list(1:1000)) %>% 
   as_tibble() %>% 
   select(MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
-  unnest() %>% 
+  unnest(cols = everything()) %>% 
   group_by(MatrixPopulation, rep) %>% 
   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
             simF = list(list_mean(simF, na.rm = TRUE))) %>% 

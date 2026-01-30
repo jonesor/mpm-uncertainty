@@ -60,8 +60,6 @@ p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
 # arrange plot panels
 g <- patchwork::wrap_plots(p1, p2, ncol = 1)
 
-# save png
-# ggsave("supplement/fig_raw/Fig_2.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
 
 
 
@@ -128,8 +126,6 @@ g1 <- patchwork::wrap_plots(p1, p2, p3, ncol = 1)
 g2 <- patchwork::wrap_plots(p4, ncol = 1)
 g <- patchwork::wrap_plots(g1, g2, ncol = 2)
 
-# save png
-# ggsave("figures/sd_other_out.png", g, height = 6, width = 6.5, units = "in", dpi = 300)
 
 
 
@@ -217,8 +213,6 @@ stan_fit <- sampling(
 )
 
 # model diagnostics
-# library(shinystan)
-# launch_shinystan(stan_fit)
 
 # extract posterior samples for intercept and slope
 mu_alpha <- rstan_extract(stan_fit, "mu_alpha")
@@ -230,7 +224,7 @@ pred_x <- seq(min(dat_stan$x), max(dat_stan$x), length.out = 50)
 pred_reg <- tibble(mu_alpha, mu_beta, pred_x = list(pred_x)) %>% 
   mutate(pred = pmap(list(mu_alpha, mu_beta, pred_x), ~ ..1 + ..2 * ..3)) %>% 
   dplyr::select(pred_x, pred) %>% 
-  unnest() %>% 
+  unnest(cols = c(pred_x, pred)) %>% 
   mutate(pred_x = 10^(pred_x + x_cent)) %>% 
   group_by(pred_x) %>% 
   summarize(pred_med = quantile(pred, 0.500),
@@ -264,7 +258,6 @@ stan_fit_error <- sampling(
 
 
 # model diagnostics
-# shinystan::launch_shinystan(stan_fit_error)
 
 # posterior samples for intercept and slope
 mu_alpha_error <- rstan_extract(stan_fit_error, "mu_alpha")
@@ -282,7 +275,7 @@ pred_x_error <- seq(min(df_shape$log_l0_low - x_cent_error),
 pred_error <- tibble(mu_alpha_error, mu_beta_error, pred_x = list(pred_x_error)) %>% 
   mutate(pred = pmap(list(mu_alpha_error, mu_beta_error, pred_x), ~ ..1 + ..2 * ..3)) %>% 
   dplyr::select(pred_x, pred) %>% 
-  unnest() %>% 
+  unnest(cols = c(pred_x, pred)) %>% 
   mutate(pred_x = 10^(pred_x + x_cent_error)) %>% 
   group_by(pred_x) %>% 
   summarize(pred_med = quantile(pred, 0.500),
@@ -339,8 +332,8 @@ tt <- theme_bw() +
 
 p1 <- ggplot(pred_full) +
   geom_point(data = bars_full, aes(x = l0_pt, y = shape_pt), size = 1.3) +
-  geom_linerange(data = bars_full, aes(x = l0_med, ymin = shape_low, ymax = shape_upp), size = 0.3, alpha = 0.6) +
-  geom_errorbarh(data = bars_full, aes(y = shape_med, xmin = l0_low, xmax = l0_upp), size = 0.3, alpha = 0.6) +
+  geom_linerange(data = bars_full, aes(x = l0_med, ymin = shape_low, ymax = shape_upp), linewidth = 0.3, alpha = 0.6) +
+  geom_errorbarh(data = bars_full, aes(y = shape_med, xmin = l0_low, xmax = l0_upp), linewidth = 0.3, alpha = 0.6) +
   geom_line(aes(x = pred_x, y = pred_med), col = "darkblue") +
   geom_ribbon(aes(x = pred_x, ymin = pred_low, ymax = pred_upp), fill = "darkblue", alpha = 0.2) +
   scale_x_log10() +
@@ -352,7 +345,7 @@ p1 <- ggplot(pred_full) +
 
 p2 <- ggplot(df_beta, aes(x = beta)) +
   geom_vline(xintercept = 0, linetype = 2, alpha = 0.5) +
-  geom_density(fill = "darkred", alpha = 0.4, size = 0) +
+  geom_density(fill = "darkred", alpha = 0.4, linewidth = 0) +
   coord_cartesian(xlim = c(-0.07, 0.07)) +
   facet_wrap(~ model, ncol = 1) +
   labs(x = expression(paste("Slope coefficient (", italic(beta), ")")), y = "Posterior density") +
@@ -361,8 +354,6 @@ p2 <- ggplot(df_beta, aes(x = beta)) +
 # combine both plots
 p <- plot_grid(p1, p2, labels = c("A", "B"), rel_widths = c(1.08, 1), nrow = 1)
 
-# save to png
-# ggsave2("figures/shape.png", p, height = 4.5, width = 6.25)
 
 
 

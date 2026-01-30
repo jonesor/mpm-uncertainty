@@ -23,7 +23,7 @@ sd_files <- sd_files[grep("/sd_", sd_files)]
 
 
 ### bind sampling distributions into single tibble
-mpm_draws <- cdb_bind_rows(lapply(sd_files, rdata_load)) %>% 
+mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load)) %>% 
   mutate(id = as.factor(1:n())) %>% 
   cdb_unnest() %>% 
   mutate(any_repro = map_lgl(matF, ~ any(.x > 0))) %>% 
@@ -85,37 +85,6 @@ sd_shape <- pt_shape %>%
   mutate(S = map_dbl(lx, Rage::shape_surv)) %>%
   left_join(select(pt_shape, id, id_L, id_S, ends_with("pt")), by = "id")
 
-# sd_other <- pt_other %>%
-#   select(id, SpeciesAuthor, MatrixPopulation, simU, simF) %>%
-#   unnest() %>%
-#   left_join(select(pt_other, id, exclude_stages), by = "id") %>%
-#   mutate(simA = pmap(list(simU, simF), ~ ..1 + ..2)) %>%
-#   left_join(select(as_tibble(pt_other), id, start, rep_stages), by = "id") %>%
-#   mutate(loglam = map_dbl(simA, ~ log(popbio::lambda(.x)))) %>%
-#   mutate(damp = map_dbl(simA, popbio::damping.ratio)) %>%
-#   mutate(gen = map2_dbl(simU, simF, Rage::gen_time)) %>%
-#   mutate(pmature = pmap_dbl(list(simU, simF, start), Rage::mature_prob)) %>%
-#   mutate(growth = pmap_dbl(list(simU, exclude_stages),
-#                            ~ Rage::vr_growth(..1, exclude = ..2))) %>%
-#   mutate(elast = pmap_dbl(list(simU, simF, exclude_stages),
-#                           ~ perturb_cust(..1, ..2, exclude = ..3,
-#                                          type = "elasticity")$progr)) %>%
-#   left_join(select(pt_other, id, starts_with("id_"), ends_with("pt")), by = "id")
-
-
-# ### write to file
-# sd_shape <- sd_shape %>%
-#   select(which(sapply(sd_shape, class) != "list"))
-# 
-# sd_other <- sd_other %>%
-#   select(which(sapply(sd_other, class) != "list"))
-# 
-# save(sd_shape, file = "data/derived/analysis_cache/full_sd_shape.RData")
-# save(sd_other, file = "data/derived/analysis_cache/full_sd_other.RData")
-
-
-# sd_shape
-# sd_full <- full_join()
 
 
 ### load sampling distributions

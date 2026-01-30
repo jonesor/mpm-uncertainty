@@ -150,7 +150,6 @@ p1c <- ggplot(df_sdist) +
 
 p1 <- patchwork::wrap_plots(p1a, p1b, p1c, ncol = 3)
 
-# ggsave("supplement/fig_raw/Fig_1a.png", p1, height = 2.2, width = 6.5, units = "in", dpi = 400)
 
 
 
@@ -244,97 +243,9 @@ p2 <- ggplot(deriv_plot) +
   )
 
 
-# ggsave("supplement/fig_raw/Fig_1b.png", p2, height = 2, width = 6.5, units = "in", dpi = 300)
 
 
 
-### test approach based on patchwork
-# library(patchwork)
-# 
-# plotfn <- function(var, title = str2lang(var)) {
-#   deriv_param_foc <- deriv_param %>%
-#     filter(par == var)
-# 
-#   deriv_pt_foc <- deriv_pt %>%
-#     filter(par == var)
-#   
-#   ggplot(deriv_param_foc) +
-#     geom_density(aes(value), fill = "darkred", alpha = 0.4, linewidth = 0) +
-#     geom_vline(data = deriv_pt_foc, aes(xintercept = value)) +
-#     # labs(x = "Parameter estimate", y = "Probability density") +
-#     labs(x = NULL, y = NULL) +
-#     # ggtitle(title) +
-#     theme_bw() +
-#     theme(
-#       strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
-#       panel.border = element_rect(color = "grey80"),
-#       panel.grid = element_blank(),
-#       axis.text.y = element_blank(),
-#       axis.ticks = element_line(linewidth = 0.4),
-#       axis.ticks.y = element_blank(),
-#       axis.ticks.x = element_line(linewidth = 0.3),
-#       text = element_text(size = 11),
-#       plot.title = element_text(hjust = 0, face = "bold", vjust = 0, size = 10)
-#   )
-# }
-# 
-# p2a <- plotfn("italic(lambda)") +
-#   scale_x_continuous(limits = c(0.74, 1.1)) +
-#   # labs(x = NULL, y = "Probability density") +
-#   ggtitle(expression(paste("Popn. growth rate (", italic(lambda), ")")))
-# 
-# p2b <- plotfn("italic(rho)") +
-#   scale_x_continuous(limits = c(0.8, 2.8)) +
-#   ggtitle(expression(paste("Damping ratio (", italic(rho), ")")))
-# 
-# p2c <- plotfn("italic(v[3])") +
-#   scale_x_log10(
-#     limits = c(0.1, 100),
-#     breaks = c(0.1, 1, 10, 100),
-#     labels = as.character(c(0.1, 1, 10, 100))
-#   ) +
-#   labs(x = "Parameter estimate", y = NULL) +
-#   coord_cartesian(clip = "off") +
-#   ggtitle(expression(paste("Repro value (Veg.)")))
-# 
-# p2d <- plotfn("italic(T)") +
-#   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 90, 30)) +
-#   ggtitle(expression(paste("Generation time (", italic(T), ")")))
-# 
-# p2e <- plotfn("italic(l[0])") +
-#   scale_x_continuous(limits = c(0, 30)) +
-#   ggtitle(expression(paste("Life expectancy (", italic(l[0]), ")")))
-# 
-# p1 <- p1a + p1b + p1c + plot_layout(nrow = 1)
-# p2 <- p2a + p2b + p2c + p2d + p2e + plot_layout(nrow = 1)
-# 
-# g <- (p1a + p1b + p1c) / p2 +
-#   plot_layout(heights = c(0.6, 0.4))
-# 
-# g <- p1 / wrap_elements(full = p2) + plot_layout(heights = c(0.65, 0.35))
-# 
-# 
-# graphics.off()
-# quartz(height = 4, width = 6.5, dpi = 220)
-# print(g)
-# 
-# top_row <- plot_grid(
-#   p1a, p1b, p1c, labels = c('A', 'B', 'C'),
-#   nrow = 1, label_size = 12
-# )
-# 
-# g <- plot_grid(
-#   top_row, p2,
-#   labels = c("", "D"),
-#   label_size = 12, ncol = 1,
-#   rel_heights = c(1.2, 1)
-# )
-# 
-# graphics.off()
-# quartz(height = 4, width = 6.5, dpi = 220)
-# print(g)
-# 
-# ggsave("figures/fig_1_new.png", g, height = 4, width = 6.5, units = "in", dpi = 600)
 
 
 

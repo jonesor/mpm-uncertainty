@@ -12,10 +12,10 @@ compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X.RData")
 ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
-  mutate(matA = lapply(Mx, string_to_mat)) %>% 
-  mutate(matU = lapply(Tmx, string_to_mat)) %>% 
-  mutate(matF = mapply(function(a, b) a - b, matA, matU, SIMPLIFY = FALSE)) %>% 
-  mutate(N = lapply(Nx, nx_to_vec))
+  mutate(matA = map(Mx, string_to_mat)) %>% 
+  mutate(matU = map(Tmx, string_to_mat)) %>% 
+  mutate(matF = map2(matA, matU, ~ .x - .y)) %>% 
+  mutate(N = map(Nx, nx_to_vec))
 
 
 ### fix typo in A matrix for Eriogonum longifolium (3.420 should be 0.342)
@@ -43,13 +43,13 @@ ehrlen_fix <- which(
     compadre$MatrixPopulation == "G"
 )
 
-for(i in ehrlen_fix) {
-  compadre$mat[[i]]@matA <- compadre$mat[[i]]@matA[-7,-7]
-  compadre$mat[[i]]@matU <- compadre$mat[[i]]@matU[-7,-7]
-  compadre$mat[[i]]@matF <- compadre$mat[[i]]@matF[-7,-7]
-  compadre$mat[[i]]@matC <- compadre$mat[[i]]@matC[-7,-7]
-  compadre$mat[[i]]@matrixClass <- compadre$mat[[i]]@matrixClass[-7,]
-}
+purrr::walk(ehrlen_fix, ~ {
+  compadre$mat[[.x]]@matA <- compadre$mat[[.x]]@matA[-7, -7]
+  compadre$mat[[.x]]@matU <- compadre$mat[[.x]]@matU[-7, -7]
+  compadre$mat[[.x]]@matF <- compadre$mat[[.x]]@matF[-7, -7]
+  compadre$mat[[.x]]@matC <- compadre$mat[[.x]]@matC[-7, -7]
+  compadre$mat[[.x]]@matrixClass <- compadre$mat[[.x]]@matrixClass[-7, ]
+})
 
 
 ### fix lemke
@@ -146,4 +146,3 @@ for (i in portela_fix1) {
 
 ### write corrected db to file
 save(compadre, file = "data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
-

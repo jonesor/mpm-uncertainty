@@ -52,10 +52,10 @@ comp_time_series <- comp_sub %>%
 ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
-  mutate(matA = lapply(Mx, string_to_mat)) %>% 
-  mutate(matU = lapply(Tmx, string_to_mat)) %>% 
-  mutate(matF = mapply(function(a, b) a - b, matA, matU, SIMPLIFY = FALSE)) %>% 
-  mutate(N = lapply(Nx, nx_to_vec))
+  mutate(matA = map(Mx, string_to_mat)) %>% 
+  mutate(matU = map(Tmx, string_to_mat)) %>% 
+  mutate(matF = map2(matA, matU, ~ .x - .y)) %>% 
+  mutate(N = map(Nx, nx_to_vec))
 
 # stage-specific sample sizes for Silene
 silene_n <- ellis_data %>% 
@@ -232,14 +232,15 @@ month_start <- "07"
 
 
 ## assemble matrix of climate data
-X <- matrix(0, N, K)
-
-for(i in seq_along(y)) {
-  yr_focal <- year[i]
+X <- map(seq_along(y), ~ {
+  yr_focal <- year[.x]
   date_origin <- as.Date(paste(yr_focal, month_start, "01", sep = "-"))
   dates_focal <- sort(seq(date_origin, by = "-1 month", length.out = K))
-  X[i,] <- filter(wx_mb, date %in% dates_focal)$tmp
-}
+  filter(wx_mb, date %in% dates_focal)$tmp
+}) %>% 
+  map(~ tibble_row(!!!setNames(as.list(.x), paste0("m", seq_len(K))))) %>% 
+  list_rbind() %>% 
+  as.matrix()
 
 
 ## arrange data for stan
@@ -255,8 +256,6 @@ fit_gprc_err <- stanfn(mod_gprc_err, data = dat_err, control = ctrl2, seed = see
 
 
 ## diagnostics
-# library(shinystan)
-# launch_shinystan(fit_mb_gpr2)
 
 
 ## measures of fit
@@ -296,20 +295,3 @@ ggsave("figures/clim_2.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 
 p <- p2 / p1 + plot_layout(heights = c(1, 1))
 ggsave("figures/clim.png", p, height = 4.5, width = 6.25, units = "in", dpi = 300)
 
-
-
-# ## plot observed vs. predicted values
-# df_yhat <- rbind(
-#   summarize_yhat(fit_null_reg, "null"),
-#   summarize_yhat(fit_gprc_reg, "moving-beta"),
-#   summarize_yhat(fit_null_err, "null (err)"),
-#   summarize_yhat(fit_gprc_err, "moving-beta (err)")
-# ) %>% mutate(model = factor(model, levels = mod_lev))
-# 
-# ggplot(df_yhat) +
-#   geom_abline(intercept = 0, slope = 1, linetype = 2, alpha = 0.5) +
-#   geom_point(aes(y, yhat_med)) +
-#   geom_smooth(aes(y, yhat_med), method = "lm", se = FALSE) +
-#   geom_linerange(aes(x = y, ymin = yhat_low90, ymax = yhat_upp90)) +
-#   facet_wrap(~ model) +
-#   labs(x = "Observed", y = "Predicted")

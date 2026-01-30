@@ -15,10 +15,10 @@ compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
-  mutate(matA = lapply(Mx, string_to_mat)) %>% 
-  mutate(matU = lapply(Tmx, string_to_mat)) %>% 
-  mutate(matF = mapply(function(a, b) a - b, matA, matU, SIMPLIFY = FALSE)) %>% 
-  mutate(N = lapply(Nx, nx_to_vec))
+  mutate(matA = map(Mx, string_to_mat)) %>% 
+  mutate(matU = map(Tmx, string_to_mat)) %>% 
+  mutate(matF = map2(matA, matU, ~ .x - .y)) %>% 
+  mutate(N = map(Nx, nx_to_vec))
 
 
 
@@ -159,19 +159,6 @@ write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 spp <- "Eryngium_alpinum"
 pop <- "PRD" # DES, BER, BOU, PRA, PRB, PRC, PRD
 
-# load("data/derived/studies/raw/andrello_matrices.RData")
-# 
-# andrello_n <- apply(M, c(2, 3, 4), sum) %>%
-#   as.data.frame() %>% 
-#   as_tibble() %>% 
-#   rownames_to_column("Stage") %>% 
-#   gather(group, N, -Stage) %>% 
-#   mutate(MatrixStartYear = as.integer(substr(group, 5, 9))) %>% 
-#   mutate(MatrixPopulation = substr(group, 1, 3)) %>% 
-#   mutate(SpeciesAuthor = spp) %>% 
-#   select(SpeciesAuthor, Stage, MatrixPopulation, MatrixStartYear, N)
-# 
-# write.csv(andrello_n, "data/derived/studies/andrello_n.csv", row.names = FALSE)
 
 andrello_n <- read_csv("data/derived/studies/andrello_n.csv") %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
@@ -686,7 +673,6 @@ write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 ### Eriksson----
 spp <- "Plantago_media"
-# pop <- "Site B" # Site A, Site B
 
 compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
@@ -1175,47 +1161,6 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-# ### Keller
-# spp <- "Leontopodium_alpinum"
-# 
-# keller_n <- read_csv("data/derived/studies/keller_n.csv") %>%
-#   group_by(MatrixPopulation, MatrixStartYear) %>% 
-#   summarize(N = list(N)) %>% 
-#   ungroup() %>% 
-#   select(MatrixPopulation, MatrixStartYear, N)
-# 
-# keller <- compadre %>% 
-#   filter(SpeciesAuthor == spp) %>% 
-#   filter(MatrixComposite == "Individual") %>% 
-#   cdb_unnest() %>% 
-#   mutate(matF = map2(matF, matC, ~ .x + .y)) %>% 
-#   mutate(matC = map(matC, ~ matrix(0, nrow(.x), ncol(.x)))) %>% 
-#   left_join(keller_n, by = c("MatrixPopulation", "MatrixStartYear")) %>% 
-#   group_by(MatrixPopulation) %>% 
-#   mutate(posU = list(mat_mean(matU) > 0),
-#          posF = list(mat_mean(matF) > 0)) %>% 
-#   ungroup()
-# 
-# npool <- keller %>% 
-#   as_tibble() %>% 
-#   group_by(MatrixPopulation) %>% 
-#   summarize(N = list(pool_counts(N)))
-# 
-# keller_out <- compadre %>% 
-#   filter(SpeciesAuthor == spp) %>% 
-#   filter(MatrixComposite == "Mean") %>% 
-#   filter(!grepl(";", MatrixPopulation)) %>% 
-#   left_join(npool) %>% 
-#   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>% 
-#   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>% 
-#   select(-N)
-# 
-# for (i in 1:nrow(keller_out)) {
-#   keller_out$mat[[i]]@matF <- keller_out$mat[[i]]@matF + keller_out$mat[[i]]@matC
-#   keller_out$mat[[i]]@matC[keller_out$mat[[i]]@matC > 0] <- 0
-# }
-# 
-# save(keller_out, file = "data/derived/analysis_cache/sd_keller.RData")
 
 
 

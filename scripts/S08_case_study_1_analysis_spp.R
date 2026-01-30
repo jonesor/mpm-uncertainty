@@ -26,7 +26,7 @@ sd_files <- sd_files[grep("data/derived/analysis_cache/sds_", sd_files)]
 
 
 ### bind sampling distributions into single tibble
-mpm_draws <- cdb_bind_rows(lapply(sd_files, rdata_load2)) %>% 
+mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load2)) %>% 
   mutate(id = as.factor(1:n())) %>% 
   cdb_unnest() %>% 
   mutate(matU = map(matU, scale_U)) %>% 
@@ -81,19 +81,6 @@ ggplot(pt_shape) +
   scale_color_gradient(low = "navyblue", high = "orange")
 
 
-# ### plot individual hazard trajectories
-# out <- df %>% 
-#   as_tibble() %>% 
-#   mutate(id = 1:n()) %>% 
-#   filter(id == sample(id, 1)) %>% 
-#   mutate(x = map(lxs, ~ seq_along(.x) - 1)) %>% 
-#   mutate(hx = map(lxs, lx_to_hx)) %>% 
-#   select(SpeciesAuthor, MatrixPopulation, id, q, lxs_min, x, lxs, shape_pt, hx) %>% 
-#   unnest()
-#   
-# ggplot(out, aes(x, hx)) +
-#   geom_line() +
-#   ggtitle(paste(out$SpeciesAuthor[1], round(out$shape_pt, 3), sep = "; "))
 
 
 ## sampling distributions for derived parameters (cached)
@@ -197,15 +184,6 @@ p1 <- ggplot(sd_other, aes(y = id_loglam)) +
        x = expression(paste("Population growth (", log~italic(lambda), ")"))) +
   tt
 
-# p2 <- ggplot(sd_other, aes(y = id_damp)) +
-#   geom_density_ridges(aes(x = damp), rel_min_height = 0.01,
-#                       scale = 3, fill = "#9ebcda", size = 0.4) +
-#   geom_point(data = pt_other, aes(x = damp_pt), size = 0.9) +
-#   scale_x_log10() +
-#   coord_flip(xlim = c(1, 12)) +
-#   labs(y = expression(paste("Population (ranked by ", italic(rho), ")")),
-#        x = expression(paste("Damping ratio (", italic(rho), ")"))) +
-#   tt
 
 p3 <- ggplot(sd_other, aes(y = id_growth)) +
   geom_density_ridges(aes(x = growth), rel_min_height = 0.01,
@@ -268,26 +246,18 @@ vw <- mean(df_shape$shape_se^2)
 va <- var(df_shape$shape_mean)
 vw / (va + vw)
 
-# ggplot(df_shape, aes(x = l0_pt, y = shape_pt)) +
-#   geom_point() +
-#   geom_smooth(method = "lm") +
-#   scale_x_log10()
-# 
-# ggplot(df_shape, aes(x = l0_mean, y = shape_mean, col = lxs_min)) +
-#   geom_point(size = 2.5) +
-#   geom_smooth(method = "lm") +
-#   scale_x_log10() +
-#   scale_color_gradient(low = "navyblue", high = "orange")
-# 
-# ggplot(df_shape) +
-#   geom_segment(aes(x = l0_pt, y = shape_pt, xend = l0_mean, yend = shape_mean),
-#                size = 0.3, arrow = arrow(length = unit(0.02, "npc"))) +
-#   geom_point(aes(l0_pt, shape_pt)) +
-#   scale_x_log10()
 
 
 
 ### Model relationship between l0 and shape, assuming no sampling uncertainty
+
+# fast dev settings for quicker runs
+fast_run <- identical(Sys.getenv("FAST_RUN"), "1")
+stan_iter <- if (fast_run) 1000 else 4000
+stan_warmup_regress <- if (fast_run) 500 else 2000
+stan_warmup_error <- if (fast_run) 500 else 3000
+stan_warmup_varcomp <- if (fast_run) 500 else 3000
+stan_chains <- if (fast_run) 1 else 2
 
 # compile stan models
 stan_regress_hier <- stan_model("models/regress2.stan")
@@ -305,16 +275,14 @@ dat_stan <- list(N = nrow(df_shape),
 stan_fit <- sampling(
   stan_regress_hier,
   data = dat_stan,
-  warmup = 2000,
-  iter = 4000,
+  warmup = stan_warmup_regress,
+  iter = stan_iter,
   thin = 2,
-  chains = 2,
+  chains = stan_chains,
   seed = seed
 )
 
 # model diagnostics
-# library(shinystan)
-# launch_shinystan(stan_fit)
 
 # extract posterior samples for intercept and slope
 mu_alpha <- rstan_extract(stan_fit, "mu_alpha")
@@ -350,16 +318,15 @@ dat_stan <- list(N = nrow(df_shape),
 stan_fit_error <- sampling(
   stan_regress_hier_error,
   data = dat_stan,
-  warmup = 3000,
-  iter = 4000,
+  warmup = stan_warmup_error,
+  iter = stan_iter,
   thin = 2,
-  chains = 2,
+  chains = stan_chains,
   control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12),
   seed = seed
 )
 
 # model diagnostics
-# shinystan::launch_shinystan(stan_fit_error)
 
 # posterior samples for intercept and slope
 mu_alpha_error <- rstan_extract(stan_fit_error, "mu_alpha")
@@ -536,10 +503,10 @@ dat_stan$y_se <- pmax(dat_stan$y_se, 1e-6)
 stan_fit_varcomp <- sampling(
   stan_varcomp,
   data = dat_stan,
-  warmup = 3000,
-  iter = 4000,
+  warmup = stan_warmup_varcomp,
+  iter = stan_iter,
   thin = 2,
-  chains = 2,
+  chains = stan_chains,
   control = list(adapt_delta = 0.95, stepsize  = 0.05, max_treedepth = 12),
   seed = seed
 )
@@ -564,8 +531,7 @@ pt <- pt_shape %>%
   mutate(hx = map(lx, lx_to_px)) %>%
   mutate(x = map(lx, ~ seq_along(.x) - 1)) %>% 
   select(SpeciesAuthor, MatrixPopulation, x, hx) %>% 
-  unnest(cols = c(x, hx)) #%>% 
-# filter(!is.na(hxs))
+  unnest(cols = c(x, hx))
 
 sdist <- sd_shape %>% 
   filter(shape_pt > 0.1) %>% 
@@ -577,8 +543,7 @@ sdist <- sd_shape %>%
   mutate(rep = 1:n()) %>% 
   slice(sample(rep, 50)) %>% 
   ungroup() %>% 
-  unnest(cols = c(x, hx))# %>% 
-# filter(!is.na(hxs))
+  unnest(cols = c(x, hx))
 
 ggplot(sdist, aes(x, hx)) +
   geom_line(aes(group = rep), alpha = 0.4, linewidth = 0.3) +

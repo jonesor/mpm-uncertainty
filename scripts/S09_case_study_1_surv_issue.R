@@ -97,8 +97,7 @@ out_shape <- comp_spp %>%
   mutate(l0_pt = map_dbl(lx, sum)) %>% 
   mutate(l0_pt_int = as.integer(round(l0_pt, 0))) %>% 
   mutate(lxs_n = map_int(lxs, length)) %>% 
-  mutate(nrep = map_int(matF, ~ length(which(colSums(.x) > 0))))# %>%
-  #filter(nrep > 1)
+  mutate(nrep = map_int(matF, ~ length(which(colSums(.x) > 0))))
 
 table(out_shape$q)[1:20]
 
@@ -113,9 +112,7 @@ out_shape <- out_shape %>%
   mutate(shape_pt = map2_dbl(lxs, q+1, shape_surv2)) %>% 
   mutate(shape_l0_pt = map2_dbl(lx, l0_pt_int, ~ 1 + log(.x[.y]))) %>% 
   as_tibble() %>% 
-  # filter(lx_n > 2) %>%
   filter(!is.na(shape_pt)) %>%
-  # mutate(shape_pt = shape_l0_pt) %>%
   mutate(id = row_number()) %>%
   mutate(id_shape = fct_reorder(fct_drop(as.factor(id)), shape_pt)) %>% 
   mutate(id_l0 = fct_reorder(fct_drop(as.factor(id)), l0_pt))
