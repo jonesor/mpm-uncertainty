@@ -148,11 +148,7 @@ p1c <- ggplot(df_sdist) +
     panel.spacing = unit(1.3, "pt")
   )
 
-p1 <- cbind(ggplotGrob(p1a), ggplotGrob(p1b), ggplotGrob(p1c), size = "first")
-
-graphics.off()
-quartz(height = 2.2, width = 6.5, dpi = 240)
-grid.arrange(p1)
+p1 <- p1a + p1b + p1c + patchwork::plot_layout(ncol = 3)
 
 # ggsave("supplement/fig_raw/Fig_1a.png", p1, height = 2.2, width = 6.5, units = "in", dpi = 400)
 
