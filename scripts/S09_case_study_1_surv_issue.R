@@ -1,20 +1,21 @@
+# S09: diagnose stage-specific survival issues in COMPADRE matrices.
 
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre", "Rage", "popbio", "popdemo"))
 source("code/functions.R")
 
 
-### load COMPADRE
+# load COMPADRE ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-## possible columns to collapse on
+# possible columns to collapse on ----
 col_spp <- c("id_stage", "SpeciesAuthor", "ProjectionInterval")
 col_pop <- c(col_spp, "MatrixPopulation", "MatrixTreatment")
 
 
-### subset
+# subset ----
 compadre_sub <- compadre %>% 
   cdb_flag() %>% 
   filter(check_NA_U == FALSE, check_zero_U == FALSE, check_NA_A == FALSE) %>% 
@@ -65,7 +66,7 @@ sum(table(comp_spp$ns1)[-(1:2)]) / sum(table(comp_spp$ns1))
 
 
 
-## number of reproductive stages
+# number of reproductive stages ----
 out <- comp_spp %>% 
   mutate(nrep = map_int(matF, ~ length(which(colSums(.x) > 0)))) %>% 
   filter(nrep > 0)

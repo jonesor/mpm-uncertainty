@@ -1,17 +1,17 @@
+# S05: generate species-level sampling distributions for case study 1.
 
-
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre", "popbio"))
 source("code/functions.R")
 set.seed(12345)
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-### Load data from Ellis et al. (2012)
+# Load data from Ellis et al. (2012) ----
 ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
@@ -22,9 +22,9 @@ ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\
 
 
 
-### Draw from MPM sampling distributions by study ##############################
+# Draw from MPM sampling distributions by study ----
 
-### Aschero
+# Aschero ----
 spp <- "Prosopis_ﬂexuosa"
 aschero_n <- read_csv("data/derived/studies/aschero_n.csv")
 
@@ -47,7 +47,7 @@ save(aschero_out, file = "data/derived/analysis_cache/sds_aschero.RData")
 
 
 
-### Kiviniemi
+# Kiviniemi ----
 spp <- "Agrimonia_eupatoria"
 
 compadre %>% 
@@ -98,7 +98,7 @@ save(kiviniemi_out, file = "data/derived/analysis_cache/sds_kiviniemi.RData")
 
 
 
-### Satterthwaite
+# Satterthwaite ----
 spp <- "Eriogonum_longifolium_var._gnaphalifolium_2"
 pop <- "Unburned"
 
@@ -153,7 +153,7 @@ save(satterthwaite_out, file = "data/derived/analysis_cache/sds_satterthwaite.RD
 
 
 
-## Andrello
+# Andrello ----
 spp <- "Eryngium_alpinum"
 pop <- "PRD" # DES, BER, BOU, PRA, PRB, PRC, PRD
 
@@ -203,7 +203,7 @@ save(andrello_out, file = "data/derived/analysis_cache/sds_andrello.RData")
 
 
 
-### Liatris_scariosa
+# Liatris_scariosa ----
 spp <- "Liatris_scariosa"
 # Ellis: LISC_0, LISC_1, LISC_2
 # Comp: "Lisc 0", "Lisc 1", "Lisc 2"
@@ -259,7 +259,7 @@ save(lisc_out, file = "data/derived/analysis_cache/sds_lisc.RData")
 
 
 
-### Cirsium_pitcheri_4
+# Cirsium_pitcheri_4 ----
 # Compadre has CiPi 1, CiPi 2, CiPi 3; Ellis has CIPI_1, CIPI_2, CIPI_3, CIPI_4
 # I think Cirsium_pitcheri_6 from Bell et al 2013, corresponds to CIPI 4 from
 #  Ellis et al 2012 (Cirsium_pitcheri_4), but they use diff stage classes
@@ -321,7 +321,7 @@ save(cipi_out, file = "data/derived/analysis_cache/sds_cipi.RData")
 
 
 
-### Scanga
+# Scanga ----
 spp <- "Trollius_laxus_2"
 pop <- c("CfCh", "Cb", "EEFF", "H66cont", "MM", "T")
 
@@ -377,7 +377,7 @@ save(scanga_out, file = "data/derived/analysis_cache/sds_scanga.RData")
 
 
 
-### Lazaro
+# Lazaro ----
 spp <- "Dioon_merolae"
 
 compadre %>% 
@@ -428,7 +428,7 @@ save(lazaro_out, file = "data/derived/analysis_cache/sds_lazaro.RData")
 
 
 
-### Arroyo
+# Arroyo ----
 spp <- "Neobuxbaumia_polylopha"
 
 compadre %>% 
@@ -478,7 +478,7 @@ save(arroyo_out, file = "data/derived/analysis_cache/sds_arroyo.RData")
 
 
 
-### Plank
+# Plank ----
 spp <- "Trillium_persistens"
 # "Battle Creek", "Moccasin Creek", "Moody Creek", "Panther Creek"
 
@@ -534,7 +534,7 @@ save(plank_out, file = "data/derived/analysis_cache/sds_plank.RData")
 
 
 
-### Jolls
+# Jolls ----
 spp <- "Cirsium_pitcheri_8"
 
 compadre %>% 
@@ -586,7 +586,7 @@ save(jolls_out, file = "data/derived/analysis_cache/sds_jolls.RData")
 
 
 
-### Torres
+# Torres ----
 spp <- "Agave_potatorum"
 # "Xochiltepec", "Machiche" (different stage defs)
 
@@ -638,7 +638,7 @@ save(torres_out, file = "data/derived/analysis_cache/sds_torres.RData")
 
 
 
-##### Andrieu
+# ## Andrieu ----
 spp <- "Paeonia_officinalis"
 pops <- c("Open habitat", "Woodland")
 # "Open habitat", "Woodland", (Managed habitat doesn't have pooled)
@@ -694,7 +694,7 @@ save(andrieu_out, file = "data/derived/analysis_cache/sds_andrieu.RData")
 
 
 
-##### Eriksson
+# ## Eriksson ----
 spp <- "Plantago_media"
 
 compadre %>% 
@@ -745,7 +745,7 @@ save(eriksson_out, file = "data/derived/analysis_cache/sds_eriksson.RData")
 
 
 
-### Astragalus_scaphoides_2, Haynes Creek, Sheep Corral Gulch, McDevitt Creek
+# Astragalus_scaphoides_2, Haynes Creek, Sheep Corral Gulch, McDevitt Creek ----
 # sometimes 0 fecund
 # negative relationship between fecundity and sample size
 spp <- "Astragalus_scaphoides_2"
@@ -805,10 +805,10 @@ save(assc_out, file = "data/derived/analysis_cache/sds_assc.RData")
 
 
 
-#### Lemke
+# # Lemke ----
 spp <- "Trollius_europaeus"
 # "HAS; JAG", "RDGm; GTH; SPW; NEV", "RDGab; JAGab"
-### *NOTE* "HAS; JAG" has N = 0 repro, so only use for surv analyses
+# *NOTE* "HAS; JAG" has N = 0 repro, so only use for surv analyses ----
 
 compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
@@ -855,7 +855,7 @@ save(lemke_out, file = "data/derived/analysis_cache/sds_lemke.RData")
 
 
 
-### Toledo
+# Toledo ----
 # matrix values based on bootstrapping, so won't necessarily match
 spp <- "Tillandsia_butzii"
 # "San Antonio, Veracruz"
@@ -906,7 +906,7 @@ save(toledo_out, file = "data/derived/analysis_cache/sds_toledo.RData")
 
 
 
-### Crone
+# Crone ----
 spp <- "Balsamorhiza_sagittata"
 # "Mount Jumbo"
 # fecundity based on number of flowers, not plants
@@ -957,7 +957,7 @@ save(crone_out, file = "data/derived/analysis_cache/sds_crone.RData")
 
 
 
-### Dostalek
+# Dostalek ----
 spp <- "Dracocephalum_austriacum_2"
 # Cisarska rokle (C1), Haknovec (C2), Kodska stena (C3)
 # Zadielsky kamen (S1), Domicke skrapy (S2), Zelezne vrata (S3)
@@ -1011,7 +1011,7 @@ save(dostalek_out, file = "data/derived/analysis_cache/sds_dostalek.RData")
 
 
 
-### Evju
+# Evju ----
 spp <- "Viola_biflora"
 
 compadre %>% 
@@ -1061,7 +1061,7 @@ save(evju_out, file = "data/derived/analysis_cache/sds_evju.RData")
 
 
 
-### Flores
+# Flores ----
 spp <- "Mammillaria_huitzilopochtli"
 
 compadre %>% 
@@ -1111,7 +1111,7 @@ save(flores_out, file = "data/derived/analysis_cache/sds_flores.RData")
 
 
 
-### Shryock
+# Shryock ----
 spp <- "Pediocactus_bradyi"
 
 compadre %>% 
@@ -1160,7 +1160,7 @@ save(shryock_out, file = "data/derived/analysis_cache/sds_shryock.RData")
 
 
 
-### Csergo
+# Csergo ----
 spp <- "Saponaria_bellidifolia"
 
 csergo_n <- read_csv("data/derived/studies/csergo_n.csv") %>%
@@ -1217,7 +1217,7 @@ save(csergo_out, file = "data/derived/analysis_cache/sds_csergo.RData")
 
 
 
-### Raghu
+# Raghu ----
 spp <- "Lantana_camara_2"
 
 raghu_n <- read_csv("data/derived/studies/raghu_n.csv") %>%
@@ -1262,7 +1262,7 @@ save(raghu_out, file = "data/derived/analysis_cache/sds_raghu.RData")
 
 
 
-### Martin
+# Martin ----
 spp <- "Astragalus_peckii"
 
 martin_n <- read_csv("data/derived/studies/martin_n.csv") %>%
@@ -1309,7 +1309,7 @@ save(martin_out, file = "data/derived/analysis_cache/sds_martin.RData")
 
 
 
-### Law
+# Law ----
 # single pooled value of fecundity, from 38 individs
 spp <- "Saussurea_medusa"
 
@@ -1368,7 +1368,7 @@ save(law_out, file = "data/derived/analysis_cache/sds_law.RData")
 
 
 
-### Jacquemyns
+# Jacquemyns ----
 spp <- "Orchis_purpurea"
 
 compadre %>% 
@@ -1418,7 +1418,7 @@ save(jacq_out, file = "data/derived/analysis_cache/sds_jacq.RData")
 
 
 
-### Portela
+# Portela ----
 spp <- "Astrocaryum_aculeatissimum"
 
 portela_n <- read_csv("data/derived/studies/portela_n.csv") %>%
@@ -1463,7 +1463,7 @@ save(portela_out, file = "data/derived/analysis_cache/sds_portela.RData")
 
 
 
-### Lopez-mata
+# Lopez-mata ----
 spp <- "Pinus_maximartinezii"
 
 compadre %>% 
@@ -1504,7 +1504,7 @@ save(lopez_out, file = "data/derived/analysis_cache/sds_lopez.RData")
 
 
 
-### Auestad
+# Auestad ----
 spp <- "Pimpinella_saxifraga"
 
 compadre %>% 
@@ -1551,7 +1551,7 @@ save(auestad_out, file = "data/derived/analysis_cache/sds_auestad.RData")
 
 
 
-### Dias Segura
+# Dias Segura ----
 spp <- "Lophophora_diffusa"
 
 compadre %>% 

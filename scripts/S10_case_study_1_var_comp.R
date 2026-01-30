@@ -1,5 +1,6 @@
+# S10: variance component analysis for case study 1.
 
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "popbio", "popdemo", "Rcompadre", "Rage",
                  "rstan", "loo"))
@@ -9,20 +10,20 @@ seed <- 12345
 set.seed(seed)
 
 
-### set options for rstan library
+# set options for rstan library ----
 # handled in setup_rstan()
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-### load study-specific sampling distribution files
+# load study-specific sampling distribution files ----
 sd_files <- paste0("data/derived/analysis_cache/", list.files("data/derived/analysis_cache"))
 sd_files <- sd_files[grep("/sd_", sd_files)]
 
 
-### bind sampling distributions into single tibble
+# bind sampling distributions into single tibble ----
 mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load)) %>% 
   mutate(id = as.factor(1:n())) %>% 
   cdb_unnest() %>% 
@@ -36,7 +37,7 @@ mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load)) %>%
                               ~ ifelse(.x == "active", FALSE, TRUE)))
 
 
-### point estimates for parameters of interest
+# point estimates for parameters of interest ----
 pt_shape <- mpm_draws %>% 
   as_tibble() %>% 
   mutate(rep_prop1 = pmap(list(matU, start, rep_stages), Rage::mature_distrib)) %>% 
@@ -73,7 +74,7 @@ pt_other <- mpm_draws %>%
 
 
 
-### sampling distributions for derived parameters
+# sampling distributions for derived parameters ----
 sd_shape <- pt_shape %>%
   select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
   unnest(cols = c(simU, simF)) %>%
@@ -87,7 +88,7 @@ sd_shape <- pt_shape %>%
 
 
 
-### load sampling distributions
+# load sampling distributions ----
 load(file = "data/derived/analysis_cache/full_sd_shape.RData")
 load(file = "data/derived/analysis_cache/full_sd_other.RData")
 if (!exists("sd_other") && exists("sd_other_out")) {
@@ -97,7 +98,7 @@ if (!exists("sd_other") && exists("sd_other_out")) {
 
 
 
-### prep df for variance component analysis
+# prep df for variance component analysis ----
 df_shape <- sd_shape %>% 
   mutate(log_L = log10(L)) %>% 
   group_by(SpeciesAuthor, MatrixPopulation) %>% 
@@ -138,7 +139,7 @@ df_other <- sd_other %>%
 
 
 
-### Variance components analysis
+# Variance components analysis ----
 stan_varcomp <- stan_model("models/varcomp.stan")
 
 

@@ -1,31 +1,34 @@
+# S08: species-level analysis for case study 1 and related figures.
 
-
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "ggridges", "cowplot", "Rcompadre", "Rage",
-                 "popbio", "popdemo", "gridExtra", "rstan", "loo", "patchwork"))
+                 "popbio", "popdemo", "gridExtra", "rstan", "loo", "patchwork",
+                 "viridisLite"))
 setup_rstan()
 source("code/functions.R")
+# Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
 seed <- 12345
 set.seed(seed)
+cols <- mpm_colors()
 
 
-### set options for rstan library
+# set options for rstan library ----
 # handled in setup_rstan()
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 
-### load study-specific sampling distribution files
+# load study-specific sampling distribution files ----
 sd_files <- paste0("data/derived/analysis_cache/", list.files("data/derived/analysis_cache"))
 sd_files <- sd_files[grep("data/derived/analysis_cache/sds_", sd_files)]
 
 
 
-### bind sampling distributions into single tibble
+# bind sampling distributions into single tibble ----
 mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load2)) %>% 
   mutate(id = as.factor(1:n())) %>% 
   cdb_unnest() %>% 
@@ -34,7 +37,7 @@ mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load2)) %>%
   mutate(start = map_int(mat, mpm_first_active)) %>% 
   mutate(rep_stages = map(matF, ~ colSums(.x) > 0))
 
-### point estimates for parameters of interest
+# point estimates for parameters of interest ----
 pt_shape <- mpm_draws %>% 
   mutate(perennial = map2_lgl(matU, start, ~ mpm_to_lx(.x, .y, xmax = 3)[4] > 0)) %>% 
   mutate(any_rep = map_lgl(matF, ~ any(.x > 0))) %>% 
@@ -53,7 +56,7 @@ pt_shape <- mpm_draws %>%
   mutate(shape_l0_pt = map2_dbl(lx, l0_pt_int, ~ 1 + log(.x[.y]))) %>% 
   as_tibble() %>% 
   filter(lx_n > 2) %>%
-  # filter(!is.na(shape_pt)) %>%
+# filter(!is.na(shape_pt)) %>%
   mutate(shape_pt = shape_l0_pt) %>% 
   mutate(id_shape = fct_reorder(fct_drop(id), shape_pt)) %>% 
   mutate(id_l0 = fct_reorder(fct_drop(id), l0_pt))
@@ -74,16 +77,16 @@ pt_other <- mpm_draws %>%
   mutate(id_growth = fct_reorder(fct_drop(id), growth_pt))
 
 
-### point estimate of shape vs l0
+# point estimate of shape vs l0 ----
 ggplot(pt_shape) +
   geom_point(aes(l0_pt, shape_pt, color = lxs_min), size = 3) +
   scale_x_log10() +
-  scale_color_gradient(low = "navyblue", high = "orange")
+  scale_color_gradientn(colors = mpm_pal(256))
 
 
 
 
-## sampling distributions for derived parameters (cached)
+# sampling distributions for derived parameters (cached) ----
 sd_shape_path <- "data/derived/analysis_cache/full_sd_spp_shape.RData"
 sd_other_path <- "data/derived/analysis_cache/full_sd_spp_other.RData"
 
@@ -129,7 +132,7 @@ if (file.exists(sd_other_path)) {
 
 
 
-### plot sampling distributions vs. point estimate for shape and l0
+# plot sampling distributions vs. point estimate for shape and l0 ----
 tt <- theme(panel.grid = element_blank(),
             axis.title = element_text(size = 12.5),
             axis.text.x = element_blank(),
@@ -140,7 +143,7 @@ tt <- theme(panel.grid = element_blank(),
 p1 <- ggplot(sd_shape, aes(y = id_shape)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = shape), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
+                      scale = 2.5, fill = cols$fill, linewidth = 0.4) +
   geom_point(data = pt_shape, aes(x = shape_pt), size = 0.9) +
   coord_flip(xlim = c(-0.5, 0.5)) +
   labs(y = expression(paste("Population (ranked by ", italic(S), ")")),
@@ -149,7 +152,7 @@ p1 <- ggplot(sd_shape, aes(y = id_shape)) +
 
 p2 <- ggplot(sd_shape, aes(y = id_l0)) +
   geom_density_ridges(aes(x = l0), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
+                      scale = 2.5, fill = cols$fill, linewidth = 0.4) +
   geom_point(data = pt_shape, aes(x = l0_pt), size = 0.9) +
   scale_x_log10() +
   coord_flip() +
@@ -164,7 +167,7 @@ ggsave("figures/sds_shape_spp.png", p_shape, height = 5.5, width = 5.5, units = 
 
 
 
-### plot sampling distributions vs. point estimate for other parameters
+# plot sampling distributions vs. point estimate for other parameters ----
 tt <- theme(panel.grid = element_blank(),
             axis.title = element_text(size = 13),
             axis.text.x = element_blank(),
@@ -175,7 +178,7 @@ tt <- theme(panel.grid = element_blank(),
 p1 <- ggplot(sd_other, aes(y = id_loglam)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = loglam), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
+                      scale = 2.5, fill = cols$fill, linewidth = 0.4) +
   geom_point(data = pt_other, aes(x = loglam_pt), size = 0.9) +
   scale_x_continuous(breaks = seq(-0.4, 0.6, 0.2)) +
   coord_flip(xlim = c(-0.4, 0.7)) +
@@ -186,7 +189,7 @@ p1 <- ggplot(sd_other, aes(y = id_loglam)) +
 
 p3 <- ggplot(sd_other, aes(y = id_growth)) +
   geom_density_ridges(aes(x = growth), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
+                      scale = 2.5, fill = cols$fill, linewidth = 0.4) +
   geom_point(data = pt_other, aes(x = growth_pt), size = 0.9) +
   coord_flip() +
   scale_x_continuous(breaks = seq(0, 1, 0.2)) +
@@ -196,7 +199,7 @@ p3 <- ggplot(sd_other, aes(y = id_growth)) +
 
 p4 <- ggplot(sd_other, aes(y = id_gen)) +
   geom_density_ridges(aes(x = gen), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
+                      scale = 2.5, fill = cols$fill, linewidth = 0.4) +
   geom_point(data = pt_other, aes(x = gen_pt), size = 0.9) +
   scale_x_log10() +
   coord_flip(xlim = c(1, 350)) +
@@ -210,7 +213,7 @@ ggsave("figures/sd_other_spp.png", p_other, height = 7, width = 5, units = "in",
 
 
 
-### prep df for shape vs. pace analysis
+# prep df for shape vs. pace analysis ----
 df_shape <- sd_shape %>% 
   mutate(log_l0 = log10(l0)) %>% 
   group_by(SpeciesAuthor, MatrixPopulation) %>% 
@@ -236,7 +239,7 @@ df_shape <- sd_shape %>%
 
 
 
-### variance components
+# variance components ----
 vw <- mean(df_shape$l0_se^2)
 va <- var(df_shape$l0_mean)
 vw / (va + vw)
@@ -248,7 +251,7 @@ vw / (va + vw)
 
 
 
-### Model relationship between l0 and shape, assuming no sampling uncertainty
+# Model relationship between l0 and shape, assuming no sampling uncertainty ----
 
 # fast dev settings for quicker runs
 fast_run <- identical(Sys.getenv("FAST_RUN"), "1")
@@ -302,7 +305,7 @@ pred_reg <- tibble(mu_alpha, mu_beta, pred_x = list(pred_x)) %>%
 
 
 
-### Model relationship between l0 and shape, with sampling uncertainty
+# Model relationship between l0 and shape, with sampling uncertainty ----
 # arrange data for stan
 x_cent_error <- mean(df_shape$log_l0_mean)
 dat_stan <- list(N = nrow(df_shape),
@@ -352,7 +355,7 @@ pred_error <- tibble(mu_alpha_error, mu_beta_error, pred_x = list(pred_x_error))
 
 
 
-### prepare plot data
+# prepare plot data ----
 # left panel
 lev <- c("Model of point estimates", "Model with sampling uncertainty")
 
@@ -393,8 +396,8 @@ df_beta <- bind_rows(
 ) %>% mutate(model = factor(model, levels = lev))
 
 
-### plot
-tt <- theme_bw() +
+# plot ----
+tt <- theme_mpm() +
   theme(panel.grid = element_blank(),
         text = element_text(size = 11.5),
         axis.ticks = element_line(linewidth = 0.4))
@@ -403,8 +406,8 @@ p1 <- ggplot(pred_full) +
   geom_point(data = bars_full, aes(x = l0_pt, y = shape_pt), size = 1.3) +
   geom_linerange(data = bars_full, aes(x = l0_med, ymin = shape_low, ymax = shape_upp), linewidth = 0.3, alpha = 0.6) +
   geom_errorbarh(data = bars_full, aes(y = shape_med, xmin = l0_low, xmax = l0_upp), linewidth = 0.3, alpha = 0.6) +
-  geom_line(aes(x = pred_x, y = pred_med), col = "darkblue") +
-  geom_ribbon(aes(x = pred_x, ymin = pred_low, ymax = pred_upp), fill = "darkblue", alpha = 0.2) +
+  geom_line(aes(x = pred_x, y = pred_med), col = cols$dark) +
+  geom_ribbon(aes(x = pred_x, ymin = pred_low, ymax = pred_upp), fill = cols$dark, alpha = 0.2) +
   scale_x_log10() +
   coord_cartesian(ylim = c(-0.3, 0.2)) +
   facet_wrap(~ model, ncol = 1) +
@@ -414,7 +417,7 @@ p1 <- ggplot(pred_full) +
 
 p2 <- ggplot(df_beta, aes(x = beta)) +
   geom_vline(xintercept = 0, linetype = 2, alpha = 0.5) +
-  geom_density(fill = "darkred", alpha = 0.4, linewidth = 0) +
+  geom_density(fill = cols$accent, alpha = 0.4, linewidth = 0) +
   coord_cartesian(xlim = c(-0.12, 0.12)) +
   facet_wrap(~ model, ncol = 1) +
   labs(x = expression(paste("Slope coefficient (", italic(beta), ")")), y = "Posterior density") +
@@ -426,7 +429,7 @@ ggsave("figures/shape_spp.png", p, height = 4.5, width = 6.25, units = "in", dpi
 
 
 
-### posterior summary
+# posterior summary ----
 # intercept
 median(mu_alpha)
 median(mu_alpha_error)
@@ -444,7 +447,7 @@ length(mu_beta_error[mu_beta_error > 0]) / length(mu_beta_error)
 
 
 
-### variance components model
+# variance components model ----
 stan_varcomp <- stan_model("models/varcomp.stan")
 
 df_other <- sd_other %>% 
@@ -522,7 +525,7 @@ quantile(var_a_pt / var_a, c(0.025, 0.500, 0.975))
 
 
 
-### examine hazard trajectories for select populations
+# examine hazard trajectories for select populations ----
 
 pt <- pt_shape %>% 
   filter(shape_pt > 0.1) %>% 
@@ -546,6 +549,6 @@ sdist <- sd_shape %>%
 
 ggplot(sdist, aes(x, hx)) +
   geom_line(aes(group = rep), alpha = 0.4, linewidth = 0.3) +
-  geom_line(data = pt, col = "darkred", linewidth = 1.2) +
+  geom_line(data = pt, col = cols$accent, linewidth = 1.2) +
   scale_x_continuous(limits = c(0, 10), breaks = seq(0, 10, 2)) +
   facet_wrap(~ SpeciesAuthor, ncol = 1)

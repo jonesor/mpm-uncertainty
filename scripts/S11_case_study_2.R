@@ -1,24 +1,26 @@
+# S11: case study 2 climate analysis and figures (uses PRISM inputs from S12).
 
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "cowplot", "Rcompadre", "Rage", "popbio",
                  "gridExtra", "rstan", "loo", "patchwork"))
 setup_rstan()
 source("code/functions.R")
+# Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
 seed <- 12345
 set.seed(seed)
 
 
-### set options for rstan library
+# set options for rstan library ----
 # handled in setup_rstan()
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch('data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData')
 
 
 
-### find long time-series for climate analysis
+# find long time-series for climate analysis ----
 # first subset to wild, unmanipulated populations with 1-yr periodicity
 comp_sub <- compadre %>% 
   filter(MatrixComposite == "Individual",
@@ -35,7 +37,7 @@ comp_time_series <- comp_sub %>%
   ungroup() %>% 
   filter(n_year >= 5) %>% 
   group_by(SpeciesAuthor, MatrixPopulation) %>%
-  # note Eryngium_alpinum MatrixPopulation "PRC" has two coords
+# note Eryngium_alpinum MatrixPopulation "PRC" has two coords
   summarize(Lon = unique(Lon)[1],
             Lat = unique(Lat)[1],
             n_year = unique(n_year)) %>% 
@@ -47,7 +49,7 @@ comp_time_series <- comp_sub %>%
 
 
 
-### Model climate for Silene_spaldingii
+# Model climate for Silene_spaldingii ----
 # load Ellis et al (2012) data
 ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
@@ -100,7 +102,7 @@ ggplot(silene, aes(tmp, fecund)) +
 
 
 
-### Simple regression of fecundity vs. spring temperature
+# Simple regression of fecundity vs. spring temperature ----
 
 # compile stan models
 stan_regress <- stan_model("models/regress.stan")
@@ -160,7 +162,7 @@ ggplot(df_beta, aes(x = model)) +
   geom_hline(yintercept = 0, alpha = 0.5, linetype = 2) +
   coord_flip()
 
-## plot fit lines
+# plot fit lines ----
 lev <- c("Model of point estimates", "Model with sampling uncertainty")
 
 # fit line
@@ -181,9 +183,8 @@ year_full <- year_err %>%
   mutate(model = factor(model, levels = lev))
 
 # plot
-tt <- theme_bw() +
-  theme(panel.grid = element_blank(),
-        text = element_text(size = 11.5),
+tt <- theme_mpm() +
+  theme(text = element_text(size = 11.5),
         axis.ticks = element_line(linewidth = 0.4))
 
 p1 <- ggplot(pred_full, aes(x = x)) +
@@ -200,7 +201,7 @@ ggsave("figures/clim_1.png", p1, height = 4.5, width = 3.5, units = "in", dpi = 
 
 
 
-### Moving beta model
+# Moving beta model ----
 
 # compile stan models
 mod_null_reg <- stan_model("models/null.stan")
@@ -221,7 +222,7 @@ wx_mb <- wx %>%
   mutate(date = as.Date(paste(Year, Month, "01", sep = "-")))
 
 
-## prepare data for stan
+# prepare data for stan ----
 year <- silene$MatrixEndYear
 y <- log(silene$fecund)
 N <- length(y)
@@ -229,7 +230,7 @@ K <- 24
 month_start <- "07"
 
 
-## assemble matrix of climate data
+# assemble matrix of climate data ----
 X <- map(seq_along(y), ~ {
   yr_focal <- year[.x]
   date_origin <- as.Date(paste(yr_focal, month_start, "01", sep = "-"))
@@ -241,29 +242,29 @@ X <- map(seq_along(y), ~ {
   as.matrix()
 
 
-## arrange data for stan
+# arrange data for stan ----
 dat_reg <- list(N = N, K = K, X = X, y = y)
 dat_err <- list(N = N, K = K, X = X, y = silene$n_offsp, offset = silene$n_repro)
 
 
-## fit stan models
+# fit stan models ----
 fit_null_reg <- stanfn(mod_null_reg, data = dat_reg, seed = seed)
 fit_null_err <- stanfn(mod_null_err, data = dat_err, seed = seed)
 fit_gprc_reg <- stanfn(mod_gprc_reg, data = dat_reg, control = ctrl2, seed = seed)
 fit_gprc_err <- stanfn(mod_gprc_err, data = dat_err, control = ctrl2, seed = seed)
 
 
-## diagnostics
+# diagnostics ----
 
 
-## measures of fit
+# measures of fit ----
 rbind(summarize_fit(fit_null_reg, "null"),
       summarize_fit(fit_gprc_reg, "moving-beta"),
       summarize_fit(fit_null_err, "null (err)"),
       summarize_fit(fit_gprc_err, "moving-beta (err)"))
 
 
-## 
+ ----
 lev <- c("Model of point estimates", "Model with sampling uncertainty")
 
 gprc_betas <- rbind(

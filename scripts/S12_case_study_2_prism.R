@@ -1,25 +1,26 @@
+# S12: download/extract PRISM climate rasters and build climate inputs for case study 2.
 
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "sf", "terra", "Rcompadre", "prism"))
 source("code/functions.R")
 
 
-### create shell scripts to download prism climate rasters
+# create shell scripts to download prism climate rasters ----
 # year <- 1981:2013
 # base_ppt <- "wget ftp://prism.nacse.org/monthly/ppt/"
 # base_tmp <- "wget ftp://prism.nacse.org/monthly/tmean/"
 # mid_ppt <- "/PRISM_ppt_stable_4kmM3_"
 # mid_tmp <- "/PRISM_tmean_stable_4kmM2_"
 # end <- "_all_bil.zip"
-# 
+
 # cat(c("#!/usr/bin/env bash", paste0(base_ppt, year, mid_ppt, year, end)),
 #     file = "scripts/download/fetch_prism_ppt.sh", sep = "\n")
 # cat(c("#!/usr/bin/env bash", paste0(base_tmp, year, mid_tmp, year, end)),
 #     file = "scripts/download/fetch_prism_tmp.sh", sep = "\n")
 
 
-### prism raster files
+# prism raster files ----
 if (!dir.exists("prism")) {
   dir.create("prism", recursive = TRUE)
 }
@@ -41,7 +42,7 @@ files_ppt <- bil_files[grepl("ppt", bil_files)]
 files_tmp <- bil_files[grepl("tmean", bil_files)]
 
 
-### coordinates for each species/pop of interest
+# coordinates for each species/pop of interest ----
 coords_path <- "data/derived/climate/species_coords.csv"
 if (!file.exists(coords_path)) {
   compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
@@ -82,7 +83,7 @@ if (length(prism_files) == 0) {
 }
 
 
-### get climate data from all raster files for all species of interest
+# get climate data from all raster files for all species of interest ----
 df_clim <- tibble(file_tmp = files_tmp, file_ppt = files_ppt) %>% 
   mutate(Date = map_chr(files_tmp, ~ strsplit(.x, "_")[[1]][5])) %>% 
   mutate(Year = as.integer(substr(Date, 1, 4))) %>% 

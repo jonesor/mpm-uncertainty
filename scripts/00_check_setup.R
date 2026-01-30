@@ -1,4 +1,6 @@
-### preflight checks for dependencies and required files
+# Preflight checks for dependencies and required input files.
+
+# preflight checks for dependencies and required files ----
 source("code/setup.R")
 
 required_pkgs <- c(

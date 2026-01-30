@@ -1,13 +1,13 @@
+# Shared helper functions for analyses and plotting.
 
-
-### Required libraries #########################################################
+# Required libraries ######################################################### ----
 # require(rstan)
 # require(loo)
 # require(tidyverse)
 
 
 
-### Transformations ############################################################
+# Transformations ############################################################ ----
 logit <- function(p) {
   log(p / (1 - p))
 }
@@ -22,7 +22,7 @@ softmax <- function(x) {
 
 
 
-### Distributions ##############################################################
+# Distributions ############################################################## ----
 rdirichlet <- function(alpha) {
   M <- length(alpha)
   x <- rgamma(M, alpha)
@@ -30,7 +30,7 @@ rdirichlet <- function(alpha) {
 }
 
 
-### Helpers to convert MPMs from Ellis et al. 2012 #############################
+# Helpers to convert MPMs from Ellis et al. 2012 ############################# ----
 string_to_mat <- function(A) {
   A <- gsub(pattern = "\\[|\\]|\\;", "", A)
   A <- strsplit(x = A, split = " ")[[1]]
@@ -49,7 +49,7 @@ nx_to_vec <- function(x) {
 
 
 
-### Rcompadre helpers ##########################################################
+# Rcompadre helpers ########################################################## ----
 cdb_glimpse <- function(db, cols = NULL) {
   db <- as_tibble(db)
   db <- rename(db, StartYear = MatrixStartYear, EndYear = MatrixEndYear)
@@ -67,7 +67,7 @@ cdb_bind_rows <- function(dbs) {
 
 
 
-### Other utilities ############################################################
+# Other utilities ############################################################ ----
 rdata_load <- function(path) {
   env <- new.env()
   x <- load(path, env)[1]
@@ -114,11 +114,42 @@ R0 <- function(matU, matF) {
   Rage::net_repro_rate(matU, matF)
 }
 
-### Script helpers #############################################################
+# Script helpers ############################################################# ----
 collapse_fn <- function(x) {
   ifelse(all(is.na(x)),
          NA_character_,
          paste(unique(x[!is.na(x)]), collapse = "; "))
+}
+
+# Plot helpers ############################################################### ----
+mpm_pal <- function(n = 5, option = "viridis", begin = 0.1, end = 0.85) {
+  if (!requireNamespace("viridisLite", quietly = TRUE)) {
+    stop("Missing package: viridisLite. Install with install.packages(\"viridisLite\").",
+         call. = FALSE)
+  }
+  viridisLite::viridis(n, option = option, begin = begin, end = end)
+}
+
+mpm_colors <- function(option = "viridis") {
+  pal <- mpm_pal(5, option = option)
+  list(
+    light = pal[1],
+    fill = pal[2],
+    mid = pal[3],
+    accent = pal[4],
+    dark = pal[5]
+  )
+}
+
+theme_mpm <- function(base_size = 11.5) {
+  ggplot2::theme_bw(base_size = base_size) +
+    ggplot2::theme(
+      panel.grid = ggplot2::element_blank(),
+      panel.border = ggplot2::element_rect(color = "grey80", linewidth = 0.4, fill = NA),
+      strip.background = ggplot2::element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
+      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+      legend.key = ggplot2::element_blank()
+    )
 }
 
 fetch_prism <- function(file_tmp, file_ppt, spp) {
@@ -137,7 +168,7 @@ fetch_prism <- function(file_tmp, file_ppt, spp) {
 
 
 
-### Confirm that stage-specific sample sizes match transition rates ############
+# Confirm that stage-specific sample sizes match transition rates ############ ----
 check_freqs_mat <- function(matU, N, prec = 0.001) {
   dim <- nrow(matU)
   out <- character(dim)
@@ -171,7 +202,7 @@ check_freqs <- function(n, x, prec = 0.001) {
 
 
 
-### Sampling distributions for single mpm ######################################
+# Sampling distributions for single mpm ###################################### ----
 dens_fn <- function(x, n, fec) {
   # x is number of successes
   # n is number of trials
@@ -272,7 +303,7 @@ sim_F_wrapper <- function(matF, posF = matF > 0, N, nsim) {
 
 
 
-### Rstan helpers ##############################################################
+# Rstan helpers ############################################################## ----
 ctrl1 <- list(adapt_delta = 0.95, stepsize = 0.05)
 ctrl2 <- list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 11)
 ctrl3 <- list(adapt_delta = 0.999, stepsize = 0.001, max_treedepth = 12)
@@ -385,7 +416,7 @@ summarize_xval <- function(fit, label) {
 
 
 
-### MPM manipulations ##########################################################
+# MPM manipulations ########################################################## ----
 mpm_flatten <- function(matA, matU, matF, matC, stage_names) {
   d <- nrow(matU)
   base_int <- expand.grid(to_col = seq_len(d), from_col = seq_len(d))
@@ -421,7 +452,7 @@ list_mean <- function(l, na.rm = TRUE) {
 
 
 
-### MPM and age-from-stage analyses ############################################
+# MPM and age-from-stage analyses ############################################ ----
 lx_submax <- function(lx, tmax, strip_zero = TRUE) {
   upp <- min(tmax, length(lx))
   lx <- lx[1L:upp] / lx[1L]

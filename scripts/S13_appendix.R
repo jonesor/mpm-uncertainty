@@ -1,11 +1,13 @@
+# S13: appendix analyses and supplementary figures/tables.
 
-
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("ggplot2", "grid", "gridExtra", "patchwork", "popbio",
-                 "Rage", "tidyverse", "Rcompadre"))
+                 "Rage", "tidyverse", "Rcompadre", "viridisLite"))
 source("code/functions.R")
+# Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+cols <- mpm_colors()
 
 
 # rbeta(1, shape1 = 1 + k, shape2 = 1 + (n-k))
@@ -13,7 +15,7 @@ compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 # rgamma(1, shape = 1 + k, rate = n)
 
 
-### Table S1-2
+# Table S1-2 ----
 matU <- rbind(c(0.000, 0.000, 0.000, 0.000),
               c(0.857, 0.778, 0.000, 0.000),
               c(0.000, 0.056, 0.667, 0.277),
@@ -55,7 +57,7 @@ round(sapply(drawsU[c(1, 2, 2000)], life_expect), 2)
 
 
 
-### Table S1-2
+# Table S1-2 ----
 
 # component MPMs
 mU1 <- rbind(c(0, 0), c(6/8, 5/14))
@@ -131,7 +133,7 @@ round(sapply(drawsU, life_expect), 2)
 
 
 
-### boundary estimates of survival
+# boundary estimates of survival ----
 load("data/derived/analysis_cache/sd_scanga.RData")
 
 scanga_t <- scanga_out %>% 
@@ -195,13 +197,13 @@ mean(life_sim$L)
 quantile(life_sim$L, c(0.5, 0.025, 0.975))
 
 
-tt <- theme_bw() +
+tt <- theme_mpm() +
   theme(panel.grid = element_blank(),
         text = element_text(size = 11.5),
         axis.ticks = element_line(linewidth = 0.4))
 
 p1 <- ggplot(sigma_sim, aes(sigma)) +
-  geom_density(fill = "darkred", color = NA, alpha = 0.5) +
+  geom_density(fill = cols$accent, color = NA, alpha = 0.5) +
   geom_vline(data = sigma_point, aes(xintercept = sigma), linetype = 2) +
   scale_x_continuous(limits = c(0, 1), breaks = c(0, 1)) +
   coord_cartesian(ylim = c(0, 20)) +
@@ -211,7 +213,7 @@ p1 <- ggplot(sigma_sim, aes(sigma)) +
   tt
 
 p2 <- ggplot(life_sim, aes(L)) +
-  geom_density(fill = "darkred", color = NA, alpha = 0.5) +
+  geom_density(fill = cols$accent, color = NA, alpha = 0.5) +
   geom_vline(data = life_point, aes(xintercept = L_pt), linetype = 2) +
   scale_x_continuous(limits = c(0, 148)) +
   labs(x = "Mature life expectancy (years)",
@@ -254,16 +256,16 @@ scanga_traj_sim <- scanga_t %>%
   mutate(x = seq_along(lx),
          hx = Rage::lx_to_hx(lx)) %>% 
   ungroup() # %>% 
-  # group_by(x) %>% 
-  # summarize(lx_low = quantile(lx, 0.025),
-  #           lx_upp = quantile(lx, 0.975))
+# group_by(x) %>%
+# summarize(lx_low = quantile(lx, 0.025),
+#           lx_upp = quantile(lx, 0.975))
 
 p3 <- ggplot(scanga_traj_sim, aes(x, lx)) +
-  geom_line(aes(group = rep), color = "darkred", alpha = 0.025) +
-  # geom_ribbon(aes(ymin = lx_low, ymax = lx_upp), fill = "darkred", alpha = 0.5) +
+  geom_line(aes(group = rep), color = cols$accent, alpha = 0.025) +
+# geom_ribbon(aes(ymin = lx_low, ymax = lx_upp), fill = cols$accent, alpha = 0.5) +
   geom_line(data = scanga_traj_pt, linetype = 2) +
   scale_y_continuous(breaks = seq(0, 1, 0.2)) +
-  # scale_y_log10() +
+# scale_y_log10() +
   labs(x = "Age from reproductive maturity (years)",
        y = expression(paste("Survivorship (", italic(l[x]), ")"))) +
   tt
@@ -278,9 +280,9 @@ ggsave("figures/boundary2.png", g2, height = 6, width = 6.25, units = "in", dpi 
 
 
 
-### illustrate pooled
+# illustrate pooled ----
 
-### Kiviniemi
+# Kiviniemi ----
 spp <- "Agrimonia_eupatoria"
 
 compadre %>% 

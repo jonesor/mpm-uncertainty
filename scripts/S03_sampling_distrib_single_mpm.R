@@ -1,16 +1,19 @@
+# S03: illustrate sampling distributions for a single focal MPM and derived parameters.
 
-### libraries
+# libraries ----
 source("code/setup.R")
-setup_packages(c("tidyverse", "Rcompadre", "Rage", "popbio", "gridExtra"))
+setup_packages(c("tidyverse", "Rcompadre", "Rage", "popbio", "gridExtra", "viridisLite"))
 source("code/functions.R")
+# Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
 set.seed(12345)
+cols <- mpm_colors()
 
 
-### load compadre
+# load compadre ----
 compadre <- Rcompadre::cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-### kiviniemi example
+# kiviniemi example ----
 kiviniemi_n <- readr::read_csv("data/derived/studies/kiviniemi_n.csv", show_col_types = FALSE) %>% 
   group_by(MatrixPopulation, MatrixStartYear) %>% 
   summarize(N = list(N), .groups = "drop")
@@ -75,17 +78,16 @@ df_rect <- df_mpm %>%
   mutate(y1 = x1, y2 = x2)
 
 
-### Figure 1 (top): MPM components
+# Figure 1 (top): MPM components ----
 p1a <- ggplot(df_plot) +
   geom_text(aes(label = A, x = 1, y = 1), size = 3.2) +
   facet_grid(to_name ~ from_name, switch = "y") +
   labs(x = NULL, y = NULL) +
   ggtitle("In COMPADRE") +
-  theme_bw() +
+  theme_mpm() +
   theme(
-    strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
+    strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
     strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
-    panel.border = element_rect(color = "grey80"),
     axis.text = element_blank(),
     axis.ticks = element_blank(),
     panel.grid = element_blank(),
@@ -100,11 +102,10 @@ p1b <- ggplot(df_plot) +
   facet_grid(to_name ~ from_name, switch = "y") +
   labs(x = NULL, y = NULL) +
   ggtitle("Raw data") +
-  theme_bw() +
+  theme_mpm() +
   theme(
-    strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
+    strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
     strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
-    panel.border = element_rect(color = "grey80"),
     axis.text = element_blank(),
     axis.ticks = element_blank(),
     panel.grid = element_blank(),
@@ -115,7 +116,7 @@ p1b <- ggplot(df_plot) +
   )
 
 p1c <- ggplot(df_sdist) +
-  geom_ribbon(aes(x = p, ymin = 0, ymax = pp), fill = "darkred", alpha = 0.4) +
+  geom_ribbon(aes(x = p, ymin = 0, ymax = pp), fill = cols$accent, alpha = 0.4) +
   geom_segment(data = df_pt, aes(x = p, y = 0, xend = p, yend = pp + 0.1), linewidth = 0.3) +
   geom_rect(data = df_rect, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2),
             fill = NA) +
@@ -130,11 +131,10 @@ p1c <- ggplot(df_sdist) +
   ) +
   labs(x = NULL, y = NULL) +
   ggtitle("Sampling distributions") +
-  theme_bw() +
+  theme_mpm() +
   theme(
-    strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
+    strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
     strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
-    panel.border = element_rect(color = "grey80"),
     axis.text.x = element_blank(),
     axis.text.y = element_text(size = 7),
     axis.ticks.x = element_blank(),
@@ -153,7 +153,7 @@ p1 <- patchwork::wrap_plots(p1a, p1b, p1c, ncol = 3)
 
 
 
-### Figure 1 (bottom): Derived parameters
+# Figure 1 (bottom): Derived parameters ----
 
 # possible transitions
 posU <- mean(kiviniemi$matU) > 0
@@ -223,15 +223,14 @@ deriv_plot <- deriv_param %>%
   filter(!(par == "Life~expectancy~(italic(l[0]))" & value > 35))
 
 p2 <- ggplot(deriv_plot) +
-  geom_density(aes(value), fill = "darkred", alpha = 0.4, linewidth = 0) +
+  geom_density(aes(value), fill = cols$accent, alpha = 0.4, linewidth = 0) +
   geom_vline(data = deriv_pt, aes(xintercept = value)) +
   facet_wrap(~ par, scales = "free", labeller = label_parsed, nrow = 1) +
   labs(x = "Parameter estimate", y = "Prob. density") +
   ggtitle("Derived parameters") +
-  theme_bw() +
+  theme_mpm() +
   theme(
-    strip.background = element_rect(color = "grey80", fill = "grey85", linewidth = 0.4),
-    panel.border = element_rect(color = "grey80"),
+    strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
     panel.grid = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks = element_line(linewidth = 0.4, color = "grey80"),
@@ -249,7 +248,7 @@ p2 <- ggplot(deriv_plot) +
 
 
 
-### table of posterior quantiles for derived parameters
+# table of posterior quantiles for derived parameters ----
 deriv_param %>% 
   group_by(par) %>% 
   summarize(med = quantile(value, 0.500),

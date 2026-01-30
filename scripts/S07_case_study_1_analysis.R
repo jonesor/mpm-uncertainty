@@ -1,24 +1,27 @@
+# S07: analyze case study 1 results and create figures.
 
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "popbio", "popdemo", "Rcompadre", "Rage",
                  "ggridges", "cowplot", "gridExtra", "patchwork",
-                 "rstan", "loo"))
+                 "rstan", "loo", "viridisLite"))
 setup_rstan()
 source("code/functions.R")
+# Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
 seed <- 12345
 set.seed(seed)
+cols <- mpm_colors()
 
 
-### set options for rstan library
+# set options for rstan library ----
 # handled in setup_rstan()
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-### load sampling distributions
+# load sampling distributions ----
 load(file = "data/derived/analysis_cache/full_pt_shape.RData")
 load(file = "data/derived/analysis_cache/full_pt_other.RData")
 
@@ -27,18 +30,17 @@ load(file = "data/derived/analysis_cache/full_sd_other.RData")
 
 
 
-### plot sampling distributions vs. point estimate for shape and l0
-tt <- theme(panel.grid = element_blank(),
-            axis.title = element_text(size = 12.5),
-            axis.text.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            panel.background = element_blank(),
-            panel.border = element_rect(linewidth = 0.5, fill = NA))
+# plot sampling distributions vs. point estimate for shape and l0 ----
+tt <- theme_mpm() +
+  theme(axis.title = element_text(size = 12.5),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        panel.border = element_rect(linewidth = 0.5, fill = NA))
 
 p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = S), rel_min_height = 1e-2,
-                      scale = 3, fill = "#9ebcda", linewidth = 0.4) +
+                      scale = 3, fill = cols$fill, linewidth = 0.4) +
   geom_point(data = pt_shape_out, aes(x = S_pt), size = 0.9) +
   annotate("text", x = Inf, y = 2.6, label = "A", vjust = 1.5, size = 5, fontface = "bold") +
   coord_flip(xlim = c(-0.3, 0.2)) +
@@ -48,7 +50,7 @@ p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
 
 p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
   geom_density_ridges(aes(x = L), rel_min_height = 1e-2,
-                      scale = 3, fill = "#9ebcda", linewidth = 0.4) +
+                      scale = 3, fill = cols$fill, linewidth = 0.4) +
   geom_point(data = pt_shape_out, aes(x = L_pt), size = 0.9) +
   annotate("text", x = Inf, y = 2.6, label = "B", vjust = 1.5, size = 5, fontface = "bold") +
   scale_x_log10(limits = c(1.2, 1500)) +
@@ -63,14 +65,13 @@ g <- patchwork::wrap_plots(p1, p2, ncol = 1)
 
 
 
-### plot sampling distributions vs. point estimate for other parameters
-tt <- theme(panel.grid = element_blank(),
-            axis.title = element_text(size = 10),
-            axis.text.x = element_blank(),
-            axis.text.y = element_text(size = 8.5, angle = 90, hjust = 0.5),
-            axis.ticks.x = element_blank(),
-            panel.background = element_blank(),
-            panel.border = element_rect(linewidth = 0.5, fill = NA))
+# plot sampling distributions vs. point estimate for other parameters ----
+tt <- theme_mpm() +
+  theme(axis.title = element_text(size = 10),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(size = 8.5, angle = 90, hjust = 0.5),
+        axis.ticks.x = element_blank(),
+        panel.border = element_rect(linewidth = 0.5, fill = NA))
 
 pt_size <- 0.7
 pt_shp <- 19
@@ -80,7 +81,7 @@ rdg_size <- 0.2
 p1 <- ggplot(sd_other_out, aes(y = id_loglam)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = loglam), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", linewidth = rdg_size) +
+                      scale = rdg_scale, fill = cols$fill, linewidth = rdg_size) +
   geom_point(data = pt_other_out, aes(x = loglam_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "A", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_continuous(breaks = seq(-0.4, 0.6, 0.2)) +
@@ -91,7 +92,7 @@ p1 <- ggplot(sd_other_out, aes(y = id_loglam)) +
 
 p2 <- ggplot(sd_other_out, aes(y = id_damp)) +
   geom_density_ridges(aes(x = damp), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", linewidth = 0.3) +
+                      scale = rdg_scale, fill = cols$fill, linewidth = 0.3) +
   geom_point(data = pt_other_out, aes(x = damp_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "B", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_log10() +
@@ -102,7 +103,7 @@ p2 <- ggplot(sd_other_out, aes(y = id_damp)) +
 
 p3 <- ggplot(sd_other_out, aes(y = id_pmature)) +
   geom_density_ridges(aes(x = pmature), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", linewidth = rdg_size) +
+                      scale = rdg_scale, fill = cols$fill, linewidth = rdg_size) +
   geom_point(data = pt_other_out, aes(x = pmature_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "C", vjust = 1.5, size = 4, fontface = "bold") +
   coord_flip() +
@@ -113,7 +114,7 @@ p3 <- ggplot(sd_other_out, aes(y = id_pmature)) +
 
 p4 <- ggplot(sd_other_out, aes(y = id_gen)) +
   geom_density_ridges(aes(x = gen), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", linewidth = rdg_size) +
+                      scale = rdg_scale, fill = cols$fill, linewidth = rdg_size) +
   geom_point(data = pt_other_out, aes(x = gen_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "D", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_log10() +
@@ -132,7 +133,7 @@ g <- patchwork::wrap_plots(g1, g2, ncol = 2)
 
 
 
-### prep df for shape vs. pace analysis
+# prep df for shape vs. pace analysis ----
 df_shape <- sd_shape_out %>% 
   mutate(log_L = log10(L)) %>% 
   group_by(SpeciesAuthor, MatrixPopulation) %>% 
@@ -177,7 +178,7 @@ df_shape <- sd_shape_out %>%
 
 
 
-### plot pace vs. shape, point estimates vs posterior means
+# plot pace vs. shape, point estimates vs posterior means ----
 ggplot(df_shape) +
   geom_segment(aes(x = L_pt, y = S_pt, xend = L_mean, yend = S_mean),
                linewidth = 0.3, arrow = arrow(length = unit(0.02, "npc"))) +
@@ -187,7 +188,7 @@ ggplot(df_shape) +
 
 
 
-### model relationship between l0 and shape, assuming no sampling uncertainty
+# model relationship between l0 and shape, assuming no sampling uncertainty ----
 
 # compile stan models
 stan_regress_hier <- stan_model("models/regress2.stan")
@@ -233,7 +234,7 @@ pred_reg <- tibble(mu_alpha, mu_beta, pred_x = list(pred_x)) %>%
 
 
 
-### Model relationship between l0 and shape, with sampling uncertainty
+# Model relationship between l0 and shape, with sampling uncertainty ----
 # arrange data for stan
 x_cent_error <- mean(df_shape$log_l0_mean)
 dat_stan <- list(N = nrow(df_shape),
@@ -283,7 +284,7 @@ pred_error <- tibble(mu_alpha_error, mu_beta_error, pred_x = list(pred_x_error))
             pred_upp = quantile(pred, 0.975))
 
 
-### prepare plot data
+# prepare plot data ----
 # left panel
 lev <- c("Model of point estimates", "Model with sampling uncertainty")
 
@@ -324,18 +325,17 @@ df_beta <- bind_rows(
 ) %>% mutate(model = factor(model, levels = lev))
 
 
-### plot
-tt <- theme_bw() +
-  theme(panel.grid = element_blank(),
-        text = element_text(size = 11.5),
+# plot ----
+tt <- theme_mpm() +
+  theme(text = element_text(size = 11.5),
         axis.ticks = element_line(linewidth = 0.4))
 
 p1 <- ggplot(pred_full) +
   geom_point(data = bars_full, aes(x = l0_pt, y = shape_pt), size = 1.3) +
   geom_linerange(data = bars_full, aes(x = l0_med, ymin = shape_low, ymax = shape_upp), linewidth = 0.3, alpha = 0.6) +
   geom_errorbarh(data = bars_full, aes(y = shape_med, xmin = l0_low, xmax = l0_upp), linewidth = 0.3, alpha = 0.6) +
-  geom_line(aes(x = pred_x, y = pred_med), col = "darkblue") +
-  geom_ribbon(aes(x = pred_x, ymin = pred_low, ymax = pred_upp), fill = "darkblue", alpha = 0.2) +
+  geom_line(aes(x = pred_x, y = pred_med), col = cols$dark) +
+  geom_ribbon(aes(x = pred_x, ymin = pred_low, ymax = pred_upp), fill = cols$accent, alpha = 0.2) +
   scale_x_log10() +
   coord_cartesian(ylim = c(-0.3, 0.2)) +
   facet_wrap(~ model, ncol = 1) +
@@ -345,7 +345,7 @@ p1 <- ggplot(pred_full) +
 
 p2 <- ggplot(df_beta, aes(x = beta)) +
   geom_vline(xintercept = 0, linetype = 2, alpha = 0.5) +
-  geom_density(fill = "darkred", alpha = 0.4, linewidth = 0) +
+  geom_density(fill = cols$accent, alpha = 0.4, linewidth = 0) +
   coord_cartesian(xlim = c(-0.07, 0.07)) +
   facet_wrap(~ model, ncol = 1) +
   labs(x = expression(paste("Slope coefficient (", italic(beta), ")")), y = "Posterior density") +
@@ -359,7 +359,7 @@ p <- plot_grid(p1, p2, labels = c("A", "B"), rel_widths = c(1.08, 1), nrow = 1)
 
 
 
-### posterior summary
+# posterior summary ----
 median(mu_beta)
 median(mu_beta_error)
 
@@ -375,7 +375,7 @@ length(mu_beta_error[mu_beta_error > 0]) / length(mu_beta_error)
 
 
 
-### Variance components analysis
+# Variance components analysis ----
 stan_varcomp <- stan_model("models/varcomp.stan")
 
 

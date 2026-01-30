@@ -1,14 +1,16 @@
-### libraries
+# S01: correct and harmonize COMPADRE entries using Ellis et al. (2012) data.
+
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre"))
 source("code/functions.R")
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X.RData")
 
 
-### Load data from Ellis et al. (2012)
+# Load data from Ellis et al. (2012) ----
 ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
@@ -18,7 +20,7 @@ ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\
   mutate(N = map(Nx, nx_to_vec))
 
 
-### fix typo in A matrix for Eriogonum longifolium (3.420 should be 0.342)
+# fix typo in A matrix for Eriogonum longifolium (3.420 should be 0.342) ----
 satterthwaite_fix <- which(
   compadre$SpeciesAuthor == 'Eriogonum_longifolium_var._gnaphalifolium_2' &
     compadre$MatrixPopulation == 'Unburned' &
@@ -28,7 +30,7 @@ satterthwaite_fix <- which(
 compadre$mat[[satterthwaite_fix]]@matA[5,5] <- 0.342
 
 
-### fix lazaro MatrixComposite
+# fix lazaro MatrixComposite ----
 lazaro_fix <- which(
   compadre$SpeciesAuthor == 'Dioon_merolae' &
     (compadre$MatrixEndYear - compadre$MatrixStartYear  == 1)
@@ -37,7 +39,7 @@ lazaro_fix <- which(
 compadre$MatrixComposite[lazaro_fix] <- "Individual"
 
 
-### fix ehrlen
+# fix ehrlen ----
 ehrlen_fix <- which(
   compadre$SpeciesAuthor == "Lathyrus_vernus" &
     compadre$MatrixPopulation == "G"
@@ -52,12 +54,12 @@ purrr::walk(ehrlen_fix, ~ {
 })
 
 
-### fix lemke
+# fix lemke ----
 lemke_fix <- which(compadre$SpeciesAuthor == "Trollius_europaeus")
 compadre$MatrixTreatment[lemke_fix] <- "Unmanipulated"
 
 
-### fix dostalek
+# fix dostalek ----
 dostalek_fix <- which(
   compadre$SpeciesAuthor == "Dracocephalum_austriacum_2" &
     compadre$MatrixTreatment == "Mean"
@@ -67,7 +69,7 @@ compadre$MatrixComposite[dostalek_fix] <- "Mean"
 compadre$MatrixTreatment[dostalek_fix] <- "Unmanipulated"
 
 
-### fix Aschero
+# fix Aschero ----
 aschero_fix <- which(
   compadre$Authors == "Aschero; Morris; Vázquez; Alvarez; Villagra" &
     compadre$MatrixTreatment == "Unmanipulated"
@@ -80,7 +82,7 @@ compadre$mat[[aschero_fix]]@matA <- compadre$mat[[aschero_fix]]@matU +
 rm(U)
 
 
-### fix Astragalus_scaphoides_2
+# fix Astragalus_scaphoides_2 ----
 assc_fix <- which(
   compadre$SpeciesAuthor == "Astragalus_scaphoides_2" &
     compadre$MatrixPopulation == "McDevitt Creek" &
@@ -98,7 +100,7 @@ compadre$mat[[assc_fix]]@matA <- compadre$mat[[assc_fix]]@matU +
 rm(assc_rep)
 
 
-### fix Shryock; Esque; Hughes
+# fix Shryock; Esque; Hughes ----
 shryock_fix1 <- which(
   compadre$SpeciesAuthor == "Pediocactus_bradyi" &
     compadre$MatrixPopulation == "Badger Creek" &
@@ -120,7 +122,7 @@ compadre$mat[[shryock_fix1]]@matU[i1] <- 0
 compadre$mat[[shryock_fix2]]@matU[i2] <- 0
 
 
-### lazaro
+# lazaro ----
 lazaro_fix <- which(
   compadre$SpeciesAuthor == "Dioon_merolae" &
     compadre$MatrixPopulation == "EC"
@@ -132,7 +134,7 @@ for (i in lazaro_fix) {
 }
 
 
-### portela
+# portela ----
 portela_fix1 <- which(
   compadre$SpeciesAuthor == "Astrocaryum_aculeatissimum"
 )
@@ -144,5 +146,5 @@ for (i in portela_fix1) {
 
 
 
-### write corrected db to file
+# write corrected db to file ----
 save(compadre, file = "data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")

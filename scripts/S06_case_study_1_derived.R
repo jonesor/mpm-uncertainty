@@ -1,20 +1,24 @@
+# S06: derive parameters and summaries from case study 1 sampling distributions.
 
-### libraries
+# libraries ----
 source("code/setup.R")
-setup_packages(c("tidyverse", "popbio", "popdemo", "Rcompadre", "Rage", "patchwork"))
+setup_packages(c("tidyverse", "popbio", "popdemo", "Rcompadre", "Rage", "patchwork",
+                 "viridisLite"))
 source("code/functions.R")
+# Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
+cols <- mpm_colors()
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-### load study-specific sampling distribution files
+# load study-specific sampling distribution files ----
 sd_files <- paste0("data/derived/analysis_cache/", list.files("data/derived/analysis_cache"))
 sd_files <- sd_files[grep("/sd_", sd_files)]
 
 
-### bind sampling distributions into single tibble
+# bind sampling distributions into single tibble ----
 mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load)) %>% 
   mutate(id = as.factor(1:n())) %>% 
   cdb_unnest() %>% 
@@ -39,7 +43,7 @@ mpm_draws %>%
   arrange(desc(n))
 
 
-### point estimates for parameters of interest
+# point estimates for parameters of interest ----
 pt_shape <- mpm_draws %>% 
   mutate(rep_prop1 = pmap(list(matU, start, rep_stages), Rage::mature_distrib)) %>% 
   mutate(lx4 = map2_dbl(matU, rep_prop1,
@@ -76,7 +80,7 @@ pt_other <- mpm_draws %>%
 
 
 
-### sampling distributions for derived parameters
+# sampling distributions for derived parameters ----
 sd_shape <- pt_shape %>%
   select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
   unnest(cols = c("simU", "simF")) %>%
@@ -104,7 +108,7 @@ sd_other <- pt_other %>%
                                          type = "elasticity")$progr))
 
 
-### write to file
+# write to file ----
 pt_shape_out <- pt_shape %>%
   dplyr::select(id, SpeciesAuthor, MatrixPopulation, q,
                 ends_with("_pt"), starts_with("id_"))
@@ -131,11 +135,12 @@ save(sd_other_out, file = "data/derived/analysis_cache/full_sd_other.RData")
 
 
 
-### testing new plot for appendix
+# testing new plot for appendix ----
 dat_example <- pt_shape %>% 
   filter(Authors == "Martin; Meinke", MatrixPopulation == "Bull Flat")
 
 stages <- c("Seedbank", "Seedling", "Small", "Medium", "Large")
+stage_cols <- mpm_pal(length(stages))
 
 N1 <- dat_example$rep_prop1[[1]]
 matU <- dat_example$matU[[1]]
@@ -161,13 +166,12 @@ proj <- sweep(proj, 1, rowSums(proj), "/") %>%
 p1 <- ggplot(proj, aes(x, tr, col = stage)) +
   geom_line(linewidth = 2) +
   geom_vline(xintercept = q, linetype = 2) +
-  scale_color_brewer(direction = 2, name = "Stage class") +
+  scale_color_manual(values = stage_cols, name = "Stage class") +
   scale_x_continuous(limits = c(0, 9), breaks = seq(0, 8, 1)) +
   scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2)) +
   labs(x = NULL, y = "Relative stage distribution") +
-  theme_bw() +
-  theme(panel.grid = element_blank(),
-        axis.text.x = element_blank())
+  theme_mpm() +
+  theme(axis.text.x = element_blank())
 
 p2 <- ggplot(df_lx, aes(x, lx)) +
   geom_line() +
@@ -175,9 +179,8 @@ p2 <- ggplot(df_lx, aes(x, lx)) +
   scale_x_continuous(limits = c(0, 9), breaks = seq(0, 8, 1)) +
   scale_y_log10(labels = formatC) +
   labs(x = NULL, y = "Survivorship") +
-  theme_bw() +
-  theme(panel.grid = element_blank(),
-        axis.text.x = element_blank())
+  theme_mpm() +
+  theme(axis.text.x = element_blank())
 
 p3 <- ggplot(df_lx, aes(x, hx)) +
   geom_line() +
@@ -185,8 +188,7 @@ p3 <- ggplot(df_lx, aes(x, hx)) +
   scale_x_continuous(limits = c(0, 9), breaks = seq(0, 8, 1)) +
   scale_y_continuous(limits = c(0.5, 1), breaks = seq(0.5, 1, 0.1)) +
   labs(x = "Time", y = "Mortality hazard") +
-  theme_bw() +
-  theme(panel.grid = element_blank())
+  theme_mpm()
 
 
 g <- p1 / p2 / p3 + patchwork::plot_annotation(tag_levels = c("A", "B", "C"))

@@ -1,15 +1,16 @@
+# S02: subset COMPADRE to target studies and save derived study list.
 
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre"))
 source("code/functions.R")
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-### subset COMPADRE to studies of interest
+# subset COMPADRE to studies of interest ----
 studies_check <- compadre %>%
   filter(YearPublication >= 2010) %>% 
   filter(MatrixSplit == "Divided",
@@ -32,7 +33,7 @@ studies_check <- compadre %>%
   arrange(YearPublication, Authors)
 
 
-### write to file
+# write to file ----
 write.csv(studies_check, "studies_check.csv", row.names = FALSE)
 
 

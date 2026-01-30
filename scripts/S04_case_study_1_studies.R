@@ -1,17 +1,17 @@
+# S04: generate study-level sampling distributions for case study 1.
 
-
-### libraries
+# libraries ----
 source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre", "popbio"))
 source("code/functions.R")
 set.seed(12345)
 
 
-### load compadre data
+# load compadre data ----
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
-### Load data from Ellis et al. (2012)
+# Load data from Ellis et al. (2012) ----
 ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
                          header = TRUE, stringsAsFactors = FALSE) %>%
   as_tibble() %>% 
@@ -23,9 +23,9 @@ ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\
 
 
 
-### Draw from MPM sampling distributions by study ##############################
+# Draw from MPM sampling distributions by study ----
 
-### Aschero ----
+# Aschero ----
 spp <- "Prosopis_ﬂexuosa"
 aschero_n <- read_csv("data/derived/studies/aschero_n.csv")
 
@@ -54,7 +54,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = FALSE)
 
 
-### Kiviniemi ----
+# Kiviniemi ----
 spp <- "Agrimonia_eupatoria"
 
 compadre %>% 
@@ -105,7 +105,7 @@ save(kiviniemi_out, file = "data/derived/analysis_cache/sd_kiviniemi.RData")
 
 
 
-### Satterthwaite ----
+# Satterthwaite ----
 spp <- "Eriogonum_longifolium_var._gnaphalifolium_2"
 pop <- "Unburned"
 
@@ -155,7 +155,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
-## Andrello ----
+# Andrello ----
 spp <- "Eryngium_alpinum"
 pop <- "PRD" # DES, BER, BOU, PRA, PRB, PRC, PRD
 
@@ -203,7 +203,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Liatris_scariosa ----
+# Liatris_scariosa ----
 spp <- "Liatris_scariosa"
 # Ellis: LISC_0, LISC_1, LISC_2
 # Comp: "Lisc 0", "Lisc 1", "Lisc 2"
@@ -257,7 +257,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Cirsium_pitcheri_4 ----
+# Cirsium_pitcheri_4 ----
 # Compadre has CiPi 1, CiPi 2, CiPi 3; Ellis has CIPI_1, CIPI_2, CIPI_3, CIPI_4
 # I think Cirsium_pitcheri_6 from Bell et al 2013, corresponds to CIPI 4 from
 #  Ellis et al 2012 (Cirsium_pitcheri_4), but they use diff stage classes
@@ -316,7 +316,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Scanga ----
+# Scanga ----
 spp <- "Trollius_laxus_2"
 pop <- c("CfCh", "Cb", "EEFF", "H66cont", "MM", "T")
 
@@ -369,7 +369,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Lazaro ----
+# Lazaro ----
 spp <- "Dioon_merolae"
 
 compadre %>% 
@@ -418,7 +418,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Arroyo ----
+# Arroyo ----
 spp <- "Neobuxbaumia_polylopha"
 
 compadre %>% 
@@ -466,7 +466,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Plank----
+# Plank ----
 spp <- "Trillium_persistens"
 # "Battle Creek", "Moccasin Creek", "Moody Creek", "Panther Creek"
 
@@ -519,7 +519,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Jolls ----
+# Jolls ----
 spp <- "Cirsium_pitcheri_8"
 
 compadre %>% 
@@ -569,7 +569,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Torres ----
+# Torres ----
 spp <- "Agave_potatorum"
 # "Xochiltepec", "Machiche"
 
@@ -618,7 +618,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Andrieu----
+# Andrieu ----
 spp <- "Paeonia_officinalis"
 pops <- c("Open habitat", "Woodland")
 # "Open habitat", "Woodland", (Managed habitat doesn't have pooled)
@@ -671,7 +671,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Eriksson----
+# Eriksson ----
 spp <- "Plantago_media"
 
 compadre %>% 
@@ -720,7 +720,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Astragalus_scaphoides_2, Haynes Creek, Sheep Corral Gulch, McDevitt Creek ----
+# Astragalus_scaphoides_2, Haynes Creek, Sheep Corral Gulch, McDevitt Creek ----
 # sometimes 0 fecund
 # negative relationship between fecundity and sample size
 spp <- "Astragalus_scaphoides_2"
@@ -777,10 +777,10 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Lemke ----
+# Lemke ----
 spp <- "Trollius_europaeus"
 # "HAS; JAG", "RDGm; GTH; SPW; NEV", "RDGab; JAGab"
-### *NOTE* "HAS; JAG" has N = 0 repro, so only use for surv analyses
+# *NOTE* "HAS; JAG" has N = 0 repro, so only use for surv analyses ----
 
 compadre %>% 
   filter(SpeciesAuthor == spp) %>% 
@@ -830,7 +830,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Toledo ----
+# Toledo ----
 # matrix values based on bootstrapping, so won't necessarily match
 spp <- "Tillandsia_butzii"
 # "San Antonio, Veracruz"
@@ -879,7 +879,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Crone ----
+# Crone ----
 spp <- "Balsamorhiza_sagittata"
 # "Mount Jumbo"
 # fecundity based on number of flowers, not plants
@@ -928,7 +928,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Dostalek----
+# Dostalek ----
 spp <- "Dracocephalum_austriacum_2"
 # Cisarska rokle (C1), Haknovec (C2), Kodska stena (C3)
 # Zadielsky kamen (S1), Domicke skrapy (S2), Zelezne vrata (S3)
@@ -979,7 +979,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Evju ----
+# Evju ----
 spp <- "Viola_biflora"
 
 compadre %>% 
@@ -1028,7 +1028,7 @@ write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 
-### Flores ----
+# Flores ----
 spp <- "Mammillaria_huitzilopochtli"
 
 compadre %>% 
@@ -1076,7 +1076,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Shryock ----
+# Shryock ----
 spp <- "Pediocactus_bradyi"
 
 shryock_n <- read_csv("data/derived/studies/shryock_n.csv") %>%
@@ -1118,7 +1118,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Csergo ----
+# Csergo ----
 spp <- "Saponaria_bellidifolia"
 
 csergo_n <- read_csv("data/derived/studies/csergo_n.csv") %>%
@@ -1164,7 +1164,7 @@ write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
 
-### Raghu----
+# Raghu ----
 spp <- "Lantana_camara_2"
 
 raghu_n <- read_csv("data/derived/studies/raghu_n.csv") %>%
@@ -1208,7 +1208,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Martin----
+# Martin ----
 spp <- "Astragalus_peckii"
 
 martin_n <- read_csv("data/derived/studies/martin_n.csv") %>%
@@ -1253,7 +1253,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Law----
+# Law ----
 # single pooled value of fecundity, from 38 individs
 spp <- "Saussurea_medusa"
 
@@ -1302,7 +1302,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
-### Jacquemyns ----
+# Jacquemyns ----
 spp <- "Orchis_purpurea"
 
 compadre %>% 
@@ -1350,7 +1350,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Portela----
+# Portela ----
 spp <- "Astrocaryum_aculeatissimum"
 
 portela_n <- read_csv("data/derived/studies/portela_n.csv") %>%
@@ -1393,7 +1393,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Lopez-mata ----
+# Lopez-mata ----
 spp <- "Pinus_maximartinezii"
 
 compadre %>% 
@@ -1436,7 +1436,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Auestad ----
+# Auestad ----
 spp <- "Pimpinella_saxifraga"
 
 compadre %>% 
@@ -1480,7 +1480,7 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
-### Dias Segura ----
+# Dias Segura ----
 spp <- "Lophophora_diffusa"
 
 compadre %>% 
