@@ -142,7 +142,6 @@ p1 <- ggplot(sd_shape, aes(y = id_shape)) +
   geom_density_ridges(aes(x = shape), rel_min_height = 0.01,
                       scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
   geom_point(data = pt_shape, aes(x = shape_pt), size = 0.9) +
-  # coord_flip(xlim = c(-0.3, 0.2)) +
   coord_flip(xlim = c(-0.5, 0.5)) +
   labs(y = expression(paste("Population (ranked by ", italic(S), ")")),
        x = expression(paste("Mortality trajectory shape (", italic(S), ")"))) +
@@ -549,6 +548,4 @@ ggplot(sdist, aes(x, hx)) +
   geom_line(aes(group = rep), alpha = 0.4, linewidth = 0.3) +
   geom_line(data = pt, col = "darkred", linewidth = 1.2) +
   scale_x_continuous(limits = c(0, 10), breaks = seq(0, 10, 2)) +
-  # scale_y_log10() +
-  # coord_cartesian(ylim = c(0, 10)) +
   facet_wrap(~ SpeciesAuthor, ncol = 1)

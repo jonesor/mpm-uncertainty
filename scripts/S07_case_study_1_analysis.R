@@ -453,7 +453,6 @@ df_theta <- posterior_vec(stan_fit_varcomp, x = df_other$id_other, "theta") %>%
   mutate(x = fct_reorder(x, med))
 
 ggplot(df_theta, aes(x = x)) +
-  # geom_hline(yintercept = 0, alpha = 0.5) +
   geom_point(aes(y = med)) +
   geom_errorbar(aes(ymin = low95, ymax = upp95)) +
   coord_flip()

@@ -195,8 +195,6 @@ p1 <- ggplot(pred_full, aes(x = x)) +
   facet_wrap(~ model, ncol = 1) +
   labs(x = "Spring temperature (Feb-Apr)", y = "Recruitment") +
   tt
-  # theme(panel.grid = element_blank(),
-  #       text = element_text(size = 11.5))
 
 ggsave("figures/clim_1.png", p1, height = 4.5, width = 3.5, units = "in", dpi = 300)
 
@@ -284,8 +282,6 @@ p2 <- ggplot(gprc_betas, aes(x = lag)) +
   labs(x = "Months before survey",
        y = expression(paste("Monthly temperature coefficient (", italic(b), ")"))) +
   tt
-  # theme(panel.grid = element_blank(),
-  #       text = element_text(size = 11.5))
 
 ggsave("figures/clim_2.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 300)
 
@@ -294,4 +290,3 @@ ggsave("figures/clim_2.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 
 # combine both climate plots
 p <- p2 / p1 + plot_layout(heights = c(1, 1))
 ggsave("figures/clim.png", p, height = 4.5, width = 6.25, units = "in", dpi = 300)
-
