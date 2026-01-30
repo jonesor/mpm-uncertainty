@@ -47,9 +47,9 @@ aschero_out <- compadre %>%
 save(aschero_out, file = "data/derived/analysis_cache/sd_aschero.RData")
 
 dataf <- aschero %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = FALSE)
 
@@ -79,9 +79,9 @@ kiviniemi <- compadre %>%
   ungroup()
 
 dataf <- kiviniemi %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -149,9 +149,9 @@ satterthwaite_out <- compadre %>%
 save(satterthwaite_out, file = "data/derived/analysis_cache/sd_satterthwaite.RData")
 
 dataf <- satterthwaite %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -209,9 +209,9 @@ andrello_out <- compadre %>%
 save(andrello_out, file = "data/derived/analysis_cache/sd_andrello.RData")
 
 dataf <- andrello %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -263,9 +263,9 @@ lisc_out <- compadre %>%
 save(lisc_out, file = "data/derived/analysis_cache/sd_lisc.RData")
 
 dataf <- lisc %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -322,9 +322,9 @@ cipi_out <- compadre %>%
 save(cipi_out, file = "data/derived/analysis_cache/sd_cipi.RData")
 
 dataf <- cipi %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -375,9 +375,9 @@ scanga_out <- compadre %>%
 save(scanga_out, file = "data/derived/analysis_cache/sd_scanga.RData")
 
 dataf <- scanga %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -424,9 +424,9 @@ lazaro_out <- compadre %>%
 save(lazaro_out, file = "data/derived/analysis_cache/sd_lazaro.RData")
 
 dataf <- lazaro %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -472,9 +472,9 @@ arroyo_out <- compadre %>%
 save(arroyo_out, file = "data/derived/analysis_cache/sd_arroyo.RData")
 
 dataf <- arroyo %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -525,9 +525,9 @@ plank_out <- compadre %>%
 save(plank_out, file = "data/derived/analysis_cache/sd_plank.RData")
 
 dataf <- plank %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -575,9 +575,9 @@ jolls_out <- compadre %>%
 save(jolls_out, file = "data/derived/analysis_cache/sd_jolls.RData")
 
 dataf <- jolls %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -624,9 +624,9 @@ torres_out <- compadre %>%
 save(torres_out, file = "data/derived/analysis_cache/sd_torres.RData")
 
 dataf <- torres %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -677,9 +677,9 @@ andrieu_out <- compadre %>%
 save(andrieu_out, file = "data/derived/analysis_cache/sd_andrieu.RData")
 
 dataf <- andrieu %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -727,9 +727,9 @@ eriksson_out <- compadre %>%
 save(eriksson_out, file = "data/derived/analysis_cache/sd_eriksson.RData")
 
 dataf <- eriksson %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -784,9 +784,9 @@ assc_out <- compadre %>%
 save(assc_out, file = "data/derived/analysis_cache/sd_assc.RData")
 
 dataf <- assc %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -837,9 +837,9 @@ lemke_out <- compadre %>%
 save(lemke_out, file = "data/derived/analysis_cache/sd_lemke.RData")
 
 dataf <- lemke %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -886,9 +886,9 @@ toledo_out <- compadre %>%
 save(toledo_out, file = "data/derived/analysis_cache/sd_toledo.RData")
 
 dataf <- toledo %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -935,9 +935,9 @@ crone_out <- compadre %>%
 save(crone_out, file = "data/derived/analysis_cache/sd_crone.RData")
 
 dataf <- crone %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -986,9 +986,9 @@ dostalek_out <- compadre %>%
 save(dostalek_out, file = "data/derived/analysis_cache/sd_dostalek.RData")
 
 dataf <- dostalek %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1034,9 +1034,9 @@ evju_out <- compadre %>%
 save(evju_out, file = "data/derived/analysis_cache/sd_evju.RData")
 
 dataf <- evju %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1083,9 +1083,9 @@ flores_out <- compadre %>%
 save(flores_out, file = "data/derived/analysis_cache/sd_flores.RData")
 
 dataf <- flores %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1125,9 +1125,9 @@ shryock_out <- compadre %>%
 save(shryock_out, file = "data/derived/analysis_cache/sd_shryock.RData")
 
 dataf <- shryock %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1168,9 +1168,9 @@ csergo_out <- compadre %>%
 save(csergo_out, file = "data/derived/analysis_cache/sd_csergo.RData")
 
 dataf <- csergo %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1256,9 +1256,9 @@ raghu_out <- compadre %>%
 save(raghu_out, file = "data/derived/analysis_cache/sd_raghu.RData")
 
 dataf <- raghu %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1301,9 +1301,9 @@ martin_out <- compadre %>%
 save(martin_out, file = "data/derived/analysis_cache/sd_martin.RData")
 
 dataf <- martin %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1351,9 +1351,9 @@ law_out <- compadre %>%
 save(law_out, file = "data/derived/analysis_cache/sd_law.RData")
 
 dataf <- law %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1398,9 +1398,9 @@ jacq_out <- compadre %>%
 save(jacq_out, file = "data/derived/analysis_cache/sd_jacq.RData")
 
 dataf <- jacq %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1441,9 +1441,9 @@ portela_out <- compadre %>%
 save(portela_out, file = "data/derived/analysis_cache/sd_portela.RData")
 
 dataf <- portela %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1484,9 +1484,9 @@ lopez_out <- compadre %>%
 save(lopez_out, file = "data/derived/analysis_cache/sd_lopez.RData")
 
 dataf <- lopez %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1528,9 +1528,9 @@ auestad_out <- compadre %>%
 save(auestad_out, file = "data/derived/analysis_cache/sd_auestad.RData")
 
 dataf <- auestad %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
@@ -1575,8 +1575,8 @@ dias_out <- compadre %>%
 save(dias_out, file = "data/derived/analysis_cache/sd_dias.RData")
 
 dataf <- dias %>% cdb_metadata() %>% 
-  select(Authors, YearPublication, Journal, DOI.ISBN, SpeciesAccepted)
+  select(Authors, YearPublication, Journal, DOI_ISBN, SpeciesAccepted)
 dataf <- unique(dataf)
-mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI.ISBN, dataf$SpeciesAccepted, sep = ", ")
+mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)

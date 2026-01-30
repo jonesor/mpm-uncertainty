@@ -17,6 +17,8 @@ setup_packages <- function(pkgs) {
 setup_rstan <- function() {
   if (requireNamespace("rstan", quietly = TRUE)) {
     rstan::rstan_options(auto_write = TRUE)
-    options(mc.cores = parallel::detectCores())
+    cores <- parallel::detectCores()
+    if (is.na(cores) || cores < 1) cores <- 1
+    options(mc.cores = cores)
   }
 }

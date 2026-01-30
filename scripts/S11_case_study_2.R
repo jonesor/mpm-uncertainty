@@ -2,7 +2,7 @@
 ### libraries
 source("code/setup.R")
 setup_packages(c("tidyverse", "cowplot", "Rcompadre", "Rage", "popbio",
-                 "gridExtra", "rstan", "loo"))
+                 "gridExtra", "rstan", "loo", "patchwork"))
 setup_rstan()
 source("code/functions.R")
 seed <- 12345
@@ -23,7 +23,7 @@ compadre <- cdb_fetch('data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData')
 comp_sub <- compadre %>% 
   filter(MatrixComposite == "Individual",
          MatrixTreatment == "Unmanipulated",
-         AnnualPeriodicity == "1",
+         ProjectionInterval == "1",
          MatrixCaptivity == "W")
 
 # find populations with time-series >= 5 years
@@ -155,7 +155,7 @@ df_beta <- tibble(reg = beta_reg, err = beta_err) %>%
 
 ggplot(df_beta, aes(x = model)) +
   geom_point(aes(y = med), size = 2.5) +
-  geom_linerange(aes(ymin = low80, ymax = upp80), size = 1.5) +
+  geom_linerange(aes(ymin = low80, ymax = upp80), linewidth = 1.5) +
   geom_linerange(aes(ymin = low95, ymax = upp95)) +
   geom_hline(yintercept = 0, alpha = 0.5, linetype = 2) +
   coord_flip()
@@ -184,7 +184,7 @@ year_full <- year_err %>%
 tt <- theme_bw() +
   theme(panel.grid = element_blank(),
         text = element_text(size = 11.5),
-        axis.ticks = element_line(size = 0.4))
+        axis.ticks = element_line(linewidth = 0.4))
 
 p1 <- ggplot(pred_full, aes(x = x)) +
   geom_line(aes(y = med)) +
@@ -198,9 +198,7 @@ p1 <- ggplot(pred_full, aes(x = x)) +
   # theme(panel.grid = element_blank(),
   #       text = element_text(size = 11.5))
 
-dev.off()
-quartz(height = 4.5, width = 3.5, dpi = 150)
-print(p1)
+ggsave("figures/clim_1.png", p1, height = 4.5, width = 3.5, units = "in", dpi = 300)
 
 
 
@@ -290,22 +288,13 @@ p2 <- ggplot(gprc_betas, aes(x = lag)) +
   # theme(panel.grid = element_blank(),
   #       text = element_text(size = 11.5))
 
-dev.off()
-quartz(height = 4.5, width = 3.5, dpi = 150)
-print(p2)
-
-# ggsave("figures/clim_2.png", p2, height = 6, width = 5, units = "in", dpi = 300)
+ggsave("figures/clim_2.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 300)
 
 
 
 # combine both climate plots
-p <- plot_grid(p2, p1, labels = c("A", "B"))
-
-dev.off()
-quartz(height = 4.5, width = 6.25, dpi = 160)
-print(p)
-
-# ggsave2("figures/clim.png", p, height = 4.5, width = 6.25)
+p <- p2 / p1 + plot_layout(heights = c(1, 1))
+ggsave("figures/clim.png", p, height = 4.5, width = 6.25, units = "in", dpi = 300)
 
 
 

@@ -3,7 +3,7 @@
 ### libraries
 source("code/setup.R")
 setup_packages(c("tidyverse", "ggridges", "cowplot", "Rcompadre", "Rage",
-                 "popbio", "popdemo", "gridExtra", "rstan", "loo"))
+                 "popbio", "popdemo", "gridExtra", "rstan", "loo", "patchwork"))
 setup_rstan()
 source("code/functions.R")
 seed <- 12345
@@ -36,7 +36,7 @@ mpm_draws <- cdb_bind_rows(lapply(sd_files, rdata_load2)) %>%
 
 ### point estimates for parameters of interest
 pt_shape <- mpm_draws %>% 
-  mutate(perennial = map2_lgl(matU, start, ~ mpm_to_lx(.x, .y, N = 3)[4] > 0)) %>% 
+  mutate(perennial = map2_lgl(matU, start, ~ mpm_to_lx(.x, .y, xmax = 3)[4] > 0)) %>% 
   mutate(any_rep = map_lgl(matF, ~ any(.x > 0))) %>% 
   filter(perennial == TRUE, any_rep == TRUE) %>% 
   mutate(first_rep = map_int(rep_stages, ~ min(which(.x)))) %>% 
@@ -96,49 +96,48 @@ ggplot(pt_shape) +
 #   ggtitle(paste(out$SpeciesAuthor[1], round(out$shape_pt, 3), sep = "; "))
 
 
-## sampling distributions for derived parameters
-sd_shape <- pt_shape %>%
-  select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
-  unnest() %>%
-  left_join(select(as_tibble(pt_shape), id, start, rep_stages)) %>%
-  mutate(rep_prop1 = pmap(list(simU, start, rep_stages), repro_prop_start)) %>%
-  mutate(lx = map2(simU, rep_prop1, lx_from_mature)) %>%
-  mutate(lx_min = map_dbl(lx, min)) %>%
-  mutate(lx_n = map_int(lx, length)) %>%
-  mutate(lxs = map2(lx, q, lx_submax)) %>%
-  mutate(lxs_min = map_dbl(lxs, min)) %>%
-  mutate(l0 = map_dbl(lx, sum)) %>%
-  mutate(l0_int = as.integer(round(l0, 0))) %>%
-  mutate(shape = map2_dbl(lxs, q+1, shape_surv2)) %>%
-  mutate(shape_l0 = map2_dbl(lx, l0_int, ~ 1 + log(.x[.y]))) %>%
-  mutate(shape = shape_l0) %>% 
-  left_join(select(pt_shape, id, id_l0, id_shape, ends_with("pt")), by = "id")
+## sampling distributions for derived parameters (cached)
+sd_shape_path <- "data/derived/analysis_cache/full_sd_spp_shape.RData"
+sd_other_path <- "data/derived/analysis_cache/full_sd_spp_other.RData"
 
-# sd_other <- pt_other %>%
-#   select(id, SpeciesAuthor, MatrixPopulation, simU, simF) %>%
-#   unnest() %>%
-#   mutate(simA = pmap(list(simU, simF), ~ ..1 + ..2)) %>% 
-#   left_join(select(as_tibble(pt_other), id, start, rep_stages), by = "id") %>% 
-#   mutate(loglam = map_dbl(simA, ~ log(lambda(.x)))) %>% 
-#   mutate(damp = map_dbl(simA, damping.ratio)) %>% 
-#   mutate(R0 = map2_dbl(simU, simF, R0)) %>%
-#   mutate(gen = log(R0) / loglam) %>% 
-#   mutate(w = map(simA, stable.stage)) %>%
-#   mutate(growth = map2_dbl(simU, w, ~ vr_growth(.x, weights_col = .y))) %>% 
-#   left_join(select(pt_other, id, starts_with("id_"), ends_with("pt")), by = "id")
-# 
-# ## write to file
-# sd_shape <- sd_shape %>%
-#   select(which(sapply(sd_shape, class) != "list"))
-# 
-# sd_other <- sd_other %>%
-#   select(which(sapply(sd_other, class) != "list"))
-# 
-# save(sd_shape, file = "data/derived/analysis_cache/full_sd_spp_shape.RData")
-# save(sd_other, file = "data/derived/analysis_cache/full_sd_spp_other.RData")
+if (file.exists(sd_shape_path)) {
+  load(sd_shape_path)
+} else {
+  sd_shape <- pt_shape %>%
+    select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
+    unnest(cols = c(simU, simF)) %>%
+    left_join(select(as_tibble(pt_shape), id, start, rep_stages)) %>%
+    mutate(rep_prop1 = pmap(list(simU, start, rep_stages), repro_prop_start)) %>%
+    mutate(lx = map2(simU, rep_prop1, lx_from_mature)) %>%
+    mutate(lx_min = map_dbl(lx, min)) %>%
+    mutate(lx_n = map_int(lx, length)) %>%
+    mutate(lxs = map2(lx, q, lx_submax)) %>%
+    mutate(lxs_min = map_dbl(lxs, min)) %>%
+    mutate(l0 = map_dbl(lx, sum)) %>%
+    mutate(l0_int = as.integer(round(l0, 0))) %>%
+    mutate(shape = map2_dbl(lxs, q+1, shape_surv2)) %>%
+    mutate(shape_l0 = map2_dbl(lx, l0_int, ~ 1 + log(.x[.y]))) %>%
+    mutate(shape = shape_l0) %>% 
+    left_join(select(pt_shape, id, id_l0, id_shape, ends_with("pt")), by = "id")
+  save(sd_shape, file = sd_shape_path)
+}
 
-load(file = "data/derived/analysis_cache/full_sd_spp_shape.RData")
-load(file = "data/derived/analysis_cache/full_sd_spp_other.RData")
+if (file.exists(sd_other_path)) {
+  load(sd_other_path)
+} else {
+  sd_other <- pt_other %>%
+    select(id, SpeciesAuthor, MatrixPopulation, simU, simF) %>%
+    unnest(cols = c(simU, simF)) %>%
+    mutate(simA = pmap(list(simU, simF), ~ ..1 + ..2)) %>% 
+    mutate(loglam = map_dbl(simA, ~ log(lambda(.x)))) %>% 
+    mutate(damp = map_dbl(simA, damping.ratio)) %>% 
+    mutate(R0 = map2_dbl(simU, simF, R0)) %>%
+    mutate(gen = log(R0) / loglam) %>% 
+    mutate(w = map(simA, stable.stage)) %>%
+    mutate(growth = map2_dbl(simU, w, ~ vr_growth(.x, weights_col = .y))) %>% 
+    left_join(select(pt_other, id, starts_with("id_"), ends_with("pt")), by = "id")
+  save(sd_other, file = sd_other_path)
+}
 
 
 
@@ -154,7 +153,7 @@ tt <- theme(panel.grid = element_blank(),
 p1 <- ggplot(sd_shape, aes(y = id_shape)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = shape), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
   geom_point(data = pt_shape, aes(x = shape_pt), size = 0.9) +
   # coord_flip(xlim = c(-0.3, 0.2)) +
   coord_flip(xlim = c(-0.5, 0.5)) +
@@ -164,7 +163,7 @@ p1 <- ggplot(sd_shape, aes(y = id_shape)) +
 
 p2 <- ggplot(sd_shape, aes(y = id_l0)) +
   geom_density_ridges(aes(x = l0), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
   geom_point(data = pt_shape, aes(x = l0_pt), size = 0.9) +
   scale_x_log10() +
   coord_flip() +
@@ -172,16 +171,9 @@ p2 <- ggplot(sd_shape, aes(y = id_l0)) +
        x = expression(paste("Mature life expectancy (", italic(L[alpha]), ")"))) +
   tt
 
-# arrange plot panels
-g <- rbind(ggplotGrob(p1), ggplotGrob(p2), size = "last")
-
-# print to screen
-dev.off()
-quartz(height = 5.5, width = 5.5, dpi = 120)
-grid.arrange(g)
-
-# save png
-# ggsave("figures/sds_shape_spp.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
+# arrange plot panels and save
+p_shape <- p1 / p2 + plot_layout(heights = c(1, 1))
+ggsave("figures/sds_shape_spp.png", p_shape, height = 5.5, width = 5.5, units = "in", dpi = 300)
 
 
 
@@ -197,7 +189,7 @@ tt <- theme(panel.grid = element_blank(),
 p1 <- ggplot(sd_other, aes(y = id_loglam)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = loglam), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
   geom_point(data = pt_other, aes(x = loglam_pt), size = 0.9) +
   scale_x_continuous(breaks = seq(-0.4, 0.6, 0.2)) +
   coord_flip(xlim = c(-0.4, 0.7)) +
@@ -217,7 +209,7 @@ p1 <- ggplot(sd_other, aes(y = id_loglam)) +
 
 p3 <- ggplot(sd_other, aes(y = id_growth)) +
   geom_density_ridges(aes(x = growth), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
   geom_point(data = pt_other, aes(x = growth_pt), size = 0.9) +
   coord_flip() +
   scale_x_continuous(breaks = seq(0, 1, 0.2)) +
@@ -227,7 +219,7 @@ p3 <- ggplot(sd_other, aes(y = id_growth)) +
 
 p4 <- ggplot(sd_other, aes(y = id_gen)) +
   geom_density_ridges(aes(x = gen), rel_min_height = 0.01,
-                      scale = 2.5, fill = "#9ebcda", size = 0.4) +
+                      scale = 2.5, fill = "#9ebcda", linewidth = 0.4) +
   geom_point(data = pt_other, aes(x = gen_pt), size = 0.9) +
   scale_x_log10() +
   coord_flip(xlim = c(1, 350)) +
@@ -235,16 +227,9 @@ p4 <- ggplot(sd_other, aes(y = id_gen)) +
        x = expression(paste("Generation time (", italic(T), ")"))) +
   tt
 
-# arrange plot panels
-g <- rbind(ggplotGrob(p1), ggplotGrob(p3), ggplotGrob(p4), size = "last")
-
-# print to screen
-dev.off()
-quartz(height = 7, width = 5, dpi = 140)
-grid.arrange(g)
-
-# save png
-# ggsave("figures/sd_other_spp.png", g, height = 7, width = 5, units = "in", dpi = 300)
+# arrange plot panels and save
+p_other <- p1 / p3 / p4 + plot_layout(heights = c(1, 1, 1))
+ggsave("figures/sd_other_spp.png", p_other, height = 7, width = 5, units = "in", dpi = 300)
 
 
 
@@ -341,7 +326,7 @@ pred_x <- seq(min(dat_stan$x), max(dat_stan$x), length.out = 50)
 pred_reg <- tibble(mu_alpha, mu_beta, pred_x = list(pred_x)) %>% 
   mutate(pred = pmap(list(mu_alpha, mu_beta, pred_x), ~ ..1 + ..2 * ..3)) %>% 
   dplyr::select(pred_x, pred) %>% 
-  unnest() %>% 
+  unnest(cols = c(pred_x, pred)) %>% 
   mutate(pred_x = 10^(pred_x + x_cent)) %>% 
   group_by(pred_x) %>% 
   summarize(pred_med = quantile(pred, 0.500),
@@ -357,9 +342,9 @@ dat_stan <- list(N = nrow(df_shape),
                  N_spp = length(unique(df_shape$spp_int)),
                  spp = df_shape$spp_int,
                  x_mean = df_shape$log_l0_mean - x_cent_error,
-                 x_se = df_shape$log_l0_se,
+                 x_se = pmax(df_shape$log_l0_se, 1e-6),
                  y_mean = df_shape$shape_mean,
-                 y_se = df_shape$shape_se)
+                 y_se = pmax(df_shape$shape_se, 1e-6))
 
 # fit stan model
 stan_fit_error <- sampling(
@@ -392,7 +377,7 @@ pred_x_error <- seq(min(df_shape$log_l0_low - x_cent_error),
 pred_error <- tibble(mu_alpha_error, mu_beta_error, pred_x = list(pred_x_error)) %>% 
   mutate(pred = pmap(list(mu_alpha_error, mu_beta_error, pred_x), ~ ..1 + ..2 * ..3)) %>% 
   dplyr::select(pred_x, pred) %>% 
-  unnest() %>% 
+  unnest(cols = c(pred_x, pred)) %>% 
   mutate(pred_x = 10^(pred_x + x_cent_error)) %>% 
   group_by(pred_x) %>% 
   summarize(pred_med = quantile(pred, 0.500),
@@ -446,12 +431,12 @@ df_beta <- bind_rows(
 tt <- theme_bw() +
   theme(panel.grid = element_blank(),
         text = element_text(size = 11.5),
-        axis.ticks = element_line(size = 0.4))
+        axis.ticks = element_line(linewidth = 0.4))
 
 p1 <- ggplot(pred_full) +
   geom_point(data = bars_full, aes(x = l0_pt, y = shape_pt), size = 1.3) +
-  geom_linerange(data = bars_full, aes(x = l0_med, ymin = shape_low, ymax = shape_upp), size = 0.3, alpha = 0.6) +
-  geom_errorbarh(data = bars_full, aes(y = shape_med, xmin = l0_low, xmax = l0_upp), size = 0.3, alpha = 0.6) +
+  geom_linerange(data = bars_full, aes(x = l0_med, ymin = shape_low, ymax = shape_upp), linewidth = 0.3, alpha = 0.6) +
+  geom_errorbarh(data = bars_full, aes(y = shape_med, xmin = l0_low, xmax = l0_upp), linewidth = 0.3, alpha = 0.6) +
   geom_line(aes(x = pred_x, y = pred_med), col = "darkblue") +
   geom_ribbon(aes(x = pred_x, ymin = pred_low, ymax = pred_upp), fill = "darkblue", alpha = 0.2) +
   scale_x_log10() +
@@ -463,22 +448,15 @@ p1 <- ggplot(pred_full) +
 
 p2 <- ggplot(df_beta, aes(x = beta)) +
   geom_vline(xintercept = 0, linetype = 2, alpha = 0.5) +
-  geom_density(fill = "darkred", alpha = 0.4, size = 0) +
+  geom_density(fill = "darkred", alpha = 0.4, linewidth = 0) +
   coord_cartesian(xlim = c(-0.12, 0.12)) +
   facet_wrap(~ model, ncol = 1) +
   labs(x = expression(paste("Slope coefficient (", italic(beta), ")")), y = "Posterior density") +
   tt
 
-# combine both plots
-p <- plot_grid(p1, p2, labels = c("A", "B"), rel_widths = c(1.08, 1), nrow = 1)
-
-# print to screen
-dev.off()
-quartz(height = 4.5, width = 6.25, dpi = 160)
-print(p)
-
-# save to png
-# ggsave2("figures/shape_spp.png", p, height = 4.5, width = 6.25)
+# combine both plots and save
+p <- p1 + p2 + plot_layout(widths = c(1.08, 1))
+ggsave("figures/shape_spp.png", p, height = 4.5, width = 6.25, units = "in", dpi = 300)
 
 
 
@@ -551,6 +529,8 @@ dat_stan <- list(N = nrow(df_shape),
                  y_mean = df_shape$log_l0_mean,
                  y_se = df_shape$log_l0_se)
 
+dat_stan$y_se <- pmax(dat_stan$y_se, 1e-6)
+
 
 # fit stan model
 stan_fit_varcomp <- sampling(
@@ -584,7 +564,7 @@ pt <- pt_shape %>%
   mutate(hx = map(lx, lx_to_px)) %>%
   mutate(x = map(lx, ~ seq_along(.x) - 1)) %>% 
   select(SpeciesAuthor, MatrixPopulation, x, hx) %>% 
-  unnest() #%>% 
+  unnest(cols = c(x, hx)) #%>% 
 # filter(!is.na(hxs))
 
 sdist <- sd_shape %>% 
@@ -597,19 +577,12 @@ sdist <- sd_shape %>%
   mutate(rep = 1:n()) %>% 
   slice(sample(rep, 50)) %>% 
   ungroup() %>% 
-  unnest()# %>% 
+  unnest(cols = c(x, hx))# %>% 
 # filter(!is.na(hxs))
 
-pt$matF[[3]]
-pt$matU[[3]] %>% colSums()
-pt$Authors[2]
-
-lapply(pt$matU, colSums)
-
-
 ggplot(sdist, aes(x, hx)) +
-  geom_line(aes(group = rep), alpha = 0.4, size = 0.3) +
-  geom_line(data = pt, col = "darkred", size = 1.2) +
+  geom_line(aes(group = rep), alpha = 0.4, linewidth = 0.3) +
+  geom_line(data = pt, col = "darkred", linewidth = 1.2) +
   scale_x_continuous(limits = c(0, 10), breaks = seq(0, 10, 2)) +
   # scale_y_log10() +
   # coord_cartesian(ylim = c(0, 10)) +

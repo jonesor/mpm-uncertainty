@@ -1,0 +1,225 @@
+SpeciesAuthor,MatrixPopulation,Lon,Lat,n_year
+Actaea_spicata,Site A,17.616666666666667,58.95,6
+Actaea_spicata,Site B,17.55,58.983333333333334,6
+Adenocarpus_gibbsianus,Donana,-6.433333333333334,37.03333333333333,5
+Adenocarpus_gibbsianus,Hinojos,-6.366666666666666,37.28333333333333,5
+Adenocarpus_gibbsianus,Palos de la Frontera,-6.883333333333333,37.21666666666667,5
+Agrimonia_eupatoria,A,17.133333333333333,58.93333333333333,5
+Agrimonia_eupatoria,B,17.133333333333333,58.93333333333333,5
+Anarrhinum_fruticosum,Crevillente I,-0.8,38.233333333333334,5
+Arabis_fecunda,Charleys Gulch,-114.01686111111111,46.25094444444444,6
+Arabis_fecunda,Lime Gulch,-112.80127777777777,45.38480555555555,6
+Arabis_fecunda,Vipond park,-112.86719444444444,45.683499999999995,6
+Arenaria_bolosii,Puig de Massanella,2.8,39.8,5
+Armeria_merinoi,Melide,-8,42.95,5
+Armeria_merinoi,Torques,-7.966666666666667,42.96666666666667,5
+Aster_pyrenaeus,Bulnes,-4.816666666666666,43.21666666666667,5
+Astragalus_scaphoides,Haynes Creek,-113.01666666666667,45.06666666666667,5
+Astragalus_scaphoides,Sheep Corral Gulch,-113.7,45,5
+Astragalus_scaphoides_2,Haynes Creek,-113.7,45.86666666666667,11
+Astragalus_scaphoides_2,McDevitt Creek,-113.7,45.86666666666667,11
+Astragalus_scaphoides_2,Sheep Corral Gulch,-113.7,45,11
+Astragalus_tremolsianus,Sierra de Grador,-2.7666666666666666,36.86666666666667,5
+Astragalus_tyghensis,Site 10,-121.31666666666666,45.166666666666664,9
+Astragalus_tyghensis,Site 13,-121.31666666666666,45.15,9
+Astragalus_tyghensis,Site 25,-121.18333333333334,45.233333333333334,9
+Astragalus_tyghensis,Site 4,-121.31666666666666,45.166666666666664,9
+Astragalus_tyghensis,Site 41,-121.1,45.25,9
+Balsamorhiza_sagittata,Mount Jumbo,-113.95,46.88333333333333,5
+Brassica_insularis,Calcina,9.35,41.71666666666667,9
+Brassica_insularis,Corbaghiola,9.133333333333333,42.31666666666667,9
+Brassica_insularis,Inzecca,9.266666666666667,42.1,9
+Brassica_insularis,Teghime,9.433333333333334,42.78333333333333,9
+Cheirolophus_metlesicsii,Barranco de Anavingo,-16.416666666666668,28.383333333333333,5
+Cirsium_pitcheri_3,Indiana Dunes West Beach,-87.2,41.61666666666667,5
+Cirsium_pitcheri_4,CiPi 1,-87.2,41.61666666666667,10
+Cirsium_pitcheri_4,CiPi 2,-87,41.666666666666664,10
+Cirsium_pitcheri_4,CiPi 3,-87.25,41.61666666666667,10
+Cirsium_pitcheri_6,Illinois Beach State Park,-87.8,42.416666666666664,7
+Cirsium_pitcheri_8,Wilderness State Park,-84.934,45.717,14
+Cirsium_undulatum,Hays,-99.05,38.13333333333333,30
+Cleistes_divaricata_var._divaricata,Big Island,-78.3,34.083333333333336,5
+Corallorhiza_trifida,Ordesa,0.08333333333333333,42.63333333333333,5
+Cypripedium_calceolus,Oparzelisko,22.65,53.266666666666666,8
+Cypripedium_calceolus,Pogorzaly,22.65,53.266666666666666,8
+Cypripedium_calceolus_2,Sallent,0.35077777777777774,42.76697222222222,5
+Cypripedium_fasciculatum,Region 3,-123.51666666666667,42.333333333333336,8
+Cypripedium_fasciculatum,Region 4,-123.16666666666667,42.25,8
+Cypripedium_fasciculatum,Region 5,-122.45,42.333333333333336,8
+Dicerandra_frutescens,Fireline Edge 1 (Pop 0),-81.35074999999999,27.15061111111111,12
+Dicerandra_frutescens,Fireline Edge 2 (Pop 11),-81.35066666666665,27.150777777777776,12
+Dicerandra_frutescens,Oak-hickory scrub 1 (Pop 10),-81.3506111111111,27.150944444444445,12
+Dicerandra_frutescens,Oak-hickory scrub 3 (Pop 19),-81.35066666666665,27.150777777777776,12
+Dicerandra_frutescens,Sand pine scrub 1 (Pop 2),-81.35066666666665,27.150777777777776,12
+Dicerandra_frutescens,Sand pine scrub 2 (Pop 4),-81.35066666666665,27.150777777777776,12
+Dicerandra_frutescens,Yard Edge (Pop 24),-81.35066666666665,27.150777777777776,12
+Dorycnium_spectabile,Barranco de los Cochinos,-16.816666666666666,28.316666666666666,5
+Dorycnium_spectabile,Barranco del Agua,-1.9,38.11666666666667,5
+Echinacea_angustifolia,Hays,-99.05,38.13333333333333,31
+Echinospartum_algibicum,Ronda,-5.15,36.733333333333334,5
+Eriogonum_longifolium_var._gnaphalifolium_2,Unburned,-81.35,27.183333333333334,8
+Erodium_paularense,Cañamares I,-2.2333333333333334,40.45,5
+Erodium_paularense,Pinilla del Valle I,-3.8166666666666664,40.916666666666664,5
+Eryngium_alpinum,BER,6.55,45.416666666666664,9
+Eryngium_alpinum,BOU,6.55,45.416666666666664,9
+Eryngium_alpinum,DES,6.55,45.416666666666664,9
+Eryngium_alpinum,PRA,6.716666666666667,45.36666666666667,9
+Eryngium_alpinum,PRB,6.716666666666667,45.36666666666667,9
+Eryngium_alpinum,PRC,6.716666666666667,45.36666666666667,9
+Eryngium_alpinum,PRD,6.55,45.416666666666664,9
+Eryngium_cuneifolium,16,-81.35,27.133333333333333,10
+Eryngium_cuneifolium,45,-81.35,27.133333333333333,10
+Eryngium_cuneifolium,54,-81.35,27.133333333333333,10
+Eryngium_cuneifolium,57,-81.35,27.133333333333333,10
+Eryngium_cuneifolium,70,-81.35,27.133333333333333,10
+Eryngium_cuneifolium,72,-81.35,27.133333333333333,10
+Eryngium_cuneifolium,85,-81.35,27.133333333333333,10
+Eryngium_cuneifolium,91,-81.35,27.133333333333333,10
+Euphorbia_fontqueriana,Puig de Massanella,2.8,39.8,5
+Geranium_sylvaticum_2,"Hol municipality, Buskerud county (Southern Norway)",7.95,60.7,5
+Haplopappus_radiatus,1in,-117.3,44.4,9
+Haplopappus_radiatus,2in,-117.3,44.4,9
+Haplopappus_radiatus,3in,-117.3,44.4,9
+Haplopappus_radiatus,4in,-117.3,44.4,9
+Haplopappus_radiatus,5in,-117.3,44.4,9
+Hedyotis_nigricans,Hays,-99.05,38.13333333333333,29
+Helianthemum_juliae,Teide National Park,-16.583333333333332,28.25,9
+Helianthemum_polygonoides,Cordovilla,-5.4,40.95,5
+Helianthemum_teneriffae,Ladera de Güímar,-16.433333333333334,28.283333333333335,5
+Horkelia_congesta,Long Tom ACEC,-123.28458333333333,44.134166666666665,6
+Hypericum_cumulicola,Site1; > 21 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site29; 10-11 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site29; 11-12 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site29; 12-13 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site29; 13-14 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site29; 9-10 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site32;  > 21 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site32; 1-2 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site32; 2-3 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site42;  3-4 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site42;  4-5 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site42; 2-3 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site42; 5-6 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site42; 6-7 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site45;  10-11 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site45;  9-10 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site45; 11-12 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site45; 12-13 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site45; 8-9 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site50;  4-5 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site50; 2-3 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site50; 3-4 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site50; 5-6 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site50; 6-7 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site57;  4-5 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site57; 2-3 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site57; 3-4 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site57; 5-6 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site57; 6-7 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site59;  > 21 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site62;  > 21 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site67;  10 - 11 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site67;  11 - 12 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site67;  8 - 9 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site67;  9 - 10 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site67; 12 - 13 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site87;  10 -  11 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site87;  11 - 12 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site87;  12 - 13 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site87;  13 - 14 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site87;  9 - 10 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site88;  10 - 11 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site88;  11 - 12 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site88;  12 - 13 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site88;  8 - 9 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site88;  9 - 10 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site91;  10 - 11 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site91;  11 - 12 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site91;  12 - 13 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site91;  8 - 9 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site91;  9 - 10 years after fire,-81.35,27.166666666666668,5
+Hypericum_cumulicola,Site93;  > 21 years after fire,-81.35,27.166666666666668,5
+Jurinea_fontqueri,Sierra de Mágina,-3.55,37.75,5
+Kosteletzkya_pentacarpos,Ricarda lagoon,2.101277777777778,41.28444444444444,8
+Laserpitium_longiradium,Sierra Nevada,-3.3,37.05,5
+Lesquerella_ovalifolia,Hays,-99.05,38.13333333333333,28
+Liatris_scariosa,Lisc 0,-87.9,41.516666666666666,5
+Liatris_scariosa,Lisc 1,-87.9,41.516666666666666,5
+Liatris_scariosa,Lisc 2,-87.9,41.516666666666666,5
+Limonium_erectum,Pangia,-2.9,40.38333333333333,5
+Limonium_malacitanum,El Chantal,-2.2,37.55,5
+Lomatium_bradshawii,Long Tom,-123.3,44.15,7
+Lomatium_cookii,Middle,-123.63333333333334,42.1,5
+Lomatium_cookii,South,-123.63333333333334,42.1,5
+Mammillaria_huitzilopochtli,S2,-96.95155555555556,17.900527777777775,5
+Opuntia_macrorhiza_2,Plot 102,-105.26758333333333,40.00013888888889,6
+Opuntia_macrorhiza_2,Plot 28,-105.25072222222222,39.95144444444445,6
+Opuntia_macrorhiza_2,Plot 52,-105.20055555555555,39.95138888888889,6
+Opuntia_macrorhiza_2,Plot 57,-105.25033333333333,39.95,6
+Opuntia_macrorhiza_2,Plot 61,-105.23430555555555,39.917833333333334,6
+Opuntia_rastrera,Grassland,-103.75,26.666666666666668,7
+Opuntia_rastrera,Nopalera,-103.75,26.666666666666668,7
+Orchis_purpurea,Light Environment 1,5.75,50.75,6
+Orchis_purpurea,Light Environment 2,5.75,50.75,6
+Orchis_purpurea,Light Environment 3,5.75,50.75,6
+Orchis_purpurea,Shaded site 1,5.75,50.75,6
+Orchis_purpurea,Shaded site 2,5.75,50.75,6
+Orchis_purpurea,Shaded site 3,5.75,50.75,6
+Paeonia_officinalis,Managed habitat,3.0166666666666666,43.766666666666666,5
+Paeonia_officinalis,Open habitat,3.0166666666666666,43.766666666666666,5
+Paeonia_officinalis,Woodland,3.0166666666666666,43.766666666666666,5
+Parolinia_glabriuscula,Caldera de Bandama,-15.45,28.033333333333335,5
+Paronychia_jamesii,Hays,-99.05,38.13333333333333,33
+Phyllanthus_emblica_3,PHEM_1,77.03377777777777,38.884861111111114,5
+Plantago_coronopus_2,C,-9.016666666666667,42.55,6
+Plantago_coronopus_2,CA,-6.216666666666667,36.416666666666664,6
+Plantago_coronopus_2,DH,9.983333333333333,55.13333333333333,6
+Plantago_coronopus_2,DS,8.25,55.483333333333334,6
+Plantago_coronopus_2,EA,-1.9166666666666665,57.333333333333336,6
+Plantago_coronopus_2,ES,-6.433333333333334,57.5,6
+Plantago_coronopus_2,F,-2.5,47.3,6
+Plantago_coronopus_2,SG,12.35,56.916666666666664,6
+Plantago_coronopus_2,ST,12.35,56.916666666666664,6
+Plantago_coronopus_2,T,-5.633333333333333,36.03333333333333,6
+Plantago_coronopus_2,TB,-9.05,43.18333333333333,6
+Primula_farinosa_4,Dröstorp 1,16.534833333333335,56.568000000000005,6
+Primula_farinosa_4,Dröstorp 2,16.5505,56.583666666666666,6
+Primula_farinosa_4,Tranekärr,16.517166666666665,56.5835,6
+Pseudomisopates_rivas-martinezii,Covacha,-5.1,40.5,5
+Pseudomisopates_rivas-martinezii,Serrota,-5.183333333333334,40.3,5
+Psoralea_tenuiflora,Hays,-99.2,38.8,33
+Purshia_subintegra,Dry,-111.98333333333333,34.733333333333334,7
+Purshia_subintegra,Moist,-111.98333333333333,34.733333333333334,7
+Pyrrocoma_radiata,"Gentle, east-facing slope",-117.3013,44.401199999999996,10
+Pyrrocoma_radiata,"Gentle, west-facing slope",-117.3177,44.4679,10
+Pyrrocoma_radiata,South-facing slope,-117.31713444444443,44.40111638888889,10
+Pyrrocoma_radiata,West-facing slope,-117.3183,44.467600000000004,10
+Ramonda_myconi,Grau,1.5666666666666667,42.333333333333336,5
+Ramonda_myconi,Ingla1,1.7833333333333332,42.31666666666667,5
+Ramonda_myconi,Ingla2,1.7833333333333332,42.31666666666667,5
+Ramonda_myconi,Pi,1.75,42.35,5
+Ramonda_myconi,Urus,1.85,42.35,5
+Ranunculus_peltatus,Island of Askö,16,59.13333333333333,5
+Ratibida_columnifera,Hays,-99.2,38.8,29
+Rumex_rupestris,Costa da Morte,-9.25,43,5
+Santolina_melidensis,Santiso-Palas,-8.05,42.85,5
+Silene_acaulis,Campion Crest,-142.81666666666666,61.55,5
+Silene_acaulis,Gulch,-142.88333333333333,61.483333333333334,5
+Silene_acaulis,Pass,-142.83333333333334,61.55,5
+Silene_acaulis,Ridge,-142.81666666666666,61.55,5
+Silene_acaulis,Rock Glacier,-142.83333333333334,61.55,5
+Silene_spaldingii,Eureka,-115.05,48.96666666666667,12
+Solidago_mollis,Hays,-99.2,38.8,30
+Sphaeralcea_coccinea,Hays,-99.2,38.8,35
+Thelesperma_megapotamicum,Hays,-99.2,38.8,29
+Tillandsia_macdougallii,Santa Catarina Ixtepeji,-96.56666666666666,17.266666666666666,5
+Trillium_ovatum,"Big Creek, Bitterroot Valley (Bitterroot National Forest)",-114.20113888888889,46.45147222222222,8
+Trillium_ovatum,"Grant Creek, Missoula Valley (Lolo National Forest)",-113.98344444444444,46.98388888888889,8
+Trillium_ovatum,"Spring Gulch, Rattlesnake drainage (Lolo National Forest)",-113.96694444444445,46.93416666666666,8
+Vella_pseudocytisus_subsp._paui,Villalba Baja,-1.0666666666666667,40.416666666666664,5
+Vella_pseudocytisus_subsp._paui,Villel,-1.1833333333333333,40.233333333333334,5
+Vella_pseudocytisus_subsp._paui_2,Villalba,-1.068861111111111,40.417138888888886,5
+Vella_pseudocytisus_subsp._paui_2,Villel,-1.1843055555555555,40.2335,5
+Vella_pseudocytisus_subsp._pseudocytisus,Aranjuez,-3.6,40.016666666666666,5
+Vella_pseudocytisus_subsp._pseudocytisus,Orce,-2.466666666666667,37.71666666666667,5
+Viola_biflora,No sheep,8,60.666666666666664,5

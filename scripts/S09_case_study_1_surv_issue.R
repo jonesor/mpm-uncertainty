@@ -2,6 +2,7 @@
 ### libraries
 source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre", "Rage", "popbio", "popdemo"))
+source("code/functions.R")
 
 
 ### load COMPADRE
@@ -9,7 +10,7 @@ compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 ## possible columns to collapse on
-col_spp <- c("id_stage", "SpeciesAuthor", "AnnualPeriodicity")
+col_spp <- c("id_stage", "SpeciesAuthor", "ProjectionInterval")
 col_pop <- c(col_spp, "MatrixPopulation", "MatrixTreatment")
 
 
@@ -81,7 +82,7 @@ out_shape <- comp_spp %>%
   filter(has_active == TRUE) %>% 
   mutate(rep_stages = map(matF, ~ colSums(.x) > 0)) %>% 
   mutate(start = mpm_first_active(.)) %>% 
-  mutate(perennial = map2_lgl(matU, start, ~ mpm_to_lx(.x, .y, N = 3)[4] > 0)) %>% 
+  mutate(perennial = map2_lgl(matU, start, ~ mpm_to_lx(.x, .y, xmax = 3)[4] > 0)) %>% 
   mutate(any_rep = map_lgl(matF, ~ any(.x > 0))) %>% 
   filter(perennial == TRUE, any_rep == TRUE) %>% 
   mutate(rep_prop1 = pmap(list(matU, start, rep_stages), repro_prop_start)) %>% 
@@ -89,7 +90,7 @@ out_shape <- comp_spp %>%
   filter(rep_na == FALSE) %>% 
   mutate(lx = map2(matU, rep_prop1, lx_from_mature)) %>%
   mutate(lx_n = map_int(lx, length)) %>% 
-  mutate(q = map2_int(matU, rep_prop1, qsd, nmax = 1e5)) %>%
+  mutate(q = map2_int(matU, rep_prop1, ~ qsd_safe(.x, .y))) %>%
   filter(!is.na(q)) %>% 
   mutate(lxs = map2(lx, q, lx_submax)) %>% 
   mutate(lxs_min = map_dbl(lxs, min)) %>% 
@@ -107,9 +108,7 @@ sum(out_shape$q < out_shape$l0_pt) / nrow(out_shape)
 
 sum(out_shape$lxs_min > 0.1) / nrow(out_shape)
 
-
-
-%>%
+out_shape <- out_shape %>%
   filter(lxs_n >= 3) %>% 
   mutate(shape_pt = map2_dbl(lxs, q+1, shape_surv2)) %>% 
   mutate(shape_l0_pt = map2_dbl(lx, l0_pt_int, ~ 1 + log(.x[.y]))) %>% 
@@ -117,8 +116,6 @@ sum(out_shape$lxs_min > 0.1) / nrow(out_shape)
   # filter(lx_n > 2) %>%
   filter(!is.na(shape_pt)) %>%
   # mutate(shape_pt = shape_l0_pt) %>%
-  mutate(id_shape = fct_reorder(fct_drop(id), shape_pt)) %>% 
-  mutate(id_l0 = fct_reorder(fct_drop(id), l0_pt))
-
-
-
+  mutate(id = row_number()) %>%
+  mutate(id_shape = fct_reorder(fct_drop(as.factor(id)), shape_pt)) %>% 
+  mutate(id_l0 = fct_reorder(fct_drop(as.factor(id)), l0_pt))

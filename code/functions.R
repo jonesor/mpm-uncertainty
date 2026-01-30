@@ -84,6 +84,36 @@ rdata_load2 <- function(path) {
   return(out)
 }
 
+life_expect <- function(matU, mixdist = NULL, start = NULL) {
+  if (is.null(mixdist) && is.null(start)) {
+    start <- 1L
+  }
+  Rage::life_expect_mean(matU, mixdist = mixdist, start = start)
+}
+
+repro_prop_start <- function(matU, start, rep_stages) {
+  Rage::mature_distrib(matU, start = start, repro_stages = rep_stages)
+}
+
+lx_from_mature <- function(matU, rep_prop1, xmax = 1000, lx_crit = -1) {
+  Rage::mpm_to_lx(matU, start = rep_prop1, xmax = xmax, lx_crit = lx_crit)
+}
+
+qsd <- function(matU, rep_prop1, conv = 0.01, nmax = 1e5) {
+  Rage::qsd_converge(matU, rep_prop1, conv = conv, N = nmax)
+}
+
+qsd_safe <- function(matU, rep_prop1, conv = 0.01, nmax = 1e5) {
+  tryCatch(
+    Rage::qsd_converge(matU, rep_prop1, conv = conv, N = nmax),
+    error = function(e) NA_integer_
+  )
+}
+
+R0 <- function(matU, matF) {
+  Rage::net_repro_rate(matU, matF)
+}
+
 ### Script helpers #############################################################
 collapse_fn <- function(x) {
   ifelse(all(is.na(x)),
@@ -377,8 +407,15 @@ scale_U <- function(matU) {
 
 
 mat_mean2 <- function(l, na.rm = TRUE, replace_na = TRUE) {
-  m <- popbio::mean.list(l, na.rm = na.rm)
+  m <- list_mean(l, na.rm = na.rm)
   if (replace_na) m[is.na(m)] <- 0
+  return(m)
+}
+
+list_mean <- function(l, na.rm = TRUE) {
+  arr <- simplify2array(l)
+  m <- apply(arr, 1:2, function(x) mean(x, na.rm = na.rm))
+  dimnames(m) <- dimnames(l[[1]])
   return(m)
 }
 
@@ -395,7 +432,11 @@ lx_submax <- function(lx, tmax, strip_zero = TRUE) {
 
 shape_surv2 <- function(lx, q) {
   upp <- min(q, length(lx))
-  ifelse(q < 4, NA_real_, shape_surv(lx[1:upp]))
+  if (q < 4) return(NA_real_)
+  tryCatch(
+    shape_surv(lx[1:upp]),
+    error = function(e) NA_real_
+  )
 }
 
 

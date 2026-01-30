@@ -2,7 +2,8 @@
 ### libraries
 source("code/setup.R")
 setup_packages(c("tidyverse", "popbio", "popdemo", "Rcompadre", "Rage",
-                 "ggridges", "cowplot", "gridExtra", "rstan", "loo"))
+                 "ggridges", "cowplot", "gridExtra", "patchwork",
+                 "rstan", "loo"))
 setup_rstan()
 source("code/functions.R")
 seed <- 12345
@@ -37,7 +38,7 @@ tt <- theme(panel.grid = element_blank(),
 p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = S), rel_min_height = 1e-2,
-                      scale = 3, fill = "#9ebcda", size = 0.4) +
+                      scale = 3, fill = "#9ebcda", linewidth = 0.4) +
   geom_point(data = pt_shape_out, aes(x = S_pt), size = 0.9) +
   annotate("text", x = Inf, y = 2.6, label = "A", vjust = 1.5, size = 5, fontface = "bold") +
   coord_flip(xlim = c(-0.3, 0.2)) +
@@ -47,7 +48,7 @@ p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
 
 p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
   geom_density_ridges(aes(x = L), rel_min_height = 1e-2,
-                      scale = 3, fill = "#9ebcda", size = 0.4) +
+                      scale = 3, fill = "#9ebcda", linewidth = 0.4) +
   geom_point(data = pt_shape_out, aes(x = L_pt), size = 0.9) +
   annotate("text", x = Inf, y = 2.6, label = "B", vjust = 1.5, size = 5, fontface = "bold") +
   scale_x_log10(limits = c(1.2, 1500)) +
@@ -57,12 +58,7 @@ p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
   tt
 
 # arrange plot panels
-g <- rbind(ggplotGrob(p1), ggplotGrob(p2), size = "last")
-
-# print to screen
-dev.off()
-quartz(height = 5.5, width = 5.5, dpi = 160)
-grid.arrange(g)
+g <- patchwork::wrap_plots(p1, p2, ncol = 1)
 
 # save png
 # ggsave("supplement/fig_raw/Fig_2.png", g, height = 5.5, width = 5.5, units = "in", dpi = 300)
@@ -86,7 +82,7 @@ rdg_size <- 0.2
 p1 <- ggplot(sd_other_out, aes(y = id_loglam)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = loglam), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
+                      scale = rdg_scale, fill = "#9ebcda", linewidth = rdg_size) +
   geom_point(data = pt_other_out, aes(x = loglam_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "A", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_continuous(breaks = seq(-0.4, 0.6, 0.2)) +
@@ -97,7 +93,7 @@ p1 <- ggplot(sd_other_out, aes(y = id_loglam)) +
 
 p2 <- ggplot(sd_other_out, aes(y = id_damp)) +
   geom_density_ridges(aes(x = damp), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", size = 0.3) +
+                      scale = rdg_scale, fill = "#9ebcda", linewidth = 0.3) +
   geom_point(data = pt_other_out, aes(x = damp_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "B", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_log10() +
@@ -108,7 +104,7 @@ p2 <- ggplot(sd_other_out, aes(y = id_damp)) +
 
 p3 <- ggplot(sd_other_out, aes(y = id_pmature)) +
   geom_density_ridges(aes(x = pmature), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
+                      scale = rdg_scale, fill = "#9ebcda", linewidth = rdg_size) +
   geom_point(data = pt_other_out, aes(x = pmature_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "C", vjust = 1.5, size = 4, fontface = "bold") +
   coord_flip() +
@@ -119,7 +115,7 @@ p3 <- ggplot(sd_other_out, aes(y = id_pmature)) +
 
 p4 <- ggplot(sd_other_out, aes(y = id_gen)) +
   geom_density_ridges(aes(x = gen), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
+                      scale = rdg_scale, fill = "#9ebcda", linewidth = rdg_size) +
   geom_point(data = pt_other_out, aes(x = gen_pt), size = pt_size, shape = pt_shp) +
   annotate("text", x = Inf, y = 4, label = "D", vjust = 1.5, size = 4, fontface = "bold") +
   scale_x_log10() +
@@ -128,35 +124,9 @@ p4 <- ggplot(sd_other_out, aes(y = id_gen)) +
        x = expression(paste("Generation time (", italic(T), ")"))) +
   tt
 
-p5 <- ggplot(sd_other_out, aes(y = id_growth)) +
-  geom_density_ridges(aes(x = growth), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
-  geom_point(data = pt_other_out, aes(x = growth_pt), size = pt_size, shape = pt_shp) +
-  annotate("text", x = Inf, y = 4, label = "E", vjust = 1.5, size = 4, fontface = "bold") +
-  coord_flip() +
-  labs(y = expression(paste("Population (ranked by ", italic(gamma), ")")),
-       x = expression(paste("Pr[Growth|Survival] (", italic(gamma), ")"))) +
-  tt
-
-p6 <- ggplot(sd_other_out, aes(y = id_elast)) +
-  geom_density_ridges(aes(x = elast), rel_min_height = 0.01,
-                      scale = rdg_scale, fill = "#9ebcda", size = rdg_size) +
-  geom_point(data = pt_other_out, aes(x = elast_pt), size = pt_size, shape = pt_shp) +
-  annotate("text", x = Inf, y = 4, label = "F", vjust = 1.5, size = 4, fontface = "bold") +
-  coord_flip() +
-  labs(y = expression(paste("Population (ranked by ", italic(E[pi]), ")")),
-       x = expression(paste("Elasticity of progression (", italic(E[pi]), ")"))) +
-  tt
-
-# arrange plot panels
-g1 <- rbind(ggplotGrob(p1), ggplotGrob(p2), ggplotGrob(p3), size = "last")
-g2 <- rbind(ggplotGrob(p4), ggplotGrob(p5), ggplotGrob(p6), size = "last")
-g <- cbind(g1, g2, size = "last")
-
-# print to screen
-dev.off()
-quartz(height = 6, width = 6.5, dpi = 150)
-grid.arrange(g)
+g1 <- patchwork::wrap_plots(p1, p2, p3, ncol = 1)
+g2 <- patchwork::wrap_plots(p4, ncol = 1)
+g <- patchwork::wrap_plots(g1, g2, ncol = 2)
 
 # save png
 # ggsave("figures/sd_other_out.png", g, height = 6, width = 6.5, units = "in", dpi = 300)
@@ -187,14 +157,34 @@ df_shape <- sd_shape_out %>%
             log_L_upp = quantile(log_L, 0.975)) %>% 
   ungroup() %>% 
   left_join(pt_shape_out) %>% 
-  mutate(spp_int = as.integer(as.factor(SpeciesAuthor)))
+  mutate(spp_int = as.integer(as.factor(SpeciesAuthor)),
+         id_shape = paste(SpeciesAuthor, MatrixPopulation, sep = " | ")) %>% 
+  mutate(
+    l0_pt = L_pt,
+    l0_med = L_med,
+    l0_mean = L_mean,
+    l0_se = L_se,
+    l0_low = L_low,
+    l0_upp = L_upp,
+    log_l0_med = log_L_med,
+    log_l0_mean = log_L_mean,
+    log_l0_se = log_L_se,
+    log_l0_low = log_L_low,
+    log_l0_upp = log_L_upp,
+    shape_pt = S_pt,
+    shape_med = S_med,
+    shape_mean = S_mean,
+    shape_se = S_se,
+    shape_low = S_low,
+    shape_upp = S_upp
+  )
 
 
 
 ### plot pace vs. shape, point estimates vs posterior means
 ggplot(df_shape) +
   geom_segment(aes(x = L_pt, y = S_pt, xend = L_mean, yend = S_mean),
-               size = 0.3, arrow = arrow(length = unit(0.02, "npc"))) +
+               linewidth = 0.3, arrow = arrow(length = unit(0.02, "npc"))) +
   geom_point(aes(L_pt, S_pt)) +
   scale_x_log10()
 
@@ -345,7 +335,7 @@ df_beta <- bind_rows(
 tt <- theme_bw() +
   theme(panel.grid = element_blank(),
         text = element_text(size = 11.5),
-        axis.ticks = element_line(size = 0.4))
+        axis.ticks = element_line(linewidth = 0.4))
 
 p1 <- ggplot(pred_full) +
   geom_point(data = bars_full, aes(x = l0_pt, y = shape_pt), size = 1.3) +
@@ -370,11 +360,6 @@ p2 <- ggplot(df_beta, aes(x = beta)) +
 
 # combine both plots
 p <- plot_grid(p1, p2, labels = c("A", "B"), rel_widths = c(1.08, 1), nrow = 1)
-
-# print to screen
-dev.off()
-quartz(height = 4.5, width = 6.25, dpi = 160)
-print(p)
 
 # save to png
 # ggsave2("figures/shape.png", p, height = 4.5, width = 6.25)
@@ -413,17 +398,13 @@ df_other <- sd_other_out %>%
             gen_mean = mean(log10(gen)),
             gen_se = sd(log10(gen)),
             pmature_mean = mean(logit(pmature)),
-            pmature_se = sd(logit(pmature)),
-            growth_mean = mean(logit(growth)),
-            growth_se = sd(logit(growth)),
-            elast_mean = mean(elast),
-            elast_se = sd(elast)) %>% 
+            pmature_se = sd(logit(pmature))) %>% 
   ungroup() %>% 
   left_join(pt_other_out) %>% 
+  mutate(id_other = paste(SpeciesAuthor, MatrixPopulation, sep = " | ")) %>% 
   mutate(damp_pt = log10(damp_pt)) %>% 
   mutate(gen_pt = log10(gen_pt)) %>% 
-  mutate(pmature_pt = logit(pmature_pt)) %>% 
-  mutate(growth_pt = logit(growth_pt))
+  mutate(pmature_pt = logit(pmature_pt))
 
 
 
@@ -455,19 +436,9 @@ dat_stan <- list(N = nrow(df_other),
                  y_pt = df_other$gen_pt)
 
 dat_stan <- list(N = nrow(df_other),
-                 y_mean = df_other$growth_mean,
-                 y_se = df_other$growth_se,
-                 y_pt = df_other$growth_pt)
-
-dat_stan <- list(N = nrow(df_other),
                  y_mean = df_other$pmature_mean,
                  y_se = df_other$pmature_se,
                  y_pt = df_other$pmature_pt)
-
-dat_stan <- list(N = nrow(df_other),
-                 y_mean = df_other$elast_mean,
-                 y_se = df_other$elast_se,
-                 y_pt = df_other$elast_pt)
 
 # fit stan model
 stan_fit_varcomp <- sampling(
@@ -487,7 +458,7 @@ quantile(pvar_w, c(0.025, 0.500, 0.975))
 
 
 
-df_theta <- posterior_vec(stan_fit_varcomp, x = df_shape$id_shape, "theta") %>% 
+df_theta <- posterior_vec(stan_fit_varcomp, x = df_other$id_other, "theta") %>% 
   mutate(x = fct_reorder(x, med))
 
 ggplot(df_theta, aes(x = x)) +
@@ -508,4 +479,3 @@ var(log10(df_shape$l0_pt)) / var(df_shape$log_l0_mean)
 var(df_other$loglam_pt) / var(df_other$loglam_mean)
 var(df_other$damp_pt) / var(df_other$damp_mean)
 var(df_other$gen_pt) / var(df_other$gen_mean)
-var(df_growth$growth_pt) / var(df_growth$growth_mean)

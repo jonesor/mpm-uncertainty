@@ -47,7 +47,7 @@ pt_shape <- mpm_draws %>%
   filter(q >= 3) %>%   # make sure at least 3 time steps
   mutate(lx = pmap(list(matU, rep_prop1, q),
                    ~ Rage::mpm_to_lx(..1, ..2, xmax = ..3), lx_crit = -1)) %>% 
-  mutate(L_pt = map2_dbl(matU, rep_prop1, Rage::life_expect)) %>% 
+  mutate(L_pt = map2_dbl(matU, rep_prop1, life_expect)) %>% 
   mutate(lx_min = map_dbl(lx, min)) %>% 
   mutate(S_pt = map_dbl(lx, Rage::shape_surv)) %>% 
   mutate(id_L = fct_reorder(fct_drop(id), L_pt)) %>% 
@@ -81,7 +81,7 @@ sd_shape <- pt_shape %>%
   mutate(rep_prop1 = pmap(list(simU, start, rep_stages), Rage::mature_distrib)) %>%
   mutate(lx = pmap(list(simU, rep_prop1, q),
                    ~ Rage::mpm_to_lx(..1, ..2, xmax = ..3), lx_crit = -1)) %>%
-  mutate(L = map2_dbl(simU, rep_prop1, Rage::life_expect)) %>%
+  mutate(L = map2_dbl(simU, rep_prop1, life_expect)) %>%
   mutate(S = map_dbl(lx, Rage::shape_surv)) %>%
   left_join(select(pt_shape, id, id_L, id_S, ends_with("pt")), by = "id")
 
@@ -114,13 +114,16 @@ sd_shape <- pt_shape %>%
 # save(sd_other, file = "data/derived/analysis_cache/full_sd_other.RData")
 
 
-sd_shape
-sd_full <- full_join()
+# sd_shape
+# sd_full <- full_join()
 
 
 ### load sampling distributions
 load(file = "data/derived/analysis_cache/full_sd_shape.RData")
 load(file = "data/derived/analysis_cache/full_sd_other.RData")
+if (!exists("sd_other") && exists("sd_other_out")) {
+  sd_other <- sd_other_out
+}
 
 
 
@@ -157,17 +160,12 @@ df_other <- sd_other %>%
             gen_mean = mean(log10(gen)),
             gen_se = sd(log10(gen)),
             pmature_mean = mean(logit(pmature)),
-            pmature_se = sd(logit(pmature)),
-            growth_mean = mean(logit(growth)),
-            growth_se = sd(logit(growth)),
-            elast_mean = mean(elast),
-            elast_se = sd(elast)) %>% 
+            pmature_se = sd(logit(pmature))) %>% 
   ungroup() %>% 
   left_join(pt_other) %>% 
   mutate(damp_pt = log10(damp_pt)) %>% 
   mutate(gen_pt = log10(gen_pt)) %>% 
-  mutate(pmature_pt = logit(pmature_pt)) %>% 
-  mutate(growth_pt = logit(growth_pt))
+  mutate(pmature_pt = logit(pmature_pt))
 
 
 
@@ -177,14 +175,14 @@ stan_varcomp <- stan_model("models/varcomp.stan")
 
 
 dat_stan <- list(N = nrow(df_shape),
-                 y_mean = df_shape$log_l0_mean,
-                 y_se = df_shape$log_l0_se,
-                 y_pt = log10(df_shape$l0_pt))
+                 y_mean = df_shape$log_L_mean,
+                 y_se = df_shape$log_L_se,
+                 y_pt = log10(df_shape$L_pt))
 
 dat_stan <- list(N = nrow(df_shape),
-                 y_mean = df_shape$shape_mean,
-                 y_se = df_shape$shape_se,
-                 y_pt = df_shape$shape_pt)
+                 y_mean = df_shape$S_mean,
+                 y_se = df_shape$S_se,
+                 y_pt = df_shape$S_pt)
 
 dat_stan <- list(N = nrow(df_other),
                  y_mean = df_other$loglam_mean,
@@ -202,19 +200,17 @@ dat_stan <- list(N = nrow(df_other),
                  y_pt = df_other$gen_pt)
 
 dat_stan <- list(N = nrow(df_other),
-                 y_mean = df_other$growth_mean,
-                 y_se = df_other$growth_se,
-                 y_pt = df_other$growth_pt)
-
-dat_stan <- list(N = nrow(df_other),
                  y_mean = df_other$pmature_mean,
                  y_se = df_other$pmature_se,
                  y_pt = df_other$pmature_pt)
 
-dat_stan <- list(N = nrow(df_other),
-                 y_mean = df_other$elast_mean,
-                 y_se = df_other$elast_se,
-                 y_pt = df_other$elast_pt)
+dat_stan$y_se <- pmax(dat_stan$y_se, 1e-6)
+
+theta_x <- if (dat_stan$N == nrow(df_other)) {
+  df_other$SpeciesAuthor
+} else {
+  df_shape$SpeciesAuthor
+}
 
 # fit stan model
 stan_fit_varcomp <- sampling(
@@ -234,7 +230,7 @@ quantile(pvar_w, c(0.025, 0.500, 0.975))
 
 
 
-df_theta <- posterior_vec(stan_fit_varcomp, x = df_shape$id_shape, "theta") %>% 
+df_theta <- posterior_vec(stan_fit_varcomp, x = theta_x, "theta") %>% 
   mutate(x = fct_reorder(x, med))
 
 ggplot(df_theta, aes(x = x)) +
@@ -249,10 +245,10 @@ var_a <- rstan_extract(stan_fit_varcomp, "var_a")
 quantile(var_a_pt / var_a, c(0.025, 0.500, 0.975))
 
 
-var(df_shape$shape_pt) / var(df_shape$shape_mean)
-var(log10(df_shape$l0_pt)) / var(df_shape$log_l0_mean)
+var(df_shape$S_pt) / var(df_shape$S_mean)
+var(log10(df_shape$L_pt)) / var(df_shape$log_L_mean)
 
 var(df_other$loglam_pt) / var(df_other$loglam_mean)
 var(df_other$damp_pt) / var(df_other$damp_mean)
 var(df_other$gen_pt) / var(df_other$gen_mean)
-var(df_growth$growth_pt) / var(df_growth$growth_mean)
+var(df_other$pmature_pt) / var(df_other$pmature_mean)

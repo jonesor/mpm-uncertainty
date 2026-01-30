@@ -5,6 +5,7 @@ source("code/setup.R")
 setup_packages(c("ggplot2", "grid", "gridExtra", "patchwork", "popbio",
                  "Rage", "tidyverse", "Rcompadre"))
 source("code/functions.R")
+compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 
 
 # rbeta(1, shape1 = 1 + k, shape2 = 1 + (n-k))
@@ -74,8 +75,8 @@ n2 <- c(8, 24)
 n3 <- c(29, 23)
 
 # mean MPM
-mU <- popbio::mean.list(list(mU1, mU2, mU3))
-mA <- popbio::mean.list(list(mA1, mA2, mA3))
+mU <- list_mean(list(mU1, mU2, mU3))
+mA <- list_mean(list(mA1, mA2, mA3))
 
 # point estimates for component and mean MPMs
 round(mA, 2)
@@ -103,13 +104,13 @@ drawsF3 <- sim_U_wrapper(mF3, N = n3, nsim = 2000)
 drawsA3 <- mapply(function(x, y) x + y, drawsU, drawsF, SIMPLIFY = F)
 
 # derive draws of mean MPM from draws of components
-drawsU <- list(mean.list(list(drawsU1[[1]], drawsU2[[1]], drawsU3[[1]])),
-               mean.list(list(drawsU1[[2]], drawsU2[[2]], drawsU3[[2]])),
-               mean.list(list(drawsU1[[2000]], drawsU2[[2000]], drawsU3[[2000]])))
+drawsU <- list(list_mean(list(drawsU1[[1]], drawsU2[[1]], drawsU3[[1]])),
+               list_mean(list(drawsU1[[2]], drawsU2[[2]], drawsU3[[2]])),
+               list_mean(list(drawsU1[[2000]], drawsU2[[2000]], drawsU3[[2000]])))
 
-drawsF <- list(mean.list(list(drawsF1[[1]], drawsF2[[1]], drawsF3[[1]])),
-               mean.list(list(drawsF1[[2]], drawsF2[[2]], drawsF3[[2]])),
-               mean.list(list(drawsF1[[2000]], drawsF2[[2000]], drawsF3[[2000]])))
+drawsF <- list(list_mean(list(drawsF1[[1]], drawsF2[[1]], drawsF3[[1]])),
+               list_mean(list(drawsF1[[2]], drawsF2[[2]], drawsF3[[2]])),
+               list_mean(list(drawsF1[[2000]], drawsF2[[2000]], drawsF3[[2000]])))
 
 drawsA <- mapply(function(x, y) x + y, drawsU, drawsF, SIMPLIFY = F)
 
@@ -137,6 +138,14 @@ scanga_t <- scanga_out %>%
   filter(MatrixPopulation == "T")
 
 (spp <- scanga_t$SpeciesAuthor[1])
+
+first_active_stage <- function(matU, matF = NULL) {
+  matA <- matU
+  if (!is.null(matF)) matA <- matA + matF
+  idx <- which(colSums(matA) > 0 | rowSums(matA) > 0)
+  if (length(idx) == 0) return(1L)
+  min(idx)
+}
 
 
 matU <- scanga_t$mat[[1]]@matU
@@ -189,7 +198,7 @@ quantile(life_sim$L, c(0.5, 0.025, 0.975))
 tt <- theme_bw() +
   theme(panel.grid = element_blank(),
         text = element_text(size = 11.5),
-        axis.ticks = element_line(size = 0.4))
+        axis.ticks = element_line(linewidth = 0.4))
 
 p1 <- ggplot(sigma_sim, aes(sigma)) +
   geom_density(fill = "darkred", color = NA, alpha = 0.5) +
@@ -212,27 +221,33 @@ p2 <- ggplot(life_sim, aes(L)) +
 g1 <- p1 / p2 + plot_layout(heights = c(0.7, 1))
 
 
-dev.off()
-quartz(height = 4, width = 6.25, dpi = 160)
-print(g1)
-
 ggsave("figures/boundary.png", g1, height = 4, width = 6.25, units = "in", dpi = 300)
 
 
 
-scanga_traj_pt <- pt_shape %>% 
-  filter(SpeciesAuthor == spp, MatrixPopulation == "T") %>% 
-  mutate(rep = 1:n()) %>% 
-  select(rep, lx) %>% 
+matU_pt <- scanga_t$mat[[1]]@matU
+matF_pt <- scanga_t$mat[[1]]@matF
+rep_stages_pt <- colSums(matF_pt) > 0
+start_pt <- first_active_stage(matU_pt, matF_pt)
+rep_prop1_pt <- repro_prop_start(matU_pt, start_pt, rep_stages_pt)
+lx_pt <- lx_from_mature(matU_pt, rep_prop1_pt)
+
+scanga_traj_pt <- tibble(rep = 1L, lx = list(lx_pt)) %>% 
   unnest(cols = "lx") %>% 
   group_by(rep) %>% 
   mutate(x = seq_along(lx),
          hx = Rage::lx_to_hx(lx)) %>% 
   ungroup()
 
-scanga_traj_sim <- sd_shape %>% 
-  filter(SpeciesAuthor == spp, MatrixPopulation == "T") %>% 
-  mutate(rep = 1:n()) %>% 
+scanga_traj_sim <- scanga_t %>% 
+  as_tibble() %>% 
+  select(simU, simF) %>% 
+  unnest(cols = c(simU, simF)) %>% 
+  mutate(rep = row_number(),
+         rep_stages = map(simF, ~ colSums(.x) > 0),
+         start = map_int(simU, first_active_stage),
+         rep_prop1 = pmap(list(simU, start, rep_stages), repro_prop_start),
+         lx = map2(simU, rep_prop1, lx_from_mature)) %>% 
   select(rep, lx) %>% 
   unnest(cols = "lx") %>% 
   group_by(rep) %>% 
@@ -258,10 +273,6 @@ g2 <- p1 / p2 / p3 +
   plot_layout(heights = c(0.8, 1, 1)) +
   plot_annotation(tag_levels = "a")
 
-
-dev.off()
-quartz(height = 6, width = 6.25, dpi = 160)
-print(g2)
 
 ggsave("figures/boundary2.png", g2, height = 6, width = 6.25, units = "in", dpi = 300)
 

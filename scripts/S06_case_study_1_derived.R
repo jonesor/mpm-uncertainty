@@ -49,7 +49,7 @@ pt_shape <- mpm_draws %>%
   filter(q >= 3) %>%   # make sure at least 3 time steps
   mutate(lx = pmap(list(matU, rep_prop1, q),
                    ~ Rage::mpm_to_lx(..1, ..2, xmax = ..3), lx_crit = -1)) %>% 
-  mutate(L_pt = map2_dbl(matU, rep_prop1, Rage::life_expect)) %>% 
+  mutate(L_pt = map2_dbl(matU, rep_prop1, life_expect)) %>% 
   mutate(lx_min = map_dbl(lx, min)) %>% 
   mutate(S_pt = map_dbl(lx, Rage::shape_surv)) %>% 
   as_tibble() %>% 
@@ -84,7 +84,7 @@ sd_shape <- pt_shape %>%
   mutate(rep_prop1 = pmap(list(simU, start, rep_stages), Rage::mature_distrib)) %>%
   mutate(lx = pmap(list(simU, rep_prop1, q),
                    ~ Rage::mpm_to_lx(..1, ..2, xmax = ..3), lx_crit = -1)) %>%
-  mutate(L = map2_dbl(simU, rep_prop1, Rage::life_expect)) %>%
+  mutate(L = map2_dbl(simU, rep_prop1, life_expect)) %>%
   mutate(S = map_dbl(lx, Rage::shape_surv))
 
 sd_other <- pt_other %>%
@@ -192,10 +192,6 @@ p3 <- ggplot(df_lx, aes(x, hx)) +
 
 
 g <- p1 / p2 / p3 + patchwork::plot_annotation(tag_levels = c("A", "B", "C"))
-
-# print to screen
-graphics.off()
-quartz(height = 6, width = 6.5, dpi = 150); print(g)
 
 # save png
 # ggsave("figures/appendix_qsd.png", g, height = 6, width = 6.5, units = "in", dpi = 600)

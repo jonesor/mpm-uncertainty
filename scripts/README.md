@@ -15,7 +15,7 @@ Contents
 - `S09_*`   Survival issue exploration.
 - `S10_*`   Variance component models.
 - `S11_*`   Case study 2 analysis.
-- `S12_*`   PRISM climate extraction and preprocessing.
+- `S12_*`   PRISM climate extraction and preprocessing (includes `prism` package download workflow).
 - `S13_*`   Appendix figures/analysis.
 
 Outputs

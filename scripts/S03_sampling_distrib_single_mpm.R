@@ -116,7 +116,7 @@ p1b <- ggplot(df_plot) +
 
 p1c <- ggplot(df_sdist) +
   geom_ribbon(aes(x = p, ymin = 0, ymax = pp), fill = "darkred", alpha = 0.4) +
-  geom_segment(data = df_pt, aes(x = p, y = 0, xend = p, yend = pp + 0.1), size = 0.3) +
+  geom_segment(data = df_pt, aes(x = p, y = 0, xend = p, yend = pp + 0.1), linewidth = 0.3) +
   geom_rect(data = df_rect, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2),
             fill = NA) +
   facet_grid(to_name ~ from_name, switch = "y") +
@@ -138,7 +138,7 @@ p1c <- ggplot(df_sdist) +
     axis.text.x = element_blank(),
     axis.text.y = element_text(size = 7),
     axis.ticks.x = element_blank(),
-    axis.ticks.y = element_line(size = 0.2, color = "grey80"),
+    axis.ticks.y = element_line(linewidth = 0.2, color = "grey80"),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_blank(),
     panel.grid.major.x = element_blank(),
@@ -148,7 +148,7 @@ p1c <- ggplot(df_sdist) +
     panel.spacing = unit(1.3, "pt")
   )
 
-p1 <- p1a + p1b + p1c + patchwork::plot_layout(ncol = 3)
+p1 <- patchwork::wrap_plots(p1a, p1b, p1c, ncol = 3)
 
 # ggsave("supplement/fig_raw/Fig_1a.png", p1, height = 2.2, width = 6.5, units = "in", dpi = 400)
 
@@ -224,7 +224,7 @@ deriv_plot <- deriv_param %>%
   filter(!(par == "Life~expectancy~(italic(l[0]))" & value > 35))
 
 p2 <- ggplot(deriv_plot) +
-  geom_density(aes(value), fill = "darkred", alpha = 0.4, size = 0) +
+  geom_density(aes(value), fill = "darkred", alpha = 0.4, linewidth = 0) +
   geom_vline(data = deriv_pt, aes(xintercept = value)) +
   facet_wrap(~ par, scales = "free", labeller = label_parsed, nrow = 1) +
   labs(x = "Parameter estimate", y = "Prob. density") +
@@ -235,18 +235,14 @@ p2 <- ggplot(deriv_plot) +
     panel.border = element_rect(color = "grey80"),
     panel.grid = element_blank(),
     axis.text.y = element_blank(),
-    axis.ticks = element_line(size = 0.4, color = "grey80"),
+    axis.ticks = element_line(linewidth = 0.4, color = "grey80"),
     axis.ticks.y = element_blank(),
-    axis.ticks.x = element_line(size = 0.3, color = "grey80"),
+    axis.ticks.x = element_line(linewidth = 0.3, color = "grey80"),
     plot.title = element_text(hjust = 0, face = "bold", vjust = 0, size = 12),
     text = element_text(size = 11.7),
     strip.text = element_text(size = 9, margin = margin(0.15, 0, 0.15, 0, "lines"))
   )
 
-
-graphics.off()
-quartz(height = 2, width = 6.5, dpi = 220)
-print(p2)
 
 # ggsave("supplement/fig_raw/Fig_1b.png", p2, height = 2, width = 6.5, units = "in", dpi = 300)
 
@@ -263,7 +259,7 @@ print(p2)
 #     filter(par == var)
 #   
 #   ggplot(deriv_param_foc) +
-#     geom_density(aes(value), fill = "darkred", alpha = 0.4, size = 0) +
+#     geom_density(aes(value), fill = "darkred", alpha = 0.4, linewidth = 0) +
 #     geom_vline(data = deriv_pt_foc, aes(xintercept = value)) +
 #     # labs(x = "Parameter estimate", y = "Probability density") +
 #     labs(x = NULL, y = NULL) +
@@ -274,9 +270,9 @@ print(p2)
 #       panel.border = element_rect(color = "grey80"),
 #       panel.grid = element_blank(),
 #       axis.text.y = element_blank(),
-#       axis.ticks = element_line(size = 0.4),
+#       axis.ticks = element_line(linewidth = 0.4),
 #       axis.ticks.y = element_blank(),
-#       axis.ticks.x = element_line(size = 0.3),
+#       axis.ticks.x = element_line(linewidth = 0.3),
 #       text = element_text(size = 11),
 #       plot.title = element_text(hjust = 0, face = "bold", vjust = 0, size = 10)
 #   )

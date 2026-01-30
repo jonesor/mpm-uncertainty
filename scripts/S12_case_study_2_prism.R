@@ -1,7 +1,8 @@
 
 ### libraries
 source("code/setup.R")
-setup_packages(c("tidyverse", "sf", "terra"))
+setup_packages(c("tidyverse", "sf", "terra", "Rcompadre", "prism"))
+source("code/functions.R")
 
 
 ### create shell scripts to download prism climate rasters
@@ -19,6 +20,20 @@ setup_packages(c("tidyverse", "sf", "terra"))
 
 
 ### prism raster files
+if (!dir.exists("prism")) {
+  dir.create("prism", recursive = TRUE)
+}
+
+prism::prism_set_dl_dir("prism")
+
+maybe_download_prism <- function(years) {
+  if (length(list.files("prism", pattern = "\\.bil$")) > 0) {
+    return(invisible(NULL))
+  }
+  prism::get_prism_monthlys(type = "ppt", years = years, mon = 1:12, keepZip = FALSE)
+  prism::get_prism_monthlys(type = "tmean", years = years, mon = 1:12, keepZip = FALSE)
+}
+
 prism_files <- paste0("prism/", list.files("prism"))
 month_files <- prism_files[grepl("[[:digit:]]{6}", prism_files)]
 bil_files <- month_files[grepl(".bil$", month_files)]
@@ -27,8 +42,44 @@ files_tmp <- bil_files[grepl("tmean", bil_files)]
 
 
 ### coordinates for each species/pop of interest
-spp_df <- read_csv("data/derived/climate/species_coords.csv") %>% 
+coords_path <- "data/derived/climate/species_coords.csv"
+if (!file.exists(coords_path)) {
+  compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+  comp_sub <- compadre %>% 
+    filter(MatrixComposite == "Individual",
+           MatrixTreatment == "Unmanipulated",
+           ProjectionInterval == "1",
+           MatrixCaptivity == "W")
+  comp_time_series <- comp_sub %>% 
+    as_tibble() %>% 
+    filter(!is.na(Lon) & !is.na(Lat)) %>% 
+    group_by(SpeciesAuthor) %>% 
+    mutate(n_year = length(unique(MatrixStartYear))) %>% 
+    ungroup() %>% 
+    filter(n_year >= 5) %>% 
+    group_by(SpeciesAuthor, MatrixPopulation) %>%
+    summarize(Lon = unique(Lon)[1],
+              Lat = unique(Lat)[1],
+              n_year = unique(n_year),
+              .groups = "drop")
+  write_csv(comp_time_series, coords_path)
+}
+
+spp_df <- read_csv(coords_path) %>% 
   filter(SpeciesAuthor == "Silene_spaldingii")
+
+if (length(prism_files) == 0) {
+  compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+  years <- compadre %>% 
+    as_tibble() %>% 
+    filter(SpeciesAuthor == "Silene_spaldingii") %>% 
+    filter(!is.na(MatrixStartYear)) %>% 
+    pull(MatrixStartYear) %>% 
+    unique() %>% 
+    sort()
+  maybe_download_prism(years)
+  prism_files <- paste0("prism/", list.files("prism"))
+}
 
 
 ### get climate data from all raster files for all species of interest

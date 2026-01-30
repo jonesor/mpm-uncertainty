@@ -136,8 +136,8 @@ sd_satterthwaite <- satterthwaite %>%
   mutate(rep = 1:n()) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation) %>% 
   summarize(simU = list(simU),
@@ -242,8 +242,8 @@ sd_lisc <- lisc %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -304,8 +304,8 @@ sd_cipi <- cipi %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -1144,8 +1144,8 @@ sd_shryock <- shryock %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -1199,8 +1199,8 @@ sd_csergo <- csergo %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -1251,8 +1251,8 @@ save(csergo_out, file = "data/derived/analysis_cache/sds_csergo.RData")
 #   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
 #   unnest() %>% 
 #   group_by(SpeciesAuthor, rep) %>% 
-#   summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-#             simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+#   summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+#             simF = list(list_mean(simF, na.rm = TRUE))) %>% 
 #   ungroup() %>% 
 #   group_by(SpeciesAuthor) %>% 
 #   summarize(simU = list(simU),
@@ -1302,8 +1302,8 @@ sd_raghu <- raghu %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -1347,8 +1347,8 @@ sd_martin <- martin %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -1457,8 +1457,8 @@ sd_jacq <- jacq %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -1503,8 +1503,8 @@ sd_portela <- portela %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -1590,8 +1590,8 @@ sd_auestad <- auestad %>%
   select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(SpeciesAuthor, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(SpeciesAuthor) %>% 
   summarize(simU = list(simU),
@@ -1640,8 +1640,8 @@ sd_dias <- dias %>%
   select(MatrixPopulation, MatrixStartYear, rep, simU, simF) %>% 
   unnest() %>% 
   group_by(MatrixPopulation, rep) %>% 
-  summarize(simU = list(popbio::mean.list(simU, na.rm = TRUE)),
-            simF = list(popbio::mean.list(simF, na.rm = TRUE))) %>% 
+  summarize(simU = list(list_mean(simU, na.rm = TRUE)),
+            simF = list(list_mean(simF, na.rm = TRUE))) %>% 
   ungroup() %>% 
   group_by(MatrixPopulation) %>% 
   summarize(simU = list(simU),
