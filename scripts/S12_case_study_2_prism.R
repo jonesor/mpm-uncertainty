@@ -6,20 +6,6 @@ setup_packages(c("tidyverse", "sf", "terra", "Rcompadre", "prism"))
 source("code/functions.R")
 
 
-# create shell scripts to download prism climate rasters ----
-# year <- 1981:2013
-# base_ppt <- "wget ftp://prism.nacse.org/monthly/ppt/"
-# base_tmp <- "wget ftp://prism.nacse.org/monthly/tmean/"
-# mid_ppt <- "/PRISM_ppt_stable_4kmM3_"
-# mid_tmp <- "/PRISM_tmean_stable_4kmM2_"
-# end <- "_all_bil.zip"
-
-# cat(c("#!/usr/bin/env bash", paste0(base_ppt, year, mid_ppt, year, end)),
-#     file = "scripts/download/fetch_prism_ppt.sh", sep = "\n")
-# cat(c("#!/usr/bin/env bash", paste0(base_tmp, year, mid_tmp, year, end)),
-#     file = "scripts/download/fetch_prism_tmp.sh", sep = "\n")
-
-
 # prism raster files ----
 if (!dir.exists("prism")) {
   dir.create("prism", recursive = TRUE)
@@ -28,18 +14,17 @@ if (!dir.exists("prism")) {
 prism::prism_set_dl_dir("prism")
 
 maybe_download_prism <- function(years) {
-  if (length(list.files("prism", pattern = "\\.bil$")) > 0) {
+  if (length(list.files("prism", pattern = "\\.bil$", recursive = TRUE)) > 0) {
     return(invisible(NULL))
   }
   prism::get_prism_monthlys(type = "ppt", years = years, mon = 1:12, keepZip = FALSE)
   prism::get_prism_monthlys(type = "tmean", years = years, mon = 1:12, keepZip = FALSE)
 }
 
-prism_files <- paste0("prism/", list.files("prism"))
-month_files <- prism_files[grepl("[[:digit:]]{6}", prism_files)]
-bil_files <- month_files[grepl(".bil$", month_files)]
-files_ppt <- bil_files[grepl("ppt", bil_files)]
-files_tmp <- bil_files[grepl("tmean", bil_files)]
+bil_files <- list.files("prism", pattern = "\\.bil$", recursive = TRUE, full.names = TRUE)
+month_files <- bil_files[grepl("[[:digit:]]{6}", bil_files)]
+files_ppt <- month_files[grepl("ppt", month_files)]
+files_tmp <- month_files[grepl("tmean", month_files)]
 
 
 # coordinates for each species/pop of interest ----
@@ -69,7 +54,7 @@ if (!file.exists(coords_path)) {
 spp_df <- read_csv(coords_path) %>% 
   filter(SpeciesAuthor == "Silene_spaldingii")
 
-if (length(prism_files) == 0) {
+if (length(bil_files) == 0) {
   compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
   years <- compadre %>% 
     as_tibble() %>% 
@@ -79,15 +64,22 @@ if (length(prism_files) == 0) {
     unique() %>% 
     sort()
   maybe_download_prism(years)
-  prism_files <- paste0("prism/", list.files("prism"))
+  bil_files <- list.files("prism", pattern = "\\.bil$", recursive = TRUE, full.names = TRUE)
+  month_files <- bil_files[grepl("[[:digit:]]{6}", bil_files)]
+  files_ppt <- month_files[grepl("ppt", month_files)]
+  files_tmp <- month_files[grepl("tmean", month_files)]
 }
 
 
 # get climate data from all raster files for all species of interest ----
-df_clim <- tibble(file_tmp = files_tmp, file_ppt = files_ppt) %>% 
-  mutate(Date = map_chr(files_tmp, ~ strsplit(.x, "_")[[1]][5])) %>% 
+df_ppt <- tibble(file_ppt = files_ppt) %>% 
+  mutate(Date = map_chr(file_ppt, ~ strsplit(basename(.x), "_")[[1]][5]))
+df_tmp <- tibble(file_tmp = files_tmp) %>% 
+  mutate(Date = map_chr(file_tmp, ~ strsplit(basename(.x), "_")[[1]][5]))
+
+df_clim <- inner_join(df_tmp, df_ppt, by = "Date") %>% 
   mutate(Year = as.integer(substr(Date, 1, 4))) %>% 
-  mutate(Month = as.integer(substr(Date, 5,6))) %>% 
+  mutate(Month = as.integer(substr(Date, 5, 6))) %>% 
   group_by(Year, Month) %>% 
   do(fetch_prism(.$file_tmp, .$file_ppt, spp_df)) %>% 
   ungroup() %>% 

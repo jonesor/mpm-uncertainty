@@ -1,0 +1,687 @@
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.2     ✔ tibble    3.2.1
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.0.4     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+This is COMPADRE version X.X.X (release date Nov_22_2017)
+See user agreement at https://compadre-db.org/Help/UserAgreement
+See how to cite with `citation(Rcompadre)`
+
+Rows: 5 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (1): MatrixClassAuthor
+dbl (1): N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Joining with `by = join_by(MatrixPopulation)`
+# A tibble: 13 × 7
+   SpeciesAuthor      MatrixPopulation MatrixComposite MatrixTreatment StartYear
+   <chr>              <chr>            <fct>           <chr>               <dbl>
+ 1 Agrimonia_eupator… A; B             Mean            Unmanipulated        1993
+ 2 Agrimonia_eupator… A                Mean            Unmanipulated        1993
+ 3 Agrimonia_eupator… A                Individual      Unmanipulated        1993
+ 4 Agrimonia_eupator… A                Individual      Unmanipulated        1994
+ 5 Agrimonia_eupator… A                Individual      Unmanipulated        1995
+ 6 Agrimonia_eupator… A                Individual      Unmanipulated        1996
+ 7 Agrimonia_eupator… A                Individual      Unmanipulated        1997
+ 8 Agrimonia_eupator… B                Mean            Unmanipulated        1993
+ 9 Agrimonia_eupator… B                Individual      Unmanipulated        1993
+10 Agrimonia_eupator… B                Individual      Unmanipulated        1994
+11 Agrimonia_eupator… B                Individual      Unmanipulated        1995
+12 Agrimonia_eupator… B                Individual      Unmanipulated        1996
+13 Agrimonia_eupator… B                Individual      Unmanipulated        1997
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 70 Columns: 9
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): Authors, Journal, SpeciesAccepted, MatrixPopulation, MatrixClassAuthor
+dbl (4): YearPublication, MatrixStartYear, MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'SpeciesAccepted', 'MatrixPopulation'. You
+can override using the `.groups` argument.
+Joining with `by = join_by(SpeciesAccepted, MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 9 × 7
+  SpeciesAuthor       MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>               <chr>            <fct>           <chr>               <dbl>
+1 Eriogonum_longifol… Unburned         Mean            Unmanipulated        1990
+2 Eriogonum_longifol… Unburned         Individual      Unmanipulated        1990
+3 Eriogonum_longifol… Unburned         Individual      Unmanipulated        1991
+4 Eriogonum_longifol… Unburned         Individual      Unmanipulated        1992
+5 Eriogonum_longifol… Unburned         Individual      Unmanipulated        1993
+6 Eriogonum_longifol… Unburned         Individual      Unmanipulated        1994
+7 Eriogonum_longifol… Unburned         Individual      Unmanipulated        1995
+8 Eriogonum_longifol… Unburned         Individual      Unmanipulated        1996
+9 Eriogonum_longifol… Unburned         Individual      Unmanipulated        1997
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 40 Columns: 7
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): DOI.ISBN, MatrixPopulation, MatrixClassAuthor
+dbl (3): MatrixStartYear, MatrixClassNumber, N
+lgl (1): Pool
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation)`
+Rows: 252 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (2): SpeciesAuthor, MatrixPopulation
+dbl (3): Stage, MatrixStartYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 4 × 6
+  SpeciesAuthor    MatrixPopulation    MatrixComposite MatrixTreatment StartYear
+  <chr>            <chr>               <fct>           <chr>               <dbl>
+1 Liatris_scariosa Lisc 0; Lisc 1; Li… Mean            Unmanipulated        1995
+2 Liatris_scariosa Lisc 0              Mean            Unmanipulated        1995
+3 Liatris_scariosa Lisc 1              Mean            Unmanipulated        1995
+4 Liatris_scariosa Lisc 2              Mean            Unmanipulated        1995
+# ℹ 1 more variable: EndYear <dbl>
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 4 × 6
+  SpeciesAuthor      MatrixPopulation  MatrixComposite MatrixTreatment StartYear
+  <chr>              <chr>             <fct>           <chr>               <dbl>
+1 Cirsium_pitcheri_4 CiPi 1; CiPi 2; … Mean            Unmanipulated        1988
+2 Cirsium_pitcheri_4 CiPi 1            Mean            Unmanipulated        1988
+3 Cirsium_pitcheri_4 CiPi 2            Mean            Unmanipulated        1988
+4 Cirsium_pitcheri_4 CiPi 3            Mean            Unmanipulated        1988
+# ℹ 1 more variable: EndYear <dbl>
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 6 × 7
+  SpeciesAuthor    MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>            <chr>            <fct>           <chr>               <dbl>
+1 Trollius_laxus_2 CfCh             Individual      Unmanipulated        2001
+2 Trollius_laxus_2 Cb               Individual      Unmanipulated        2001
+3 Trollius_laxus_2 EEFF             Individual      Unmanipulated        2002
+4 Trollius_laxus_2 H66cont          Individual      Unmanipulated        2001
+5 Trollius_laxus_2 MM               Individual      Unmanipulated        2002
+6 Trollius_laxus_2 T                Individual      Unmanipulated        2002
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 30 Columns: 7
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): Authors, MatrixComposite, Group, MatrixClassOrganized, MatrixClassA...
+dbl (2): MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Joining with `by = join_by(MatrixPopulation)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 11 × 7
+   SpeciesAuthor MatrixPopulation MatrixComposite MatrixTreatment StartYear
+   <chr>         <chr>            <fct>           <chr>               <dbl>
+ 1 Dioon_merolae EC; FO           Mean            Unmanipulated        2004
+ 2 Dioon_merolae EC               Mean            Unmanipulated        2004
+ 3 Dioon_merolae EC               Individual      Unmanipulated        2004
+ 4 Dioon_merolae EC               Individual      Unmanipulated        2005
+ 5 Dioon_merolae EC               Individual      Unmanipulated        2006
+ 6 Dioon_merolae EC               Individual      Unmanipulated        2007
+ 7 Dioon_merolae FO               Mean            Unmanipulated        2004
+ 8 Dioon_merolae FO               Individual      Unmanipulated        2004
+ 9 Dioon_merolae FO               Individual      Unmanipulated        2005
+10 Dioon_merolae FO               Individual      Unmanipulated        2006
+11 Dioon_merolae FO               Individual      Unmanipulated        2007
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 96 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): DOI.ISBN, MatrixPopulation, MatrixClassAuthor
+dbl (2): MatrixStartYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 3 × 7
+  SpeciesAuthor       MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>               <chr>            <fct>           <chr>               <dbl>
+1 Neobuxbaumia_polyl… Barranca of Met… Mean            Unmanipulated        2012
+2 Neobuxbaumia_polyl… Barranca of Met… Individual      Unmanipulated        2012
+3 Neobuxbaumia_polyl… Barranca of Met… Individual      Unmanipulated        2013
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 20 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): Authors, MatrixComposite, MatrixPopulation, MatrixClassOrganized, M...
+dbl (3): MatrixStartYear, MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation)`
+# A tibble: 4 × 7
+  SpeciesAuthor       MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>               <chr>            <fct>           <chr>               <dbl>
+1 Trillium_persistens Battle Creek     Individual      Unmanipulated        2009
+2 Trillium_persistens Moccasin Creek   Individual      Unmanipulated        2009
+3 Trillium_persistens Moody Creek      Individual      Unmanipulated        2009
+4 Trillium_persistens Panther Creek    Individual      Unmanipulated        2009
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 16 Columns: 7
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): Authors, MatrixComposite, MatrixPopulation, MatrixClassOrganized, M...
+dbl (2): MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Joining with `by = join_by(MatrixPopulation)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 16 × 7
+   SpeciesAuthor      MatrixPopulation MatrixComposite MatrixTreatment StartYear
+   <chr>              <chr>            <fct>           <chr>               <dbl>
+ 1 Cirsium_pitcheri_8 Wilderness Stat… Mean            Unmanipulated        1995
+ 2 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        1995
+ 3 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        1996
+ 4 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        1997
+ 5 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        1998
+ 6 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        1999
+ 7 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2000
+ 8 Cirsium_pitcheri_8 Wilderness Stat… Mean            Unmanipulated        2005
+ 9 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2005
+10 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2006
+11 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2007
+12 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2008
+13 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2009
+14 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2010
+15 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2011
+16 Cirsium_pitcheri_8 Wilderness Stat… Individual      Unmanipulated        2012
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 56 Columns: 4
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (2): Stage, MatrixPopulation
+dbl (2): MatrixStartYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 2 × 7
+  SpeciesAuthor   MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>           <chr>            <fct>           <chr>               <dbl>
+1 Agave_potatorum Xochiltepec      Individual      Unmanipulated        2005
+2 Agave_potatorum Machiche         Individual      Unmanipulated        2005
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 31 Columns: 6
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (4): DOI.ISBN, MatrixPopulation, MatrixClassOrganized, MatrixClassAuthor
+dbl (2): MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Joining with `by = join_by(MatrixPopulation)`
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation)`
+# A tibble: 14 × 7
+   SpeciesAuthor      MatrixPopulation MatrixComposite MatrixTreatment StartYear
+   <chr>              <chr>            <fct>           <chr>               <dbl>
+ 1 Paeonia_officinal… Open habitat     Pooled          Unmanipulated        2003
+ 2 Paeonia_officinal… Open habitat     Mean            Unmanipulated        2003
+ 3 Paeonia_officinal… Open habitat     Individual      Unmanipulated        2003
+ 4 Paeonia_officinal… Open habitat     Individual      Unmanipulated        2004
+ 5 Paeonia_officinal… Open habitat     Individual      Unmanipulated        2005
+ 6 Paeonia_officinal… Open habitat     Individual      Unmanipulated        2006
+ 7 Paeonia_officinal… Open habitat     Individual      Unmanipulated        2007
+ 8 Paeonia_officinal… Woodland         Pooled          Unmanipulated        2003
+ 9 Paeonia_officinal… Woodland         Mean            Unmanipulated        2003
+10 Paeonia_officinal… Woodland         Individual      Unmanipulated        2003
+11 Paeonia_officinal… Woodland         Individual      Unmanipulated        2004
+12 Paeonia_officinal… Woodland         Individual      Unmanipulated        2005
+13 Paeonia_officinal… Woodland         Individual      Unmanipulated        2006
+14 Paeonia_officinal… Woodland         Individual      Unmanipulated        2007
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 10 Columns: 7
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): SpeciesAuthor, MatrixComposite, MatrixPopulation, MatrixClassOrgani...
+dbl (2): MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Joining with `by = join_by(MatrixPopulation)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 11 × 7
+   SpeciesAuthor  MatrixPopulation MatrixComposite MatrixTreatment StartYear
+   <chr>          <chr>            <fct>           <chr>               <dbl>
+ 1 Plantago_media Site A; Site B   Mean            Unmanipulated        1993
+ 2 Plantago_media Site A           Mean            Unmanipulated        1993
+ 3 Plantago_media Site A           Individual      Unmanipulated        1993
+ 4 Plantago_media Site A           Individual      Unmanipulated        1994
+ 5 Plantago_media Site A           Individual      Unmanipulated        1995
+ 6 Plantago_media Site A           Individual      Unmanipulated        1996
+ 7 Plantago_media Site B           Mean            Unmanipulated        1993
+ 8 Plantago_media Site B           Individual      Unmanipulated        1993
+ 9 Plantago_media Site B           Individual      Unmanipulated        1994
+10 Plantago_media Site B           Individual      Unmanipulated        1995
+11 Plantago_media Site B           Individual      Unmanipulated        1996
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+Rows: 40 Columns: 6
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): DOI.ISBN, MatrixPopulation, MatrixClassAuthor
+dbl (3): MatrixStartYear, MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 35 × 7
+   SpeciesAuthor      MatrixPopulation MatrixComposite MatrixTreatment StartYear
+   <chr>              <chr>            <fct>           <chr>               <dbl>
+ 1 Astragalus_scapho… Sheep Corral Gu… Mean            Unmanipulated        1988
+ 2 Astragalus_scapho… Sheep Corral Gu… Mean            Unmanipulated        1988
+ 3 Astragalus_scapho… Sheep Corral Gu… Individual      Unmanipulated        1988
+ 4 Astragalus_scapho… Sheep Corral Gu… Individual      Unmanipulated        1989
+ 5 Astragalus_scapho… Sheep Corral Gu… Individual      Unmanipulated        1990
+ 6 Astragalus_scapho… Sheep Corral Gu… Individual      Unmanipulated        1991
+ 7 Astragalus_scapho… Sheep Corral Gu… Individual      Unmanipulated        1992
+ 8 Astragalus_scapho… Sheep Corral Gu… Individual      Unmanipulated        1993
+ 9 Astragalus_scapho… Sheep Corral Gu… Individual      Unmanipulated        1994
+10 Astragalus_scapho… Sheep Corral Gu… Individual      Unmanipulated        1995
+# ℹ 25 more rows
+# ℹ 2 more variables: EndYear <dbl>, MatrixComposite <fct>
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 1 × 8
+  SpeciesAuthor      MatrixPopulation  MatrixComposite MatrixTreatment StartYear
+  <chr>              <chr>             <fct>           <chr>               <dbl>
+1 Trollius_europaeus HAS; JAG; JAGab;… Pooled          Unmanipulated        2006
+# ℹ 3 more variables: EndYear <dbl>, Observation <fct>, MatrixComposite <fct>
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 3 × 6
+  SpeciesAuthor     MatrixPopulation   MatrixComposite MatrixTreatment StartYear
+  <chr>             <chr>              <fct>           <chr>               <dbl>
+1 Tillandsia_butzii San Antonio, Vera… Mean            Unmanipulated        2009
+2 Tillandsia_butzii San Antonio, Vera… Individual      Unmanipulated        2009
+3 Tillandsia_butzii San Antonio, Vera… Individual      Unmanipulated        2010
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 10 Columns: 6
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): DOI.ISBN, MatrixClassOrganized, MatrixClassAuthor
+dbl (3): MatrixStartYear, MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Joining with `by = join_by(MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 6 × 6
+  SpeciesAuthor       MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>               <chr>            <fct>           <chr>               <dbl>
+1 Balsamorhiza_sagit… Mount Jumbo      Mean            Unmanipulated        2002
+2 Balsamorhiza_sagit… Mount Jumbo      Individual      Unmanipulated        2002
+3 Balsamorhiza_sagit… Mount Jumbo      Individual      Unmanipulated        2003
+4 Balsamorhiza_sagit… Mount Jumbo      Individual      Unmanipulated        2004
+5 Balsamorhiza_sagit… Mount Jumbo      Individual      Unmanipulated        2005
+6 Balsamorhiza_sagit… Mount Jumbo      Individual      Unmanipulated        2006
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 25 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): DOI.ISBN, MatrixComposite, MatrixTreatment, MatrixClassOrganized, M...
+dbl (3): MatrixStartYear, MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Joining with `by = join_by(MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 24 × 6
+   SpeciesAuthor      MatrixPopulation MatrixComposite MatrixTreatment StartYear
+   <chr>              <chr>            <fct>           <chr>               <dbl>
+ 1 Dracocephalum_aus… Cisarska rokle … Mean            Unmanipulated        2003
+ 2 Dracocephalum_aus… Cisarska rokle … Individual      Unmanipulated        2003
+ 3 Dracocephalum_aus… Cisarska rokle … Individual      Unmanipulated        2004
+ 4 Dracocephalum_aus… Cisarska rokle … Individual      Unmanipulated        2005
+ 5 Dracocephalum_aus… Haknovec (C2)    Mean            Unmanipulated        2003
+ 6 Dracocephalum_aus… Haknovec (C2)    Individual      Unmanipulated        2003
+ 7 Dracocephalum_aus… Haknovec (C2)    Individual      Unmanipulated        2004
+ 8 Dracocephalum_aus… Haknovec (C2)    Individual      Unmanipulated        2005
+ 9 Dracocephalum_aus… Kodska stena (C… Mean            Unmanipulated        2003
+10 Dracocephalum_aus… Kodska stena (C… Individual      Unmanipulated        2003
+# ℹ 14 more rows
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 72 Columns: 9
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): Authors, Journal, MatrixPopulation, MatrixClassOrganized, MatrixCla...
+dbl (4): YearPublication, MatrixStartYear, MatrixClassNumber, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 6 × 6
+  SpeciesAuthor MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>         <chr>            <fct>           <chr>               <dbl>
+1 Viola_biflora No sheep         Mean            Unmanipulated        2002
+2 Viola_biflora No sheep         Individual      Unmanipulated        2002
+3 Viola_biflora No sheep         Individual      Unmanipulated        2003
+4 Viola_biflora No sheep         Individual      Unmanipulated        2004
+5 Viola_biflora No sheep         Individual      Unmanipulated        2005
+6 Viola_biflora No sheep         Individual      Unmanipulated        2006
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 40 Columns: 7
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): SpeciesAuthor, MatrixPopulation, MatrixTreatment, MatrixComposite, ...
+dbl (2): MatrixStartYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 6 × 6
+  SpeciesAuthor       MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>               <chr>            <fct>           <chr>               <dbl>
+1 Mammillaria_huitzi… S2               Mean            Unmanipulated        1999
+2 Mammillaria_huitzi… S2               Individual      Unmanipulated        1999
+3 Mammillaria_huitzi… S2               Individual      Unmanipulated        2000
+4 Mammillaria_huitzi… S2               Individual      Unmanipulated        2001
+5 Mammillaria_huitzi… S2               Individual      Unmanipulated        2002
+6 Mammillaria_huitzi… S2               Individual      Unmanipulated        2003
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 25 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (5): SpeciesAuthor, MatrixPopulation, MatrixTreatment, MatrixComposite, ...
+dbl (3): MatrixStartYear, MatrixEndYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 5 × 6
+  SpeciesAuthor      MatrixPopulation  MatrixComposite MatrixTreatment StartYear
+  <chr>              <chr>             <fct>           <chr>               <dbl>
+1 Pediocactus_bradyi Badger Creek; So… Mean            <NA>                 1988
+2 Pediocactus_bradyi Badger Creek      Mean            <NA>                 1988
+3 Pediocactus_bradyi Soap Creek        Mean            <NA>                 1988
+4 Pediocactus_bradyi North Canyon East Mean            <NA>                 1988
+5 Pediocactus_bradyi North Canyon West Mean            <NA>                 1988
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 88 Columns: 8
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixComposite
+dbl (5): MatrixStartYear, MatrixEndYear, S1, S2, S3
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+Rows: 56 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (2): MatrixStartYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+# A tibble: 16 × 3
+# Groups:   MatrixPopulation [4]
+   MatrixPopulation stage     x
+   <chr>            <int> <dbl>
+ 1 Cheile Posegii       1 23.3 
+ 2 Cheile Posegii       2 30   
+ 3 Cheile Posegii       3 11   
+ 4 Cheile Posegii       4 56.7 
+ 5 Dealul Vidolm        1  2.25
+ 6 Dealul Vidolm        2 20.8 
+ 7 Dealul Vidolm        3 15.2 
+ 8 Dealul Vidolm        4 46.2 
+ 9 Piatra Urdasului     1  9.33
+10 Piatra Urdasului     2  8   
+11 Piatra Urdasului     3  7.33
+12 Piatra Urdasului     4 23   
+13 Pinet                1  9   
+14 Pinet                2 20.2 
+15 Pinet                3 16.8 
+16 Pinet                4 54.2 
+# A tibble: 14 × 6
+   SpeciesAuthor      MatrixPopulation MatrixComposite MatrixTreatment StartYear
+   <chr>              <chr>            <fct>           <chr>               <dbl>
+ 1 Saponaria_bellidi… Pinet            Individual      Unmanipulated        2004
+ 2 Saponaria_bellidi… Pinet            Individual      Unmanipulated        2005
+ 3 Saponaria_bellidi… Pinet            Individual      Unmanipulated        2006
+ 4 Saponaria_bellidi… Pinet            Individual      Unmanipulated        2007
+ 5 Saponaria_bellidi… Cheile Posegii   Individual      Unmanipulated        2005
+ 6 Saponaria_bellidi… Cheile Posegii   Individual      Unmanipulated        2006
+ 7 Saponaria_bellidi… Cheile Posegii   Individual      Unmanipulated        2007
+ 8 Saponaria_bellidi… Piatra Urdasului Individual      Unmanipulated        2004
+ 9 Saponaria_bellidi… Piatra Urdasului Individual      Unmanipulated        2005
+10 Saponaria_bellidi… Piatra Urdasului Individual      Unmanipulated        2006
+11 Saponaria_bellidi… Dealul Vidolm    Individual      Unmanipulated        2004
+12 Saponaria_bellidi… Dealul Vidolm    Individual      Unmanipulated        2005
+13 Saponaria_bellidi… Dealul Vidolm    Individual      Unmanipulated        2006
+14 Saponaria_bellidi… Dealul Vidolm    Individual      Unmanipulated        2007
+# ℹ 1 more variable: EndYear <dbl>
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+Rows: 12 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (2): MatrixStartYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+Rows: 30 Columns: 6
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (3): MatrixStartYear, MatrixEndYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 5 × 6
+  SpeciesAuthor    MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>            <chr>            <fct>           <chr>               <dbl>
+1 Saussurea_medusa Medusa I         Mean            Unmanipulated        2002
+2 Saussurea_medusa Medusa I         Individual      Unmanipulated        2002
+3 Saussurea_medusa Medusa I         Individual      Unmanipulated        2003
+4 Saussurea_medusa Medusa I         Individual      Unmanipulated        2004
+5 Saussurea_medusa Medusa I         Individual      Unmanipulated        2005
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 20 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (2): MatrixStartYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation)`
+# A tibble: 43 × 6
+   SpeciesAuthor   MatrixPopulation    MatrixComposite MatrixTreatment StartYear
+   <chr>           <chr>               <fct>           <chr>               <dbl>
+ 1 Orchis_purpurea Shaded site 1; Sha… Mean            Unmanipulated        2002
+ 2 Orchis_purpurea Shaded site 1       Mean            Unmanipulated        2002
+ 3 Orchis_purpurea Shaded site 1       Individual      Unmanipulated        2002
+ 4 Orchis_purpurea Shaded site 1       Individual      Unmanipulated        2003
+ 5 Orchis_purpurea Shaded site 1       Individual      Unmanipulated        2004
+ 6 Orchis_purpurea Shaded site 1       Individual      Unmanipulated        2005
+ 7 Orchis_purpurea Shaded site 1       Individual      Unmanipulated        2006
+ 8 Orchis_purpurea Shaded site 1       Individual      Unmanipulated        2007
+ 9 Orchis_purpurea Shaded site 2       Mean            Unmanipulated        2002
+10 Orchis_purpurea Shaded site 2       Individual      Unmanipulated        2002
+# ℹ 33 more rows
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 216 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (2): MatrixStartYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+Rows: 10 Columns: 6
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (3): MatrixStartYear, MatrixEndYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 1 × 6
+  SpeciesAuthor       MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>               <chr>            <fct>           <chr>               <dbl>
+1 Pinus_maximartinez… Juchipila        Mean            Unmanipulated        1996
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 9 Columns: 6
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (3): MatrixStartYear, MatrixEndYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+Joining with `by = join_by(MatrixPopulation)`
+# A tibble: 3 × 6
+  SpeciesAuthor       MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>               <chr>            <fct>           <chr>               <dbl>
+1 Pimpinella_saxifra… Molde road verg… Pooled          Unmanipulated        2003
+2 Pimpinella_saxifra… Stuvane road ve… Pooled          Unmanipulated        2003
+3 Pimpinella_saxifra… Nese road verge… Pooled          Unmanipulated        2003
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 15 Columns: 6
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (3): MatrixStartYear, MatrixEndYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'SpeciesAuthor'. You can override using the
+`.groups` argument.
+Joining with `by = join_by(SpeciesAuthor)`
+# A tibble: 3 × 6
+  SpeciesAuthor      MatrixPopulation MatrixComposite MatrixTreatment StartYear
+  <chr>              <chr>            <fct>           <chr>               <dbl>
+1 Lophophora_diffusa Ermita           Mean            Unmanipulated        2010
+2 Lophophora_diffusa Ermita           Individual      Unmanipulated        2010
+3 Lophophora_diffusa Ermita           Individual      Unmanipulated        2011
+# ℹ 1 more variable: EndYear <dbl>
+Rows: 14 Columns: 6
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): SpeciesAuthor, MatrixPopulation, MatrixClassAuthor
+dbl (3): MatrixStartYear, MatrixEndYear, N
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation, MatrixStartYear)`
+`summarise()` has grouped output by 'MatrixPopulation'. You can override using
+the `.groups` argument.
+Joining with `by = join_by(MatrixPopulation)`
