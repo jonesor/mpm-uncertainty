@@ -16,7 +16,7 @@ Data sources
 ------------
 - COMPADRE: pre-release build compiled 2017-11-22 (recorded in `data/metadata/sources.md`).
 - Ellis et al. (2012) supplemental matrices.
-- PRISM climate rasters (legacy `wget` helpers in `scripts/download/`; recommended R download via `prism` inside `scripts/S12_case_study_2_prism.R`, which writes to `data/raw/prism/` and should run before `scripts/S11_case_study_2.R`).
+- PRISM climate rasters are downloaded via `prism` configured by `setup_prism()` in `code/setup.R`, used in `scripts/S11_case_study_2_prism.R`, which writes to `data/raw/prism/` and should run before `scripts/S12_case_study_2.R`.
 
 Folder guide
 ------------
@@ -32,5 +32,5 @@ Folder guide
 
 Notes
 -----
-- Some external data sources require download (e.g., PRISM rasters). The legacy `wget` scripts may fail if FTP is blocked; prefer the `prism` R package workflow in `scripts/S12_case_study_2_prism.R`. See `scripts/download/` and `data/metadata/`.
+- Some external data sources require download (e.g., PRISM rasters). Use the `prism` R package workflow in `scripts/S11_case_study_2_prism.R`. See `data/metadata/`.
 - The project uses R and Stan; package versions are not yet pinned.

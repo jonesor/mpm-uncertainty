@@ -22,3 +22,17 @@ setup_rstan <- function() {
     options(mc.cores = cores)
   }
 }
+
+setup_prism <- function(prism_dir = "data/raw/prism") {
+  if (!requireNamespace("prism", quietly = TRUE)) {
+    stop(
+      "Missing package: prism. Install with install.packages(\"prism\").",
+      call. = FALSE
+    )
+  }
+  if (!dir.exists(prism_dir)) {
+    dir.create(prism_dir, recursive = TRUE)
+  }
+  prism::prism_set_dl_dir(prism_dir)
+  invisible(prism_dir)
+}

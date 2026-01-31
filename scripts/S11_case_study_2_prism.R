@@ -1,4 +1,4 @@
-# S12: download/extract PRISM climate rasters and build climate inputs for case study 2.
+# S11: download/extract PRISM climate rasters and build climate inputs for case study 2.
 
 # libraries ----
 source("code/setup.R")
@@ -7,12 +7,8 @@ source("code/functions.R")
 
 
 # prism raster files ----
-prism_dir <- "data/raw/prism"
-if (!dir.exists(prism_dir)) {
-  dir.create(prism_dir, recursive = TRUE)
-}
-
-prism::prism_set_dl_dir(prism_dir)
+# download location is configured by setup_prism() in code/setup.R
+prism_dir <- setup_prism("data/raw/prism")
 
 maybe_download_prism <- function(years) {
   if (length(list.files(prism_dir, pattern = "\\.bil$", recursive = TRUE)) > 0) {

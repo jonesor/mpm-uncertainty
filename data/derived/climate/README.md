@@ -9,4 +9,4 @@ Contents
 
 Notes
 -----
-PRISM raster downloads and extraction are handled by `scripts/S12_case_study_2_prism.R` using the `prism` package (rasters in `data/raw/prism/`); extraction uses `sf` + `terra`.
+PRISM raster downloads and extraction are handled by `scripts/S11_case_study_2_prism.R` using `setup_prism()` in `code/setup.R` (rasters in `data/raw/prism/`); extraction uses `sf` + `terra`.

@@ -10,3 +10,4 @@ Contents
 Usage
 -----
 Scripts load this with `source("code/functions.R")`.
+Setup helpers (including `setup_prism()`) live in `code/setup.R`.

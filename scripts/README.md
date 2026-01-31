@@ -14,8 +14,8 @@ Contents
 - `S08_*`   Case study 1 species analysis.
 - `S09_*`   Survival issue exploration.
 - `S10_*`   Variance component models.
-- `S11_*`   Case study 2 analysis (run after `S12_*` produces climate inputs).
-- `S12_*`   PRISM climate extraction and preprocessing (includes `prism` package download workflow; run before `S11_*`).
+- `S11_*`   PRISM climate extraction and preprocessing (includes `prism` package download workflow; run before `S12_*`).
+- `S12_*`   Case study 2 analysis (run after `S11_*` produces climate inputs).
 - `S13_*`   Appendix figures/analysis.
 
 Outputs
@@ -27,5 +27,6 @@ Setup
 -----
 - Run `scripts/00_check_setup.R` to verify packages and required input files.
 - Scripts load packages via `code/setup.R` using `setup_packages(...)`.
+- PRISM download location is configured by `setup_prism()` in `code/setup.R`.
 - PRISM extraction uses the `sf` + `terra` stack (no `rgdal`).
 - Set `FAST_RUN=1` in the environment to shorten Stan runs in `S08_case_study_1_analysis_spp.R` for development.

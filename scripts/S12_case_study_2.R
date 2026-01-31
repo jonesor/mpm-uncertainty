@@ -1,4 +1,4 @@
-# S11: case study 2 climate analysis and figures (uses PRISM inputs from S12).
+# S12: case study 2 climate analysis and figures (uses PRISM inputs from S11).
 
 # libraries ----
 source("code/setup.R")
