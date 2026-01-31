@@ -6,6 +6,7 @@ data/derived/studies/raw/
 data/derived/analysis_cache/
 chelsa/
 prism/
+data/raw/prism/
 models/*.rds
 studies_check*
 studies_emails*
