@@ -203,10 +203,13 @@ quantile(pvar_w, c(0.025, 0.500, 0.975))
 df_theta <- posterior_vec(stan_fit_varcomp, x = theta_x, "theta") %>% 
   mutate(x = fct_reorder(x, med))
 
-ggplot(df_theta, aes(x = x)) +
+p_theta <- ggplot(df_theta, aes(x = x)) +
   geom_point(aes(y = med)) +
   geom_errorbar(aes(ymin = low95, ymax = upp95)) +
   coord_flip()
+
+if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
+ggsave("figures/case1_varcomp_theta_summary.png", p_theta, height = 4.5, width = 5.5, units = "in", dpi = 300)
 
 
 var_a_pt <- var(dat_stan$y_pt)

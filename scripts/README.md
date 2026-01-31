@@ -21,7 +21,7 @@ Contents
 Outputs
 -------
 - Intermediate artifacts are written to `data/derived/analysis_cache/`.
-- Figures are written to `figures/` (many `ggsave` calls are commented).
+- Figures are written to `figures/` with filenames set in the scripts.
 
 Setup
 -----

@@ -10,4 +10,4 @@ Contents
 Notes
 -----
 - Scripts use FTP URLs; access may be blocked. Prefer the `prism` R package workflow embedded in `scripts/S12_case_study_2_prism.R`.
-- Large downloads; store outputs outside the repo and reference in `scripts/S12_case_study_2_prism.R`.
+- Downloads are large; by default `prism` writes to `data/raw/prism/`, but you can set another download directory in `scripts/S12_case_study_2_prism.R`.

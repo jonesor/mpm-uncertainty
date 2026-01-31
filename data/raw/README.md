@@ -6,3 +6,4 @@ Subfolders
 ----------
 - `compadre/`     COMPADRE database extracts.
 - `ellis_2012/`   Ellis et al. (2012) supplemental matrices and metadata.
+- `prism/`        PRISM climate rasters downloaded via `prism`.

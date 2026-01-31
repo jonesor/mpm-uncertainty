@@ -179,11 +179,14 @@ df_shape <- sd_shape_out %>%
 
 
 # plot pace vs. shape, point estimates vs posterior means ----
-ggplot(df_shape) +
+p_pace_shape <- ggplot(df_shape) +
   geom_segment(aes(x = L_pt, y = S_pt, xend = L_mean, yend = S_mean),
                linewidth = 0.3, arrow = arrow(length = unit(0.02, "npc"))) +
   geom_point(aes(L_pt, S_pt)) +
   scale_x_log10()
+
+if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
+ggsave("figures/case1_pace_shape.png", p_pace_shape, height = 4, width = 4.5, units = "in", dpi = 300)
 
 
 
@@ -452,10 +455,12 @@ quantile(pvar_w, c(0.025, 0.500, 0.975))
 df_theta <- posterior_vec(stan_fit_varcomp, x = df_other$id_other, "theta") %>% 
   mutate(x = fct_reorder(x, med))
 
-ggplot(df_theta, aes(x = x)) +
+p_theta <- ggplot(df_theta, aes(x = x)) +
   geom_point(aes(y = med)) +
   geom_errorbar(aes(ymin = low95, ymax = upp95)) +
   coord_flip()
+
+ggsave("figures/case1_varcomp_theta.png", p_theta, height = 4.5, width = 5.5, units = "in", dpi = 300)
 
 
 var_a_pt <- var(dat_stan$y_pt)

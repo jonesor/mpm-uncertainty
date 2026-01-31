@@ -78,7 +78,7 @@ pt_other <- mpm_draws %>%
 
 
 # point estimate of shape vs l0 ----
-ggplot(pt_shape) +
+p0 <- ggplot(pt_shape) +
   geom_point(aes(l0_pt, shape_pt, color = lxs_min), size = 3) +
   scale_x_log10() +
   scale_color_gradientn(colors = mpm_pal(256))
@@ -547,7 +547,7 @@ sdist <- sd_shape %>%
   ungroup() %>% 
   unnest(cols = c(x, hx))
 
-ggplot(sdist, aes(x, hx)) +
+p_hx <- ggplot(sdist, aes(x, hx)) +
   geom_line(aes(group = rep), alpha = 0.4, linewidth = 0.3) +
   geom_line(data = pt, col = cols$accent, linewidth = 1.2) +
   scale_x_continuous(limits = c(0, 10), breaks = seq(0, 10, 2)) +

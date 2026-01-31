@@ -11,3 +11,4 @@ Version
 -------
 - Pre-release COMPADRE build compiled 2017-11-22.
 - This pre-release dataset can be released with the paper; consider updating analyses to the latest public COMPADRE release and recording the exact version/DOI in `data/metadata/sources.md`.
+ - PRISM rasters for case study 2 live in `data/raw/prism/`.

@@ -93,12 +93,15 @@ silene <- comp_sub %>%
          ppt = as.numeric(scale(ppt)))
 
 
-# plot Spring temp vs. fecundity
-ggplot(silene, aes(tmp, fecund)) +
+# plot Spring temp vs. fecundity ----
+p_scatter <- ggplot(silene, aes(tmp, fecund)) +
   geom_point() +
   geom_linerange(aes(ymin = fec_low, ymax = fec_upp)) +
   geom_smooth(method = "lm") +
   scale_y_log10()
+
+if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
+ggsave("figures/case2_temp_fecundity.png", p_scatter, height = 4, width = 4.5, units = "in", dpi = 300)
 
 
 
@@ -155,12 +158,14 @@ df_beta <- tibble(reg = beta_reg, err = beta_err) %>%
             low95 = quantile(val, 0.025),
             upp95 = quantile(val, 0.975))
 
-ggplot(df_beta, aes(x = model)) +
+p_beta <- ggplot(df_beta, aes(x = model)) +
   geom_point(aes(y = med), size = 2.5) +
   geom_linerange(aes(ymin = low80, ymax = upp80), linewidth = 1.5) +
   geom_linerange(aes(ymin = low95, ymax = upp95)) +
   geom_hline(yintercept = 0, alpha = 0.5, linetype = 2) +
   coord_flip()
+
+ggsave("figures/case2_beta_summary.png", p_beta, height = 3.5, width = 4, units = "in", dpi = 300)
 
 # plot fit lines ----
 lev <- c("Model of point estimates", "Model with sampling uncertainty")

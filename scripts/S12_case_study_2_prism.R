@@ -7,21 +7,22 @@ source("code/functions.R")
 
 
 # prism raster files ----
-if (!dir.exists("prism")) {
-  dir.create("prism", recursive = TRUE)
+prism_dir <- "data/raw/prism"
+if (!dir.exists(prism_dir)) {
+  dir.create(prism_dir, recursive = TRUE)
 }
 
-prism::prism_set_dl_dir("prism")
+prism::prism_set_dl_dir(prism_dir)
 
 maybe_download_prism <- function(years) {
-  if (length(list.files("prism", pattern = "\\.bil$", recursive = TRUE)) > 0) {
+  if (length(list.files(prism_dir, pattern = "\\.bil$", recursive = TRUE)) > 0) {
     return(invisible(NULL))
   }
   prism::get_prism_monthlys(type = "ppt", years = years, mon = 1:12, keepZip = FALSE)
   prism::get_prism_monthlys(type = "tmean", years = years, mon = 1:12, keepZip = FALSE)
 }
 
-bil_files <- list.files("prism", pattern = "\\.bil$", recursive = TRUE, full.names = TRUE)
+bil_files <- list.files(prism_dir, pattern = "\\.bil$", recursive = TRUE, full.names = TRUE)
 month_files <- bil_files[grepl("[[:digit:]]{6}", bil_files)]
 files_ppt <- month_files[grepl("ppt", month_files)]
 files_tmp <- month_files[grepl("tmean", month_files)]
@@ -64,7 +65,7 @@ if (length(bil_files) == 0) {
     unique() %>% 
     sort()
   maybe_download_prism(years)
-  bil_files <- list.files("prism", pattern = "\\.bil$", recursive = TRUE, full.names = TRUE)
+  bil_files <- list.files(prism_dir, pattern = "\\.bil$", recursive = TRUE, full.names = TRUE)
   month_files <- bil_files[grepl("[[:digit:]]{6}", bil_files)]
   files_ppt <- month_files[grepl("ppt", month_files)]
   files_tmp <- month_files[grepl("tmean", month_files)]

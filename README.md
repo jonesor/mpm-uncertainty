@@ -10,13 +10,13 @@ Quick start
 - Run `scripts/00_check_setup.R` to verify packages and required inputs.
 - Start with `scripts/` in numeric order (S01 ... S13). Each script is intended to be run after prior steps.
 - Outputs that are reused across scripts are cached under `data/derived/analysis_cache/`.
-- Figures are written to `figures/` (commented `ggsave` calls indicate intended outputs).
+- Figures are written to `figures/` with filenames set in the scripts.
 
 Data sources
 ------------
 - COMPADRE: pre-release build compiled 2017-11-22 (recorded in `data/metadata/sources.md`).
 - Ellis et al. (2012) supplemental matrices.
-- PRISM climate rasters (legacy `wget` helpers in `scripts/download/`; recommended R download via `prism` inside `scripts/S12_case_study_2_prism.R`, which should run before `scripts/S11_case_study_2.R`).
+- PRISM climate rasters (legacy `wget` helpers in `scripts/download/`; recommended R download via `prism` inside `scripts/S12_case_study_2_prism.R`, which writes to `data/raw/prism/` and should run before `scripts/S11_case_study_2.R`).
 
 Folder guide
 ------------
