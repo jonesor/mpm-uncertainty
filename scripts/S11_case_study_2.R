@@ -269,7 +269,7 @@ rbind(summarize_fit(fit_null_reg, "null"),
       summarize_fit(fit_gprc_err, "moving-beta (err)"))
 
 
- ----
+# plot moving-beta coefficients ----
 lev <- c("Model of point estimates", "Model with sampling uncertainty")
 
 gprc_betas <- rbind(
