@@ -148,8 +148,8 @@ p4 <- ggplot(sd_other_out, aes(y = id_gen)) +
   scale_x_log10() +
   coord_flip() +
   labs(
-    y = expression(paste("Population (ranked by ", italic(T), ")")),
-    x = expression(paste("Generation time (", italic(T), ")"))
+    y = expression(paste("Population (ranked by ", italic("T"), ")")),
+    x = expression(paste("Generation time (", italic("T"), ")"))
   ) +
   tt
 

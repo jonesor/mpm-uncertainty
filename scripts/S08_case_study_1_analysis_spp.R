@@ -31,7 +31,7 @@ sd_files <- sd_files[grep("data/derived/analysis_cache/sds_", sd_files)]
 
 # bind sampling distributions into single tibble ----
 mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load2)) %>%
-  mutate(id = as.factor(1:n())) %>%
+  mutate(id = as.factor(dplyr::row_number())) %>%
   cdb_unnest() %>%
   mutate(matU = map(matU, scale_U)) %>%
   mutate(matA = pmap(list(matU, matF, matC), ~ ..1 + ..2 + ..3)) %>%
@@ -236,8 +236,8 @@ p4 <- ggplot(sd_other, aes(y = id_gen)) +
   scale_x_log10() +
   coord_flip(xlim = c(1, 350)) +
   labs(
-    y = expression(paste("Population (ranked by ", italic(T), ")")),
-    x = expression(paste("Generation time (", italic(T), ")"))
+    y = expression(paste("Population (ranked by ", italic("T"), ")")),
+    x = expression(paste("Generation time (", italic("T"), ")"))
   ) +
   tt
 
@@ -617,7 +617,7 @@ sdist <- sd_shape %>%
   mutate(x = map(lx, ~ seq_along(.x) - 1)) %>%
   select(SpeciesAuthor, MatrixPopulation, x, hx) %>%
   group_by(SpeciesAuthor, MatrixPopulation) %>%
-  mutate(rep = 1:n()) %>%
+  mutate(rep = dplyr::row_number()) %>%
   slice(sample(rep, 50)) %>%
   ungroup() %>%
   unnest(cols = c(x, hx))
