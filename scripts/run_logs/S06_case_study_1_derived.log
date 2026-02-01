@@ -35,3 +35,6 @@ See how to cite with `citation(Rcompadre)`
 # ℹ 20 more rows
 Joining with `by = join_by(id)`
 Joining with `by = join_by(id)`
+Warning message:
+Removed 1 row containing missing values or values outside the scale range
+(`geom_line()`). 

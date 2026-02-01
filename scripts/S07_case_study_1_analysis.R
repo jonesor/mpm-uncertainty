@@ -62,6 +62,9 @@ p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
 # arrange plot panels
 g <- patchwork::wrap_plots(p1, p2, ncol = 1)
 
+if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
+ggsave("figures/fig2_shape_l0_distributions.png", g, height = 7.5, width = 5.5, units = "in", dpi = 300)
+
 
 
 
@@ -127,6 +130,8 @@ g1 <- patchwork::wrap_plots(p1, p2, p3, ncol = 1)
 g2 <- patchwork::wrap_plots(p4, ncol = 1)
 g <- patchwork::wrap_plots(g1, g2, ncol = 2)
 
+ggsave("figures/fig2_other_param_distributions.png", g, height = 7.5, width = 7.5, units = "in", dpi = 300)
+
 
 
 
@@ -174,7 +179,12 @@ df_shape <- sd_shape_out %>%
     shape_se = S_se,
     shape_low = S_low,
     shape_upp = S_upp
-  )
+  ) %>% 
+  mutate(across(where(is.numeric), ~ signif(.x, 3)))
+
+if (!dir.exists("data/derived/analysis_cache")) dir.create("data/derived/analysis_cache",
+                                                           recursive = TRUE)
+write_csv(df_shape, "data/derived/analysis_cache/case1_shape_summary.csv")
 
 
 
@@ -357,6 +367,8 @@ p2 <- ggplot(df_beta, aes(x = beta)) +
 # combine both plots
 p <- plot_grid(p1, p2, labels = c("A", "B"), rel_widths = c(1.08, 1), nrow = 1)
 
+ggsave("figures/fig3_shape_l0_regression.png", p, height = 4.2, width = 8.5, units = "in", dpi = 300)
+
 
 
 
@@ -453,7 +465,10 @@ quantile(pvar_w, c(0.025, 0.500, 0.975))
 
 
 df_theta <- posterior_vec(stan_fit_varcomp, x = df_other$id_other, "theta") %>% 
-  mutate(x = fct_reorder(x, med))
+  mutate(x = fct_reorder(x, med)) %>% 
+  mutate(across(where(is.numeric), ~ signif(.x, 3)))
+
+write_csv(df_other, "data/derived/analysis_cache/case1_other_summary.csv")
 
 p_theta <- ggplot(df_theta, aes(x = x)) +
   geom_point(aes(y = med)) +
@@ -461,6 +476,18 @@ p_theta <- ggplot(df_theta, aes(x = x)) +
   coord_flip()
 
 ggsave("figures/case1_varcomp_theta.png", p_theta, height = 4.5, width = 5.5, units = "in", dpi = 300)
+
+beta_summary <- df_beta %>% 
+  group_by(model) %>% 
+  summarize(beta_med = quantile(beta, 0.500),
+            beta_low = quantile(beta, 0.025),
+            beta_upp = quantile(beta, 0.975),
+            p_beta_gt0 = mean(beta > 0),
+            .groups = "drop")
+beta_summary <- beta_summary %>% 
+  mutate(across(c(beta_med, beta_low, beta_upp), ~ signif(.x, 3)),
+         p_beta_gt0 = round(p_beta_gt0, 3))
+write_csv(beta_summary, "data/derived/analysis_cache/case1_beta_summary.csv")
 
 
 var_a_pt <- var(dat_stan$y_pt)

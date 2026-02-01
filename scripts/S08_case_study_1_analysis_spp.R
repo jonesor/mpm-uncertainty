@@ -83,6 +83,18 @@ p0 <- ggplot(pt_shape) +
   scale_x_log10() +
   scale_color_gradientn(colors = mpm_pal(256))
 
+if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
+ggsave("figures/shape_l0_scatter_spp.png", p0, height = 4, width = 4.5, units = "in", dpi = 300)
+
+if (!dir.exists("data/derived/analysis_cache")) dir.create("data/derived/analysis_cache",
+                                                           recursive = TRUE)
+pt_shape_out <- pt_shape %>% 
+  mutate(across(where(is.numeric), ~ signif(.x, 3)))
+pt_other_out <- pt_other %>% 
+  mutate(across(where(is.numeric), ~ signif(.x, 3)))
+write_csv(pt_shape_out, "data/derived/analysis_cache/case1_spp_point_estimates.csv")
+write_csv(pt_other_out, "data/derived/analysis_cache/case1_spp_other_point_estimates.csv")
+
 
 
 
@@ -235,6 +247,9 @@ df_shape <- sd_shape %>%
   ungroup() %>% 
   left_join(pt_shape) %>% 
   mutate(spp_int = as.integer(as.factor(SpeciesAuthor)))
+
+write_csv(df_shape %>% mutate(across(where(is.numeric), ~ signif(.x, 3))),
+          "data/derived/analysis_cache/case1_spp_shape_summary.csv")
 
 
 
@@ -463,6 +478,9 @@ df_other <- sd_other %>%
   ungroup() %>% 
   left_join(pt_other)
 
+write_csv(df_other %>% mutate(across(where(is.numeric), ~ signif(.x, 3))),
+          "data/derived/analysis_cache/case1_spp_other_summary.csv")
+
 dat_stan <- list(N = nrow(df_shape),
                  y_mean = df_shape$log_l0_mean,
                  y_se = df_shape$log_l0_se)
@@ -552,3 +570,5 @@ p_hx <- ggplot(sdist, aes(x, hx)) +
   geom_line(data = pt, col = cols$accent, linewidth = 1.2) +
   scale_x_continuous(limits = c(0, 10), breaks = seq(0, 10, 2)) +
   facet_wrap(~ SpeciesAuthor, ncol = 1)
+
+ggsave("figures/hazard_trajectories_spp.png", p_hx, height = 6, width = 5, units = "in", dpi = 300)

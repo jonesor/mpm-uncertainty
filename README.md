@@ -29,8 +29,10 @@ Folder guide
 - `figures/`            Generated figures for the paper.
 - `supplement/`         Non-reproducible source assets (e.g., figure source files).
 - `docs/`               Notes, methods, and documentation.
+- `docs/manuscript/`    Draft manuscript DOCX files.
+- `docs/analysis_summary.md`   Manuscript scaffold keyed to scripts, figures, and tables.
 
 Notes
 -----
-- Some external data sources require download (e.g., PRISM rasters). Use the `prism` R package workflow in `scripts/S11_case_study_2_prism.R`. See `data/metadata/`.
+- Some external data sources require download (e.g., PRISM rasters). Use the `prism` R package workflow in `scripts/S11_case_study_2_prism.R` which stores files under `data/raw/prism/` (ignored by git). See `data/metadata/`.
 - The project uses R and Stan; package versions are not yet pinned.

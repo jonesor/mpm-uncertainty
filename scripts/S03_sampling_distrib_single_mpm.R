@@ -150,6 +150,8 @@ p1c <- ggplot(df_sdist) +
 
 p1 <- patchwork::wrap_plots(p1a, p1b, p1c, ncol = 3)
 
+if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
+ggsave("figures/fig1_top.png", p1, height = 3.5, width = 10.5, units = "in", dpi = 300)
 
 
 
@@ -241,6 +243,7 @@ p2 <- ggplot(deriv_plot) +
     strip.text = element_text(size = 9, margin = margin(0.15, 0, 0.15, 0, "lines"))
   )
 
+ggsave("figures/fig1_bottom.png", p2, height = 3.5, width = 8.5, units = "in", dpi = 300)
 
 
 
@@ -249,9 +252,14 @@ p2 <- ggplot(deriv_plot) +
 
 
 # table of posterior quantiles for derived parameters ----
-deriv_param %>% 
+deriv_summary <- deriv_param %>% 
   group_by(par) %>% 
   summarize(med = quantile(value, 0.500),
             low = quantile(value, 0.025),
             upp = quantile(value, 0.975)) %>% 
-  left_join(deriv_pt, by = "par")
+  left_join(deriv_pt, by = "par") %>% 
+  mutate(across(where(is.numeric), ~ signif(.x, 3)))
+
+if (!dir.exists("data/derived/analysis_cache")) dir.create("data/derived/analysis_cache",
+                                                           recursive = TRUE)
+write_csv(deriv_summary, "data/derived/analysis_cache/fig1_derived_param_summary.csv")

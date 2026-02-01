@@ -167,6 +167,13 @@ p_beta <- ggplot(df_beta, aes(x = model)) +
 
 ggsave("figures/case2_beta_summary.png", p_beta, height = 3.5, width = 4, units = "in", dpi = 300)
 
+if (!dir.exists("data/derived/analysis_cache")) dir.create("data/derived/analysis_cache",
+                                                           recursive = TRUE)
+beta_summary <- df_beta %>% 
+  select(model, med, low95, upp95)
+write_csv(beta_summary %>% mutate(across(where(is.numeric), ~ signif(.x, 3))),
+          "data/derived/analysis_cache/case2_spring_beta_summary.csv")
+
 # plot fit lines ----
 lev <- c("Model of point estimates", "Model with sampling uncertainty")
 
@@ -290,6 +297,9 @@ p2 <- ggplot(gprc_betas, aes(x = lag)) +
   tt
 
 ggsave("figures/clim_2.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 300)
+
+write_csv(gprc_betas %>% mutate(across(where(is.numeric), ~ signif(.x, 3))),
+          "data/derived/analysis_cache/case2_gprc_beta_summary.csv")
 
 
 

@@ -192,3 +192,6 @@ p3 <- ggplot(df_lx, aes(x, hx)) +
 
 
 g <- p1 / p2 / p3 + patchwork::plot_annotation(tag_levels = c("A", "B", "C"))
+
+if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
+ggsave("figures/case1_example_survival.png", g, height = 7.5, width = 5, units = "in", dpi = 300)

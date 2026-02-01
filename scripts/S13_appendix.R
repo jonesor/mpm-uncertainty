@@ -222,7 +222,7 @@ p2 <- ggplot(life_sim, aes(L)) +
 
 g1 <- p1 / p2 + plot_layout(heights = c(0.7, 1))
 
-
+if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
 ggsave("figures/boundary.png", g1, height = 4, width = 6.25, units = "in", dpi = 300)
 
 

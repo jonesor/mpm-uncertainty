@@ -34,6 +34,7 @@ studies_check <- compadre %>%
 
 
 # write to file ----
+if (!dir.exists("data/derived/studies")) dir.create("data/derived/studies", recursive = TRUE)
+write_csv(studies_check, "data/derived/studies/target_studies.csv")
 write.csv(studies_check, "studies_check.csv", row.names = FALSE)
-
 

@@ -217,10 +217,19 @@ var_a <- rstan_extract(stan_fit_varcomp, "var_a")
 quantile(var_a_pt / var_a, c(0.025, 0.500, 0.975))
 
 
-var(df_shape$S_pt) / var(df_shape$S_mean)
-var(log10(df_shape$L_pt)) / var(df_shape$log_L_mean)
+var_ratio <- tibble(
+  parameter = c("shape", "life_expectancy", "loglam", "damp", "gen", "pmature"),
+  ratio = c(
+    var(df_shape$S_pt) / var(df_shape$S_mean),
+    var(log10(df_shape$L_pt)) / var(df_shape$log_L_mean),
+    var(df_other$loglam_pt) / var(df_other$loglam_mean),
+    var(df_other$damp_pt) / var(df_other$damp_mean),
+    var(df_other$gen_pt) / var(df_other$gen_mean),
+    var(df_other$pmature_pt) / var(df_other$pmature_mean)
+  )
+)
 
-var(df_other$loglam_pt) / var(df_other$loglam_mean)
-var(df_other$damp_pt) / var(df_other$damp_mean)
-var(df_other$gen_pt) / var(df_other$gen_mean)
-var(df_other$pmature_pt) / var(df_other$pmature_mean)
+if (!dir.exists("data/derived/analysis_cache")) dir.create("data/derived/analysis_cache",
+                                                           recursive = TRUE)
+write_csv(var_ratio %>% mutate(ratio = round(ratio, 2)),
+          "data/derived/analysis_cache/case1_variance_ratios.csv")

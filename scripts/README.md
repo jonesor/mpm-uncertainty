@@ -22,6 +22,18 @@ Outputs
 -------
 - Intermediate artifacts are written to `data/derived/analysis_cache/`.
 - Figures are written to `figures/` with filenames set in the scripts.
+- Climate extraction outputs are written to `data/derived/climate/` (notably `species_clim_prism.csv` from `S11_*`).
+
+Figures and tables
+------------------
+- **Fig. 1 (sampling distributions for a single MPM)**: `S03_*` (`figures/fig1_top.png`, `figures/fig1_bottom.png`).
+- **Fig. 2 (sampling distributions vs point estimates for shape/life expectancy)**: `S07_*` (`figures/fig2_shape_l0_distributions.png`).
+- **Fig. 2 (other parameter distributions)**: `S07_*` (`figures/fig2_other_param_distributions.png`).
+- **Fig. 3 (shape–life expectancy relationship + beta posterior)**: `S07_*` (`figures/fig3_shape_l0_regression.png`).
+- **Table 1 (variance components)**: `S10_*` (exported to `data/derived/analysis_cache/case1_variance_ratios.csv`).
+- **Fig. 4 (Silene climate analyses)**: `S12_*` (`figures/clim_1.png`, `figures/clim_2.png`, `figures/clim.png`; plus `case2_*` diagnostic figures).
+- **Appendix figures (boundary estimates)**: `S13_*` (`figures/boundary.png`, `figures/boundary2.png`).
+- **Species‑level case study figures**: `S08_*` (`figures/sds_shape_spp.png`, `figures/sd_other_spp.png`, `figures/shape_spp.png`, `figures/shape_l0_scatter_spp.png`, `figures/hazard_trajectories_spp.png`) for supplementary material.
 
 Setup
 -----
