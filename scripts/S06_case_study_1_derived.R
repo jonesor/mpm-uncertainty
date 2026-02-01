@@ -22,7 +22,7 @@ sd_files <- sd_files[grep("/sd_", sd_files)]
 
 # bind sampling distributions into single tibble ----
 mpm_draws <- cdb_bind_rows(map(sd_files, rdata_load)) %>%
-  mutate(id = as.factor(1:n())) %>%
+  mutate(id = as.factor(dplyr::row_number())) %>%
   cdb_unnest() %>%
   mutate(any_repro = map_lgl(matF, ~ any(.x > 0))) %>%
   filter(any_repro == TRUE) %>% # make sure some repro
@@ -185,7 +185,7 @@ proj <- sweep(proj, 1, rowSums(proj), "/") %>%
   as.data.frame() %>%
   setNames(stages) %>%
   as_tibble() %>%
-  mutate(x = 1:n() - 1) %>%
+  mutate(x = dplyr::row_number() - 1) %>%
   tidyr::gather("stage", "tr", -x) %>%
   mutate(stage = factor(stage, levels = stages))
 
