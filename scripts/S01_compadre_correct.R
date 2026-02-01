@@ -11,29 +11,31 @@ compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X.RData")
 
 
 # Load data from Ellis et al. (2012) ----
-ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt", sep = "\t",
-                         header = TRUE, stringsAsFactors = FALSE) %>%
-  as_tibble() %>% 
-  mutate(matA = map(Mx, string_to_mat)) %>% 
-  mutate(matU = map(Tmx, string_to_mat)) %>% 
-  mutate(matF = map2(matA, matU, ~ .x - .y)) %>% 
+ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt",
+  sep = "\t",
+  header = TRUE, stringsAsFactors = FALSE
+) %>%
+  as_tibble() %>%
+  mutate(matA = map(Mx, string_to_mat)) %>%
+  mutate(matU = map(Tmx, string_to_mat)) %>%
+  mutate(matF = map2(matA, matU, ~ .x - .y)) %>%
   mutate(N = map(Nx, nx_to_vec))
 
 
 # fix typo in A matrix for Eriogonum longifolium (3.420 should be 0.342) ----
 satterthwaite_fix <- which(
-  compadre$SpeciesAuthor == 'Eriogonum_longifolium_var._gnaphalifolium_2' &
-    compadre$MatrixPopulation == 'Unburned' &
+  compadre$SpeciesAuthor == "Eriogonum_longifolium_var._gnaphalifolium_2" &
+    compadre$MatrixPopulation == "Unburned" &
     compadre$MatrixStartYear == 1991
 )
 
-compadre$mat[[satterthwaite_fix]]@matA[5,5] <- 0.342
+compadre$mat[[satterthwaite_fix]]@matA[5, 5] <- 0.342
 
 
 # fix lazaro MatrixComposite ----
 lazaro_fix <- which(
-  compadre$SpeciesAuthor == 'Dioon_merolae' &
-    (compadre$MatrixEndYear - compadre$MatrixStartYear  == 1)
+  compadre$SpeciesAuthor == "Dioon_merolae" &
+    (compadre$MatrixEndYear - compadre$MatrixStartYear == 1)
 )
 
 compadre$MatrixComposite[lazaro_fix] <- "Individual"
@@ -89,9 +91,9 @@ assc_fix <- which(
     compadre$MatrixComposite == "Mean"
 )
 
-assc_rep <- ellis_data %>% 
-  filter(SPP == "ASSC", POP == "ASSC_mcdevi") %>% 
-  .$matF %>% 
+assc_rep <- ellis_data %>%
+  filter(SPP == "ASSC", POP == "ASSC_mcdevi") %>%
+  .$matF %>%
   mat_mean()
 
 compadre$mat[[assc_fix]]@matF <- assc_rep
@@ -143,7 +145,6 @@ for (i in portela_fix1) {
   compadre$mat[[i]]@matU <- compadre$mat[[i]]@matU + compadre$mat[[i]]@matC
   compadre$mat[[i]]@matC[compadre$mat[[i]]@matC > 0] <- 0
 }
-
 
 
 # write corrected db to file ----

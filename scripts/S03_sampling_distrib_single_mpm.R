@@ -14,67 +14,75 @@ compadre <- Rcompadre::cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.R
 
 
 # kiviniemi example ----
-kiviniemi_n <- readr::read_csv("data/derived/studies/kiviniemi_n.csv", show_col_types = FALSE) %>% 
-  group_by(MatrixPopulation, MatrixStartYear) %>% 
+kiviniemi_n <- readr::read_csv("data/derived/studies/kiviniemi_n.csv", show_col_types = FALSE) %>%
+  group_by(MatrixPopulation, MatrixStartYear) %>%
   summarize(N = list(N), .groups = "drop")
 
 # focal species and population
 kiviniemi <- compadre %>%
-  cdb_unnest() %>% 
-  as_tibble() %>% 
-  filter(SpeciesAuthor == "Agrimonia_eupatoria",
-         MatrixPopulation == "B",
-         MatrixComposite == "Individual",
-         MatrixStartYear == 1997) %>% 
+  cdb_unnest() %>%
+  as_tibble() %>%
+  filter(
+    SpeciesAuthor == "Agrimonia_eupatoria",
+    MatrixPopulation == "B",
+    MatrixComposite == "Individual",
+    MatrixStartYear == 1997
+  ) %>%
   left_join(kiviniemi_n, by = c("MatrixPopulation", "MatrixStartYear"))
 
 # short form stage class names
 kiviniemi$MatrixClassAuthor[[1]]
-stage_names <- c('Sdl.', 'Juv.', 'Veg.', 'Rep.')
+stage_names <- c("Sdl.", "Juv.", "Veg.", "Rep.")
 
 # stage sample-sizes for focal year and population
-kiviniemi_n1 <- kiviniemi_n %>% 
-  filter(MatrixPopulation %in% kiviniemi$MatrixPopulation,
-         MatrixStartYear %in% kiviniemi$MatrixStartYear) %>% 
-  unnest(cols = "N") %>% 
+kiviniemi_n1 <- kiviniemi_n %>%
+  filter(
+    MatrixPopulation %in% kiviniemi$MatrixPopulation,
+    MatrixStartYear %in% kiviniemi$MatrixStartYear
+  ) %>%
+  unnest(cols = "N") %>%
   mutate(from_col = 1:n())
 
 # convert mpm to flat form
-df_mpm <- mpm_flatten(kiviniemi$matA[[1]],
-                      kiviniemi$matU[[1]],
-                      kiviniemi$matF[[1]],
-                      kiviniemi$matC[[1]],
-                      stage_names)
+df_mpm <- mpm_flatten(
+  kiviniemi$matA[[1]],
+  kiviniemi$matU[[1]],
+  kiviniemi$matF[[1]],
+  kiviniemi$matC[[1]],
+  stage_names
+)
 
 # arrange data for plotting
-df_plot <- df_mpm %>% 
-  left_join(kiviniemi_n1, by = "from_col") %>% 
-  mutate(num = round(A * N, 1)) %>% 
+df_plot <- df_mpm %>%
+  left_join(kiviniemi_n1, by = "from_col") %>%
+  mutate(num = round(A * N, 1)) %>%
   mutate(n_lab = ifelse(A == 0, "", paste0(num, "/", N))) %>%
-  mutate(A_num = ifelse(A == 0, NA_real_, A)) %>% 
-  mutate(A = ifelse(A == 0, "", sprintf("%.2f", A))) %>% 
-  mutate(U = ifelse(U == 0, "", sprintf("%.2f", U))) %>% 
-  mutate(F = ifelse(F == 0, "", sprintf("%.2f", F))) %>% 
+  mutate(A_num = ifelse(A == 0, NA_real_, A)) %>%
+  mutate(A = ifelse(A == 0, "", sprintf("%.2f", A))) %>%
+  mutate(U = ifelse(U == 0, "", sprintf("%.2f", U))) %>%
+  mutate(F = ifelse(F == 0, "", sprintf("%.2f", F))) %>%
   mutate(C = ifelse(C == 0, "", sprintf("%.2f", C)))
 
-df_sdist <- df_mpm %>% 
-  left_join(kiviniemi_n1, by = "from_col") %>% 
-  mutate(x = round(A * N, 1)) %>% 
-  mutate(x = ifelse(A == 0, NA, x)) %>% 
-  mutate(fec = ifelse(F == 0, FALSE, TRUE)) %>% 
-  group_by(to_col, from_col) %>% 
-  do(dens_fn(.$x, .$N, .$fec)) %>% 
-  ungroup() %>% 
+df_sdist <- df_mpm %>%
+  left_join(kiviniemi_n1, by = "from_col") %>%
+  mutate(x = round(A * N, 1)) %>%
+  mutate(x = ifelse(A == 0, NA, x)) %>%
+  mutate(fec = ifelse(F == 0, FALSE, TRUE)) %>%
+  group_by(to_col, from_col) %>%
+  do(dens_fn(.$x, .$N, .$fec)) %>%
+  ungroup() %>%
   left_join(df_mpm, by = c("to_col", "from_col"))
 
-df_pt <- df_sdist %>% 
-  group_by(to_name, from_name) %>% 
-  filter(!is.na(pp), pp == max(pp)) %>% 
+df_pt <- df_sdist %>%
+  group_by(to_name, from_name) %>%
+  filter(!is.na(pp), pp == max(pp)) %>%
   ungroup()
 
-df_rect <- df_mpm %>% 
-  mutate(x1 = ifelse(A == 0, -Inf, NA),
-         x2 = ifelse(A == 0, Inf, NA)) %>% 
+df_rect <- df_mpm %>%
+  mutate(
+    x1 = ifelse(A == 0, -Inf, NA),
+    x2 = ifelse(A == 0, Inf, NA)
+  ) %>%
   mutate(y1 = x1, y2 = x2)
 
 
@@ -118,8 +126,10 @@ p1b <- ggplot(df_plot) +
 p1c <- ggplot(df_sdist) +
   geom_ribbon(aes(x = p, ymin = 0, ymax = pp), fill = cols$accent, alpha = 0.4) +
   geom_segment(data = df_pt, aes(x = p, y = 0, xend = p, yend = pp + 0.1), linewidth = 0.3) +
-  geom_rect(data = df_rect, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2),
-            fill = NA) +
+  geom_rect(
+    data = df_rect, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2),
+    fill = NA
+  ) +
   facet_grid(to_name ~ from_name, switch = "y") +
   coord_flip() +
   scale_y_reverse() +
@@ -154,7 +164,6 @@ if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
 ggsave("figures/fig1_top.png", p1, height = 3.5, width = 10.5, units = "in", dpi = 300)
 
 
-
 # Figure 1 (bottom): Derived parameters ----
 
 # possible transitions
@@ -168,7 +177,7 @@ individ_sim <- kiviniemi %>%
   mutate(simU = map2(matU, N, ~ sim_U_wrapper(.x, posU, .y, 2000))) %>%
   mutate(simF = map2(matF, N, ~ sim_F_wrapper(.x, posF, .y, 2000))) %>%
   mutate(simA = map2(simF, simU, ~ map2(.x, .y, `+`))) %>%
-  as_tibble() %>% 
+  as_tibble() %>%
   select(simU, simF, simA) %>%
   unnest(cols = c(simU, simF, simA)) %>%
   mutate(rep = 1:n()) %>%
@@ -190,44 +199,44 @@ par_lab <- c(
 
 
 # derived parameters, sampling distributions
-deriv_param <- individ_sim %>% 
-  mutate(lambda = map_dbl(simA, lambda)) %>% 
-  mutate(rho = map_dbl(simA, damping.ratio)) %>% 
+deriv_param <- individ_sim %>%
+  mutate(lambda = map_dbl(simA, lambda)) %>%
+  mutate(rho = map_dbl(simA, damping.ratio)) %>%
   mutate(`v[3]` = map_dbl(simA, ~ reproductive.value(.x)[3])) %>%
-  mutate(`E[list(4,4)]` = map_dbl(simA, ~ elasticity(.x)[4,4])) %>% 
+  mutate(`E[list(4,4)]` = map_dbl(simA, ~ elasticity(.x)[4, 4])) %>%
   mutate(`R[0]` = map2_dbl(simU, simF, net_repro_rate)) %>%
-  mutate(`T` = map2_dbl(simU, simF, gen_time)) %>% 
+  mutate(`T` = map2_dbl(simU, simF, gen_time)) %>%
   mutate(`l[0]` = map_dbl(simU, life_expect)) %>%
-  select(-matches("sim"), -`R[0]`) %>% 
-  gather(par, value, lambda:`l[0]`) %>% 
+  select(-matches("sim"), -`R[0]`) %>%
+  gather(par, value, lambda:`l[0]`) %>%
   mutate(par = factor(par, levels = par_lev, labels = par_lab))
 
 # derived parameters, point estimates
-deriv_pt <- kiviniemi %>% 
-  as_tibble() %>% 
-  select(matA, matU, matF) %>% 
-  mutate(lambda = map_dbl(matA, lambda)) %>% 
-  mutate(rho = map_dbl(matA, damping.ratio)) %>% 
+deriv_pt <- kiviniemi %>%
+  as_tibble() %>%
+  select(matA, matU, matF) %>%
+  mutate(lambda = map_dbl(matA, lambda)) %>%
+  mutate(rho = map_dbl(matA, damping.ratio)) %>%
   mutate(`v[3]` = map_dbl(matA, ~ reproductive.value(.x)[3])) %>%
-  mutate(`E[list(4,4)]` = map_dbl(matA, ~ elasticity(.x)[4,4])) %>% 
+  mutate(`E[list(4,4)]` = map_dbl(matA, ~ elasticity(.x)[4, 4])) %>%
   mutate(`R[0]` = map2_dbl(matU, matF, net_repro_rate)) %>%
-  mutate(`T` = map2_dbl(matU, matF, gen_time)) %>% 
+  mutate(`T` = map2_dbl(matU, matF, gen_time)) %>%
   mutate(`l[0]` = map_dbl(matU, life_expect)) %>%
-  select(-starts_with("mat"), -`R[0]`) %>% 
-  gather(par, value, lambda:`l[0]`) %>% 
-  mutate(par = factor(par, levels = par_lev, labels = par_lab)) %>% 
+  select(-starts_with("mat"), -`R[0]`) %>%
+  gather(par, value, lambda:`l[0]`) %>%
+  mutate(par = factor(par, levels = par_lev, labels = par_lab)) %>%
   filter(!par %in% c("Repro.~value~(Veg.)", "Elasticity"))
 
 # plot
-deriv_plot <- deriv_param %>% 
-  filter(!par %in% c("Repro.~value~(Veg.)", "Elasticity")) %>% 
+deriv_plot <- deriv_param %>%
+  filter(!par %in% c("Repro.~value~(Veg.)", "Elasticity")) %>%
   filter(!(par == "Generation~time~(italic(T))" & value > 90)) %>%
   filter(!(par == "Life~expectancy~(italic(l[0]))" & value > 35))
 
 p2 <- ggplot(deriv_plot) +
   geom_density(aes(value), fill = cols$accent, alpha = 0.4, linewidth = 0) +
   geom_vline(data = deriv_pt, aes(xintercept = value)) +
-  facet_wrap(~ par, scales = "free", labeller = label_parsed, nrow = 1) +
+  facet_wrap(~par, scales = "free", labeller = label_parsed, nrow = 1) +
   labs(x = "Parameter estimate", y = "Prob. density") +
   ggtitle("Derived parameters") +
   theme_mpm() +
@@ -246,20 +255,20 @@ p2 <- ggplot(deriv_plot) +
 ggsave("figures/fig1_bottom.png", p2, height = 3.5, width = 8.5, units = "in", dpi = 300)
 
 
-
-
-
-
-
 # table of posterior quantiles for derived parameters ----
-deriv_summary <- deriv_param %>% 
-  group_by(par) %>% 
-  summarize(med = quantile(value, 0.500),
-            low = quantile(value, 0.025),
-            upp = quantile(value, 0.975)) %>% 
-  left_join(deriv_pt, by = "par") %>% 
+deriv_summary <- deriv_param %>%
+  group_by(par) %>%
+  summarize(
+    med = quantile(value, 0.500),
+    low = quantile(value, 0.025),
+    upp = quantile(value, 0.975)
+  ) %>%
+  left_join(deriv_pt, by = "par") %>%
   mutate(across(where(is.numeric), ~ signif(.x, 3)))
 
-if (!dir.exists("data/derived/analysis_cache")) dir.create("data/derived/analysis_cache",
-                                                           recursive = TRUE)
+if (!dir.exists("data/derived/analysis_cache")) {
+  dir.create("data/derived/analysis_cache",
+    recursive = TRUE
+  )
+}
 write_csv(deriv_summary, "data/derived/analysis_cache/fig1_derived_param_summary.csv")

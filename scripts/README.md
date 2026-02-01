@@ -42,3 +42,9 @@ Setup
 - PRISM download location is configured by `setup_prism()` in `code/setup.R`.
 - PRISM extraction uses the `sf` + `terra` stack (no `rgdal`).
 - Set `FAST_RUN=1` in the environment to shorten Stan runs in `S08_case_study_1_analysis_spp.R` for development.
+
+Linting and formatting
+----------------------
+- Linting uses `.lintr` in the repo root (object-usage checks are disabled; naming and pipe preferences are not enforced).
+- Run from R: `lintr::lint_dir(".")`.
+- Formatting uses `scripts/format.R` (wrapper around `styler`).

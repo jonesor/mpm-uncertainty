@@ -28,37 +28,41 @@ files_tmp <- month_files[grepl("tmean", month_files)]
 coords_path <- "data/derived/climate/species_coords.csv"
 if (!file.exists(coords_path)) {
   compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
-  comp_sub <- compadre %>% 
-    filter(MatrixComposite == "Individual",
-           MatrixTreatment == "Unmanipulated",
-           ProjectionInterval == "1",
-           MatrixCaptivity == "W")
-  comp_time_series <- comp_sub %>% 
-    as_tibble() %>% 
-    filter(!is.na(Lon) & !is.na(Lat)) %>% 
-    group_by(SpeciesAuthor) %>% 
-    mutate(n_year = length(unique(MatrixStartYear))) %>% 
-    ungroup() %>% 
-    filter(n_year >= 5) %>% 
+  comp_sub <- compadre %>%
+    filter(
+      MatrixComposite == "Individual",
+      MatrixTreatment == "Unmanipulated",
+      ProjectionInterval == "1",
+      MatrixCaptivity == "W"
+    )
+  comp_time_series <- comp_sub %>%
+    as_tibble() %>%
+    filter(!is.na(Lon) & !is.na(Lat)) %>%
+    group_by(SpeciesAuthor) %>%
+    mutate(n_year = length(unique(MatrixStartYear))) %>%
+    ungroup() %>%
+    filter(n_year >= 5) %>%
     group_by(SpeciesAuthor, MatrixPopulation) %>%
-    summarize(Lon = unique(Lon)[1],
-              Lat = unique(Lat)[1],
-              n_year = unique(n_year),
-              .groups = "drop")
+    summarize(
+      Lon = unique(Lon)[1],
+      Lat = unique(Lat)[1],
+      n_year = unique(n_year),
+      .groups = "drop"
+    )
   write_csv(comp_time_series, coords_path)
 }
 
-spp_df <- read_csv(coords_path) %>% 
+spp_df <- read_csv(coords_path) %>%
   filter(SpeciesAuthor == "Silene_spaldingii")
 
 if (length(bil_files) == 0) {
   compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
-  years <- compadre %>% 
-    as_tibble() %>% 
-    filter(SpeciesAuthor == "Silene_spaldingii") %>% 
-    filter(!is.na(MatrixStartYear)) %>% 
-    pull(MatrixStartYear) %>% 
-    unique() %>% 
+  years <- compadre %>%
+    as_tibble() %>%
+    filter(SpeciesAuthor == "Silene_spaldingii") %>%
+    filter(!is.na(MatrixStartYear)) %>%
+    pull(MatrixStartYear) %>%
+    unique() %>%
     sort()
   maybe_download_prism(years)
   bil_files <- list.files(prism_dir, pattern = "\\.bil$", recursive = TRUE, full.names = TRUE)
@@ -69,18 +73,18 @@ if (length(bil_files) == 0) {
 
 
 # get climate data from all raster files for all species of interest ----
-df_ppt <- tibble(file_ppt = files_ppt) %>% 
+df_ppt <- tibble(file_ppt = files_ppt) %>%
   mutate(Date = map_chr(file_ppt, ~ strsplit(basename(.x), "_")[[1]][5]))
-df_tmp <- tibble(file_tmp = files_tmp) %>% 
+df_tmp <- tibble(file_tmp = files_tmp) %>%
   mutate(Date = map_chr(file_tmp, ~ strsplit(basename(.x), "_")[[1]][5]))
 
-df_clim <- inner_join(df_tmp, df_ppt, by = "Date") %>% 
-  mutate(Year = as.integer(substr(Date, 1, 4))) %>% 
-  mutate(Month = as.integer(substr(Date, 5, 6))) %>% 
-  group_by(Year, Month) %>% 
-  do(fetch_prism(.$file_tmp, .$file_ppt, spp_df)) %>% 
-  ungroup() %>% 
-  arrange(SpeciesAuthor, MatrixPopulation, Year, Month) %>% 
+df_clim <- inner_join(df_tmp, df_ppt, by = "Date") %>%
+  mutate(Year = as.integer(substr(Date, 1, 4))) %>%
+  mutate(Month = as.integer(substr(Date, 5, 6))) %>%
+  group_by(Year, Month) %>%
+  do(fetch_prism(.$file_tmp, .$file_ppt, spp_df)) %>%
+  ungroup() %>%
+  arrange(SpeciesAuthor, MatrixPopulation, Year, Month) %>%
   filter(!(is.na(tmp) & is.na(ppt)))
 
 write.csv(df_clim, "data/derived/climate/species_clim_prism.csv", row.names = FALSE)
