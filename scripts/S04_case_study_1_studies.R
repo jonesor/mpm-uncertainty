@@ -4,7 +4,7 @@
 source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre", "popbio"))
 source("code/functions.R")
-set.seed(12345)
+set.seed(5654)
 
 
 # load compadre data ----

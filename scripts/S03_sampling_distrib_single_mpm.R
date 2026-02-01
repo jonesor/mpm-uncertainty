@@ -5,7 +5,7 @@ source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre", "Rage", "popbio", "gridExtra", "viridisLite"))
 source("code/functions.R")
 # Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
-set.seed(12345)
+set.seed(5654)
 cols <- mpm_colors()
 
 

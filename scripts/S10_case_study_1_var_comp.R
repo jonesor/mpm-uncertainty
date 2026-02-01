@@ -8,7 +8,7 @@ setup_packages(c(
 ))
 setup_rstan()
 source("code/functions.R")
-seed <- 12345
+seed <- 5654
 set.seed(seed)
 
 

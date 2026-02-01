@@ -9,7 +9,7 @@ setup_packages(c(
 setup_rstan()
 source("code/functions.R")
 # Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
-seed <- 12345
+seed <- 5654
 set.seed(seed)
 
 
