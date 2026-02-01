@@ -140,6 +140,60 @@ round(sapply(drawsA, damping.ratio), 2)
 round(sapply(drawsU, life_expect), 2)
 
 
+# Table S1-3 output (mean MPM sampling distribution) ----
+nsim <- 2000L
+drawsU_mean <- map(seq_len(nsim), ~ list_mean(list(
+  drawsU1[[.x]],
+  drawsU2[[.x]],
+  drawsU3[[.x]]
+)))
+drawsF_mean <- map(seq_len(nsim), ~ list_mean(list(
+  drawsF1[[.x]],
+  drawsF2[[.x]],
+  drawsF3[[.x]]
+)))
+drawsA_mean <- map2(drawsF_mean, drawsU_mean, `+`)
+
+mean_param <- tibble(
+  lambda = map_dbl(drawsA_mean, lambda),
+  rho = map_dbl(drawsA_mean, damping.ratio),
+  l0 = map_dbl(drawsU_mean, life_expect)
+)
+
+mean_point <- tibble(
+  lambda = lambda(mA),
+  rho = damping.ratio(mA),
+  l0 = life_expect(mU)
+)
+
+par_lab <- c(
+  "Pop.~growth~rate~(italic(lambda))",
+  "Damping~ratio~(italic(rho))",
+  "Life~expectancy~(italic(l[0]))"
+)
+
+mean_summary <- mean_param %>%
+  pivot_longer(cols = everything(), names_to = "par", values_to = "value") %>%
+  group_by(par) %>%
+  summarize(
+    med = quantile(value, 0.500),
+    low = quantile(value, 0.025),
+    upp = quantile(value, 0.975),
+    .groups = "drop"
+  ) %>%
+  left_join(mean_point %>% pivot_longer(cols = everything(),
+                                        names_to = "par",
+                                        values_to = "value"),
+            by = "par") %>%
+  mutate(par = factor(par, levels = c("lambda", "rho", "l0"), labels = par_lab)) %>%
+  mutate(across(where(is.numeric), ~ signif(.x, 3)))
+
+if (!dir.exists("data/derived/analysis_cache")) {
+  dir.create("data/derived/analysis_cache", recursive = TRUE)
+}
+write_csv(mean_summary, "data/derived/analysis_cache/fig1_mean_mpm_param_summary.csv")
+
+
 # boundary estimates of survival ----
 load("data/derived/analysis_cache/sd_scanga.RData")
 
