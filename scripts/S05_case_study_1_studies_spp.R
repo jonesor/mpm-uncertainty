@@ -136,7 +136,7 @@ sd_satterthwaite <- satterthwaite %>%
   select(MatrixPopulation, MatrixStartYear, simU, simF) %>%
   unnest(cols = everything()) %>%
   group_by(MatrixPopulation, MatrixStartYear) %>%
-  mutate(rep = 1:n()) %>%
+  mutate(rep = dplyr::row_number()) %>%
   ungroup() %>%
   group_by(MatrixPopulation, rep) %>%
   summarize(
@@ -1421,7 +1421,7 @@ sd_law <- law %>%
   select(MatrixPopulation, MatrixStartYear, simU) %>%
   unnest(cols = everything()) %>%
   group_by(MatrixPopulation, MatrixStartYear) %>%
-  mutate(rep = 1:n()) %>%
+  mutate(rep = dplyr::row_number()) %>%
   ungroup() %>%
   group_by(MatrixPopulation, rep) %>%
   summarize(simU = list(mat_mean(simU))) %>%
