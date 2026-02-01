@@ -17,6 +17,7 @@ Contents
 - `S11_*`   PRISM climate extraction and preprocessing (includes `prism` package download workflow; run before `S12_*`).
 - `S12_*`   Case study 2 analysis (run after `S11_*` produces climate inputs).
 - `S13_*`   Appendix figures/analysis.
+- `99_*`    Manuscript table exports (DOCX) via `officer` + `flextable`.
 
 Outputs
 -------
