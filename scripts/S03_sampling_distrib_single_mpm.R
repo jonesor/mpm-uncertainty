@@ -41,7 +41,7 @@ kiviniemi_n1 <- kiviniemi_n %>%
     MatrixStartYear %in% kiviniemi$MatrixStartYear
   ) %>%
   unnest(cols = "N") %>%
-  mutate(from_col = 1:n())
+  mutate(from_col = dplyr::row_number())
 
 # convert mpm to flat form
 df_mpm <- mpm_flatten(
@@ -60,14 +60,14 @@ df_plot <- df_mpm %>%
   mutate(A_num = ifelse(A == 0, NA_real_, A)) %>%
   mutate(A = ifelse(A == 0, "", sprintf("%.2f", A))) %>%
   mutate(U = ifelse(U == 0, "", sprintf("%.2f", U))) %>%
-  mutate(F = ifelse(F == 0, "", sprintf("%.2f", F))) %>%
+  mutate(F = ifelse(.data$F == 0, "", sprintf("%.2f", .data$F))) %>%
   mutate(C = ifelse(C == 0, "", sprintf("%.2f", C)))
 
 df_sdist <- df_mpm %>%
   left_join(kiviniemi_n1, by = "from_col") %>%
   mutate(x = round(A * N, 1)) %>%
   mutate(x = ifelse(A == 0, NA, x)) %>%
-  mutate(fec = ifelse(F == 0, FALSE, TRUE)) %>%
+  mutate(fec = ifelse(.data$F == 0, FALSE, TRUE)) %>%
   group_by(to_col, from_col) %>%
   do(dens_fn(.$x, .$N, .$fec)) %>%
   ungroup() %>%
@@ -180,7 +180,7 @@ individ_sim <- kiviniemi %>%
   as_tibble() %>%
   select(simU, simF, simA) %>%
   unnest(cols = c(simU, simF, simA)) %>%
-  mutate(rep = 1:n()) %>%
+  mutate(rep = dplyr::row_number()) %>%
   select(rep, simA, simU, simF)
 
 

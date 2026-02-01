@@ -350,13 +350,16 @@ posterior_vec <- function(fit, x, var, exp = FALSE) {
   fn <- ifelse(exp,
                function(x, q) exp(quantile(x, q)),
                function(x, q) quantile(x, q))
-  return(tibble::tibble(
-    x = x,
-    med = apply(var, 2, fn, q = 0.500),
-    low80 = apply(var, 2, fn, q = 0.10),
-    upp80 = apply(var, 2, fn, q = 0.90),
-    low95 = apply(var, 2, fn, q = 0.025),
-    upp95 = apply(var, 2, fn, q = 0.975)))
+  return(
+    tibble::tibble(
+      x = x,
+      med = apply(var, 2, fn, q = 0.500),
+      low80 = apply(var, 2, fn, q = 0.10),
+      upp80 = apply(var, 2, fn, q = 0.90),
+      low95 = apply(var, 2, fn, q = 0.025),
+      upp95 = apply(var, 2, fn, q = 0.975)
+    )
+  )
 }
 
 
@@ -434,7 +437,13 @@ mpm_flatten <- function(matA, matU, matF, matC, stage_names) {
 
 
 scale_U <- function(matU) {
-  out <- apply(matU, 2, function(x) if (any(sum(x) > 1)) { x / sum(x) } else { x })
+  out <- apply(matU, 2, function(x) {
+    if (any(sum(x) > 1)) {
+      x / sum(x)
+    } else {
+      x
+    }
+  })
   dimnames(out) <- dimnames(matU)
   return(out)
 }
