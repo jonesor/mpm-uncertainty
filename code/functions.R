@@ -26,7 +26,7 @@ softmax <- function(x) {
 rdirichlet <- function(alpha) {
   M <- length(alpha)
   x <- rgamma(M, alpha)
-  x / sum(x)
+  return(x / sum(x))
 }
 
 
@@ -35,7 +35,7 @@ string_to_mat <- function(A) {
   A <- gsub(pattern = "\\[|\\]|\\;", "", A)
   A <- strsplit(x = A, split = " ")[[1]]
   mat <- matrix(as.numeric(A), nrow = sqrt(length(A)), byrow = TRUE)
-  mat
+  return(mat)
 }
 
 
@@ -44,7 +44,7 @@ nx_to_vec <- function(x) {
   x <- strsplit(x, " ")[[1]]
   x <- gsub("NA", NA_integer_, x)
   x <- as.integer(x)
-  x
+  return(x)
 }
 
 
@@ -71,7 +71,7 @@ cdb_bind_rows <- function(dbs) {
 rdata_load <- function(path) {
   env <- new.env()
   x <- load(path, env)[1]
-  env[[x]]
+  return(env[[x]])
 }
 
 rdata_load2 <- function(path) {
@@ -81,7 +81,7 @@ rdata_load2 <- function(path) {
   out$Altitude <- NULL
   out$MatrixStartYear <- NULL
   out$MatrixEndYear <- NULL
-  out
+  return(out)
 }
 
 life_expect <- function(matU, mixdist = NULL, start = NULL) {
@@ -163,7 +163,7 @@ fetch_prism <- function(file_tmp, file_ppt, spp) {
   out <- sf::st_drop_geometry(spp_sf)
   out$tmp <- tmp_vals
   out$ppt <- ppt_vals
-  tibble::as_tibble(out)
+  return(tibble::as_tibble(out))
 }
 
 
@@ -177,12 +177,12 @@ check_freqs_mat <- function(matU, N, prec = 0.001) {
     out[i] <- check_freqs(N[i], matU[, i], prec = prec)
   }
 
-  data.frame(N, x = out)
+  return(data.frame(N, x = out))
 }
 
 check_freqs <- function(n, x, prec = 0.001) {
   if (is.na(n) || n == 0) {
-    NA
+    return(NA)
   } else {
     y <- vector(mode = "numeric", length = length(x))
 
@@ -192,10 +192,10 @@ check_freqs <- function(n, x, prec = 0.001) {
 
     check <- all(abs(y - x) <= prec)
     if (check) {
-      "Pass"
+      return("Pass")
     } else {
       y <- round(y, as.integer(log10(1 / prec)))
-      paste(paste(round(y[y > 0], 6), collapse = "; "))
+      return(paste(paste(round(y[y > 0], 6), collapse = "; ")))
     }
   }
 }
@@ -207,7 +207,7 @@ dens_fn <- function(x, n, fec) {
   # x is number of successes
   # n is number of trials
   if (is.na(x)) {
-    data.frame(p = 0, pp = NA_real_)
+    return(data.frame(p = 0, pp = NA_real_))
   } else {
     p <- seq(0, 1, 0.01)    # population probability
 
@@ -219,7 +219,7 @@ dens_fn <- function(x, n, fec) {
       cn <- integrate(function(z) dbinom(x, n, z), lower = 0, upper = 1)$value
     }
     pp <- l / cn # posterior probability (assuming flat prior)
-    data.frame(p = p, pp = pp)
+    return(data.frame(p = p, pp = pp))
   }
 }
 
@@ -237,7 +237,7 @@ sim_stage_U <- function(x, vital_ind, n) {
     out <- numeric(length(x))
     out[vital_ind] <- rates_sim[seq_along(vital_ind)]
   }
-  out
+  return(out)
 }
 
 
@@ -251,7 +251,7 @@ sim_stage_F <- function(x, vital_ind, n) {
     out <- numeric(length(x))
     out[vital_ind] <- rates_sim
   }
-  out
+  return(out)
 }
 
 
@@ -271,7 +271,7 @@ sim_U <- function(matU, posU, N) {
       simU[, i] <- sim_stage_U(matU[, i], vital_ind, N[i])
     }
   }
-  simU
+  return(simU)
 }
 
 
@@ -291,17 +291,17 @@ sim_F <- function(matF, posF, N) {
       simF[, i] <- sim_stage_F(matF[, i], vital_ind, N[i])
     }
   }
-  simF
+  return(simF)
 }
 
 
 sim_U_wrapper <- function(matU, posU = matU > 0, N, nsim) {
-  replicate(nsim, sim_U(matU, posU, N), simplify = FALSE)
+  return(replicate(nsim, sim_U(matU, posU, N), simplify = FALSE))
 }
 
 
 sim_F_wrapper <- function(matF, posF = matF > 0, N, nsim) {
-  replicate(nsim, sim_F(matF, posF, N), simplify = FALSE)
+  return(replicate(nsim, sim_F(matF, posF, N), simplify = FALSE))
 }
 
 
@@ -324,7 +324,7 @@ stan_diagnostics <- function(fit) {
   n_eff_low <- length(which(stan_summary$n_eff / n < 0.1))
   mcse_high <- length(which(stan_summary$se_mean / stan_summary$sd > 0.1))
   n_diverg <- rstan::get_num_divergent(fit)
-  tibble::tibble(rhat_high, n_eff_low, mcse_high, n_diverg)
+  return(tibble::tibble(rhat_high, n_eff_low, mcse_high, n_diverg))
 }
 
 
@@ -341,7 +341,7 @@ stanfn <- function(object, data, control = ctrl1, iter = 3000,
                            pars = pars_excl, include = FALSE, seed = seed)
   }
 
-  fit
+  return(fit)
 }
 
 
@@ -350,25 +350,25 @@ posterior_vec <- function(fit, x, var, exp = FALSE) {
   fn <- ifelse(exp,
                function(x, q) exp(quantile(x, q)),
                function(x, q) quantile(x, q))
-  tibble::tibble(
+  return(tibble::tibble(
     x = x,
     med = apply(var, 2, fn, q = 0.500),
     low80 = apply(var, 2, fn, q = 0.10),
     upp80 = apply(var, 2, fn, q = 0.90),
     low95 = apply(var, 2, fn, q = 0.025),
-    upp95 = apply(var, 2, fn, q = 0.975))
+    upp95 = apply(var, 2, fn, q = 0.975)))
 }
 
 
 summarize_yhat <- function(fit, label) {
   yhat <- rstan::extract(fit, "yhat")$yhat
 
-  tibble::tibble(n = seq_len(ncol(yhat)),
-                 y = y,
-                 model = label,
-                 yhat_med = apply(yhat, 2, function(x) quantile(x, 0.50)),
-                 yhat_low90 = apply(yhat, 2, function(x) quantile(x, 0.05)),
-                 yhat_upp90 = apply(yhat, 2, function(x) quantile(x, 0.95)))
+  return(tibble::tibble(n = seq_len(ncol(yhat)),
+                        y = y,
+                        model = label,
+                        yhat_med = apply(yhat, 2, function(x) quantile(x, 0.50)),
+                        yhat_low90 = apply(yhat, 2, function(x) quantile(x, 0.05)),
+                        yhat_upp90 = apply(yhat, 2, function(x) quantile(x, 0.95))))
 }
 
 
@@ -379,11 +379,11 @@ summarize_beta <- function(fit, label, wt = FALSE) {
     beta <- rstan::extract(fit, "beta")$beta
   }
 
-  tibble::tibble(lag = seq_len(ncol(beta)),
-                 model = label,
-                 beta_med = apply(beta, 2, function(x) quantile(x, 0.50)),
-                 beta_low95 = apply(beta, 2, function(x) quantile(x, 0.05)),
-                 beta_upp95 = apply(beta, 2, function(x) quantile(x, 0.95)))
+  return(tibble::tibble(lag = seq_len(ncol(beta)),
+                        model = label,
+                        beta_med = apply(beta, 2, function(x) quantile(x, 0.50)),
+                        beta_low95 = apply(beta, 2, function(x) quantile(x, 0.05)),
+                        beta_upp95 = apply(beta, 2, function(x) quantile(x, 0.95))))
 }
 
 
@@ -399,9 +399,9 @@ summarize_fit <- function(fit, label) {
   elpd_waic <- waic_mat[1, 1]
   elpd_waic_se <- waic_mat[1, 2]
 
-  cbind(tibble::tibble(model = label),
-        stan_diagnostics(fit),
-        tibble::tibble(elpd_loo, elpd_loo_se, elpd_waic, elpd_waic_se))
+  return(cbind(tibble::tibble(model = label),
+               stan_diagnostics(fit),
+               tibble::tibble(elpd_loo, elpd_loo_se, elpd_waic, elpd_waic_se)))
 }
 
 
@@ -412,9 +412,9 @@ summarize_xval <- function(fit, label) {
   yhat_test <- rstan::extract(fit, "yhat_test")$yhat_test
   yhat_test_median <- apply(yhat_test, 2, median)
 
-  dplyr::bind_cols(tibble::tibble(model = label),
-                   stan_diagnostics(fit),
-                   tibble::tibble(lppd_test, yhat_test = yhat_test_median))
+  return(dplyr::bind_cols(tibble::tibble(model = label),
+                          stan_diagnostics(fit),
+                          tibble::tibble(lppd_test, yhat_test = yhat_test_median)))
 }
 
 
@@ -429,28 +429,28 @@ mpm_flatten <- function(matA, matU, matF, matC, stage_names) {
   out$U <- c(matU)
   out$F <- c(matF)
   out$C <- c(matC)
-  out
+  return(out)
 }
 
 
 scale_U <- function(matU) {
   out <- apply(matU, 2, function(x) if (any(sum(x) > 1)) { x / sum(x) } else { x })
   dimnames(out) <- dimnames(matU)
-  out
+  return(out)
 }
 
 
 mat_mean2 <- function(l, na.rm = TRUE, replace_na = TRUE) {
   m <- list_mean(l, na.rm = na.rm)
   if (replace_na) m[is.na(m)] <- 0
-  m
+  return(m)
 }
 
 list_mean <- function(l, na.rm = TRUE) {
   arr <- simplify2array(l)
   m <- apply(arr, 1:2, function(x) mean(x, na.rm = na.rm))
   dimnames(m) <- dimnames(l[[1]])
-  m
+  return(m)
 }
 
 
@@ -460,7 +460,7 @@ lx_submax <- function(lx, tmax, strip_zero = TRUE) {
   upp <- min(tmax, length(lx))
   lx <- lx[1L:upp] / lx[1L]
   if (strip_zero) lx <- lx[lx > 0]
-  lx
+  return(lx)
 }
 
 
@@ -484,14 +484,14 @@ sum2 <- function(x) {
 
 pool_counts <- function(nl) {
   X <- do.call(rbind, nl)
-  apply(X, 2, sum2)
+  return(apply(X, 2, sum2))
 }
 
 
 make_mat <- function(df, d, tr) {
   m <- matrix(0, nrow = d, ncol = d)
   m[cbind(df$row, df$col)] <- df[[tr]]
-  m
+  return(m)
 }
 
 
@@ -558,10 +558,10 @@ perturb_cust <- function(matU, matF, posU = matU > 0, posF = matF > 0,
     fecund <- sum_elast(pertMat, posF, propF)
   }
 
-  list(stasis = stasis,
-       retro = retro,
-       progr = progr,
-       fecund = fecund)
+  return(list(stasis = stasis,
+              retro = retro,
+              progr = progr,
+              fecund = fecund))
 }
 
 
