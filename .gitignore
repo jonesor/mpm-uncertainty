@@ -7,6 +7,7 @@ data/derived/analysis_cache/
 chelsa/
 prism/
 data/raw/prism/
+scripts/run_logs/
 models/*.rds
 studies_check*
 studies_emails*

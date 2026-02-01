@@ -73,15 +73,15 @@ Chain 1: Iteration: 3400 / 4000 [ 85%]  (Sampling)
 Chain 1: Iteration: 3800 / 4000 [ 95%]  (Sampling)
 Chain 1: Iteration: 4000 / 4000 [100%]  (Sampling)
 Chain 1: 
-Chain 1:  Elapsed Time: 0.788 seconds (Warm-up)
-Chain 1:                0.249 seconds (Sampling)
-Chain 1:                1.037 seconds (Total)
+Chain 1:  Elapsed Time: 0.811 seconds (Warm-up)
+Chain 1:                0.253 seconds (Sampling)
+Chain 1:                1.064 seconds (Total)
 Chain 1: 
 
 SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
 Chain 2: 
-Chain 2: Gradient evaluation took 2e-06 seconds
-Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.02 seconds.
+Chain 2: Gradient evaluation took 3e-06 seconds
+Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.03 seconds.
 Chain 2: Adjust your expectations accordingly!
 Chain 2: 
 Chain 2: 
@@ -98,9 +98,9 @@ Chain 2: Iteration: 3400 / 4000 [ 85%]  (Sampling)
 Chain 2: Iteration: 3800 / 4000 [ 95%]  (Sampling)
 Chain 2: Iteration: 4000 / 4000 [100%]  (Sampling)
 Chain 2: 
-Chain 2:  Elapsed Time: 0.848 seconds (Warm-up)
-Chain 2:                0.222 seconds (Sampling)
-Chain 2:                1.07 seconds (Total)
+Chain 2:  Elapsed Time: 0.877 seconds (Warm-up)
+Chain 2:                0.227 seconds (Sampling)
+Chain 2:                1.104 seconds (Total)
 Chain 2: 
 Warning messages:
 1: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.

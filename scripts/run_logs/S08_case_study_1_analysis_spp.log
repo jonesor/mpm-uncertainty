@@ -97,9 +97,9 @@ Chain 1: Iteration: 3200 / 4000 [ 80%]  (Sampling)
 Chain 1: Iteration: 3600 / 4000 [ 90%]  (Sampling)
 Chain 1: Iteration: 4000 / 4000 [100%]  (Sampling)
 Chain 1: 
-Chain 1:  Elapsed Time: 0.017 seconds (Warm-up)
+Chain 1:  Elapsed Time: 0.016 seconds (Warm-up)
 Chain 1:                0.015 seconds (Sampling)
-Chain 1:                0.032 seconds (Total)
+Chain 1:                0.031 seconds (Total)
 Chain 1: 
 
 SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
@@ -147,15 +147,15 @@ Chain 1: Iteration: 3400 / 4000 [ 85%]  (Sampling)
 Chain 1: Iteration: 3800 / 4000 [ 95%]  (Sampling)
 Chain 1: Iteration: 4000 / 4000 [100%]  (Sampling)
 Chain 1: 
-Chain 1:  Elapsed Time: 29.272 seconds (Warm-up)
-Chain 1:                9.995 seconds (Sampling)
-Chain 1:                39.267 seconds (Total)
+Chain 1:  Elapsed Time: 29.856 seconds (Warm-up)
+Chain 1:                10.011 seconds (Sampling)
+Chain 1:                39.867 seconds (Total)
 Chain 1: 
 
 SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
 Chain 2: 
-Chain 2: Gradient evaluation took 5e-06 seconds
-Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.05 seconds.
+Chain 2: Gradient evaluation took 4e-06 seconds
+Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.04 seconds.
 Chain 2: Adjust your expectations accordingly!
 Chain 2: 
 Chain 2: 
@@ -172,9 +172,9 @@ Chain 2: Iteration: 3400 / 4000 [ 85%]  (Sampling)
 Chain 2: Iteration: 3800 / 4000 [ 95%]  (Sampling)
 Chain 2: Iteration: 4000 / 4000 [100%]  (Sampling)
 Chain 2: 
-Chain 2:  Elapsed Time: 29.711 seconds (Warm-up)
-Chain 2:                9.901 seconds (Sampling)
-Chain 2:                39.612 seconds (Total)
+Chain 2:  Elapsed Time: 30.114 seconds (Warm-up)
+Chain 2:                10.176 seconds (Sampling)
+Chain 2:                40.29 seconds (Total)
 Chain 2: 
 Warning messages:
 1: There were 1000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12. See
@@ -227,9 +227,9 @@ Chain 1: Iteration: 3400 / 4000 [ 85%]  (Sampling)
 Chain 1: Iteration: 3800 / 4000 [ 95%]  (Sampling)
 Chain 1: Iteration: 4000 / 4000 [100%]  (Sampling)
 Chain 1: 
-Chain 1:  Elapsed Time: 20.941 seconds (Warm-up)
-Chain 1:                7.319 seconds (Sampling)
-Chain 1:                28.26 seconds (Total)
+Chain 1:  Elapsed Time: 21.656 seconds (Warm-up)
+Chain 1:                7.196 seconds (Sampling)
+Chain 1:                28.852 seconds (Total)
 Chain 1: 
 
 SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
@@ -252,9 +252,9 @@ Chain 2: Iteration: 3400 / 4000 [ 85%]  (Sampling)
 Chain 2: Iteration: 3800 / 4000 [ 95%]  (Sampling)
 Chain 2: Iteration: 4000 / 4000 [100%]  (Sampling)
 Chain 2: 
-Chain 2:  Elapsed Time: 21.116 seconds (Warm-up)
-Chain 2:                7.024 seconds (Sampling)
-Chain 2:                28.14 seconds (Total)
+Chain 2:  Elapsed Time: 21.563 seconds (Warm-up)
+Chain 2:                7.423 seconds (Sampling)
+Chain 2:                28.986 seconds (Total)
 Chain 2: 
 Warning messages:
 1: There were 1000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 12. See
