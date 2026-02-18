@@ -29,8 +29,8 @@ Folder guide
 - `figures/`            Generated figures for the paper.
 - `supplement/`         Non-reproducible source assets (e.g., figure source files).
 - `docs/`               Notes, methods, and documentation.
-- `docs/manuscript/`    Draft manuscript DOCX files.
-- `docs/analysis_summary.md`   Manuscript scaffold keyed to scripts, figures, and tables.
+- `docs/manuscript/`    Main manuscript and supplement Rmd files plus archived DOCX drafts.
+- `docs/analysis_summary.md`   Traceability map keyed to scripts, figures, and tables.
 
 Notes
 -----

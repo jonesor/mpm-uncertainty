@@ -1,88 +1,52 @@
-# Analysis Summary (manuscript scaffold)
+# Analysis Traceability Summary
 
-This scaffold aligns the manuscript sections with the analysis scripts (S01–S13) and highlights where figures, tables, and model summaries are produced. Add concrete results as they are finalized; placeholders below mark expected outputs.
-Numeric exports are rounded to manuscript‑appropriate precision (typically 3 significant figures; probabilities to 3 decimals).
+This file maps manuscript statements and display items to the scripts and concrete output files that generate them.
 
-## Title/Abstract
-- **Scripts:** S01–S13 (overall pipeline).
-- **Add later:** One‑paragraph summary of main findings; include key effect sizes and uncertainty statements.
+## Scope and manuscript split
+- **Main manuscript:** `docs/manuscript/manuscript_main.Rmd`
+- **Supplementary materials:** `docs/manuscript/manuscript_supplement.Rmd`
+- **Pipeline scripts:** `scripts/S01_*` ... `scripts/S13_*` (+ `scripts/00_check_setup.R`, `scripts/99_make_tables.R`)
 
-## 1. Introduction
-- **Primary sources:** manuscript text only.
-- **No script outputs** (contextual framing).
+## End-to-end order
+1. `scripts/00_check_setup.R`
+2. `scripts/S01_*` ... `scripts/S10_*`
+3. `scripts/S11_*` (PRISM extraction)
+4. `scripts/S12_*` (climate analysis)
+5. `scripts/S13_*` (supplement summaries)
+6. `scripts/99_make_tables.R` (DOCX tables)
 
-## 2. Methods
+## Main manuscript traceability
+| Manuscript element | Script(s) | Output file(s) |
+|---|---|---|
+| Data corrections and COMPADRE preprocessing (Methods) | `S01_*` | `data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData` |
+| Target-study filtering (Methods) | `S02_*` | `data/derived/studies/target_studies.csv` |
+| Fig. 1 single-MPM sampling distributions | `S03_*` | `figures/fig1_top.png`, `figures/fig1_bottom.png` |
+| Fig. 2 parameter distributions | `S07_*` | `figures/fig2_shape_l0_distributions.png`, `figures/fig2_other_param_distributions.png` |
+| Fig. 3 pace-shape regression/posteriors | `S07_*` | `figures/fig3_shape_l0_regression.png` |
+| Table 1 variance components | `S10_*`, `99_make_tables.R` | `data/derived/analysis_cache/case1_variance_ratios.csv`; `docs/tables/Table1_variance_components.docx` |
+| Fig. 4 climate-recruitment results | `S12_*` | `figures/clim_1.png`, `figures/clim_2.png`, `figures/clim.png` |
 
-### 2.1 COMPADRE data and corrections
-- **Scripts:** `S01_*` (COMPADRE fixes), `S02_*` (study selection).
-- **Possible outputs to export:** summary of corrections (CSV/MD), final selection counts by filter step.
+## Supplement traceability
+| Supplement element | Script(s) | Output file(s) |
+|---|---|---|
+| Table S1-2 (single MPM derived parameters) | `S03_*`, `99_make_tables.R` | `data/derived/analysis_cache/fig1_derived_param_summary.csv`; `docs/tables/Table_S1-2_single_mpm_derived.docx` |
+| Table S1-3 (mean MPM derived parameters) | `S13_*`, `99_make_tables.R` | `data/derived/analysis_cache/fig1_mean_mpm_param_summary.csv`; `docs/tables/Table_S1-3_mean_mpm_derived.docx` |
+| Case study 1 model summary table | `S07_*` | `data/derived/analysis_cache/case1_beta_summary.csv` |
+| Case study 2 model summary tables | `S12_*` | `data/derived/analysis_cache/case2_gprc_beta_summary.csv`, `data/derived/analysis_cache/case2_spring_beta_summary.csv` |
+| Boundary-estimate supplementary figures | `S13_*` | `figures/boundary.png`, `figures/boundary2.png` |
+| Species-level supplementary diagnostics | `S08_*` | `figures/sds_shape_spp.png`, `figures/sd_other_spp.png`, `figures/shape_spp.png`, `figures/shape_l0_scatter_spp.png`, `figures/hazard_trajectories_spp.png` |
 
-### 2.2 Target studies
-- **Scripts:** `S02_*`
-- **Exports:** `data/derived/studies/target_studies.csv`.
+## Supporting outputs (not directly cited as main figures/tables)
+- Case study 1 diagnostics from `S06_*`, `S07_*`, `S10_*`:
+  - `figures/case1_example_survival.png`
+  - `figures/case1_pace_shape.png`
+  - `figures/case1_varcomp_theta.png`
+  - `figures/case1_varcomp_theta_summary.png`
+- Case study 2 diagnostics from `S12_*`:
+  - `figures/case2_temp_fecundity.png`
+  - `figures/case2_beta_summary.png`
 
-### 2.3 Typical construction of MPMs
-- **Scripts:** narrative only; data example in `S03_*`.
-- **Possible outputs:** example transition counts used in Fig. 1 (CSV/MD).
-
-### 2.4 Sampling distribution for a single MPM
-- **Scripts:** `S03_*`
-- **Figures:** **Fig. 1** (`figures/fig1_top.png`, `figures/fig1_bottom.png`).
-- **Exports:** `data/derived/analysis_cache/fig1_derived_param_summary.csv`.
-
-### 2.5 Case Study #1: mortality trajectories
-- **Scripts:** `S04_*`, `S05_*`, `S06_*`, `S07_*`, `S10_*`, `S13_*`
-- **Figures:** 
-  - **Fig. 2** (`figures/fig2_shape_l0_distributions.png`, `figures/fig2_other_param_distributions.png`)
-  - **Fig. 3** (`figures/fig3_shape_l0_regression.png`)
-- **Tables:** 
-  - **Table 1** variance components (`S10_*`; exported to `data/derived/analysis_cache/case1_variance_ratios.csv`).
-- **Supplement:** boundary estimates and related diagnostics (`S13_*`).
-
-### 2.6 Case Study #2: weather impacts
-- **Scripts:** `S11_*` (PRISM extraction), `S12_*` (analysis)
-- **Figures:** **Fig. 4** (`S12_*`: `figures/clim_1.png`, `figures/clim_2.png`, `figures/clim.png`).
-- **Exports:** `data/derived/analysis_cache/case2_gprc_beta_summary.csv`, `data/derived/analysis_cache/case2_spring_beta_summary.csv`.
-
-## 3. Results
-
-### 3.1 Comparative analysis of mortality trajectories
-- **Scripts:** `S06_*`, `S07_*`, `S10_*`
-- **Include:** key effect estimates, posterior probabilities, variance components.
-- **Recommended outputs:** 
-  - `case1_variance_ratios.csv` (from `S10_*`)
-  - `case1_beta_summary.csv` (from `S07_*`)
-
-### 3.2 Case Study #2: weather and recruitment
-- **Scripts:** `S12_*`
-- **Include:** GPRC lag effects, simplified Spring temperature model results.
-- **Recommended outputs:** 
-  - `case2_gprc_beta_summary.csv`
-  - `case2_spring_beta_summary.csv`
-
-## 4. Discussion
-- **Scripts:** narrative only.
-- **Optionally cite:** robustness checks in `S13_*` and sensitivity implied by variance components.
-
-## Data Accessibility
-- **Scripts:** `S01_*` (corrected COMPADRE), `S11_*` (PRISM extraction).
-- **Add later:** repository + archive DOI once finalized.
-
-## Appendices
-
-### Appendix S1
-- **Scripts:** `S03_*` (single MPM sampling), `S13_*` (boundary survival).
-- **Figures:** `figures/boundary.png`, `figures/boundary2.png`.
-- **Tables (DOCX):** generated by `scripts/99_make_tables.R` in `docs/tables/` (Table S1-2, Table S1-3 placeholder).
-
-### Appendix S2
-- **Scripts:** `S07_*`, `S08_*`, `S10_*`, `S12_*` (Stan model details and diagnostics).
-- **Recommended outputs:** 
-  - `table_mcmc_settings.md` (model settings and priors)
-  - `table_model_spec_case1.md`, `table_model_spec_case2.md`
-
-## Suggested additional exports
-- **S02:** CSV table of included studies and sample sizes (now `data/derived/studies/target_studies.csv`).
-- **S06/S07:** CSV of point estimates vs sampling distribution medians/CI (now `case1_shape_summary.csv`, `case1_other_summary.csv`, `case1_beta_summary.csv`).
-- **S10:** CSV of variance components (now `case1_variance_ratios.csv`).
-- **S12:** CSV of lag coefficients and posterior summaries for Fig. 4 (now `case2_gprc_beta_summary.csv`, `case2_spring_beta_summary.csv`).
+## Consistency notes
+- Main manuscript now carries only **main-paper table output** (Table 1).
+- Supplementary tables/figures are rendered from `docs/manuscript/manuscript_supplement.Rmd`.
+- `scripts/S02_target_studies.R` still writes an extra local `studies_check.csv` artifact in the repo root; it is not used in manuscript rendering.

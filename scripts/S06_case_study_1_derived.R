@@ -161,7 +161,7 @@ save(sd_shape_out, file = "data/derived/analysis_cache/full_sd_shape.RData")
 save(sd_other_out, file = "data/derived/analysis_cache/full_sd_other.RData")
 
 
-# testing new plot for appendix ----
+# testing new plot for supplement ----
 dat_example <- pt_shape %>%
   filter(Authors == "Martin; Meinke", MatrixPopulation == "Bull Flat")
 

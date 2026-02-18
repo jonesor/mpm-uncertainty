@@ -15,3 +15,7 @@ studies_emails*
 ex_3a_prep.R
 species_clim.csv
 .Rproj.user
+docs/manuscript/zenodo/staging/*
+!docs/manuscript/zenodo/staging/README.md
+docs/manuscript/zenodo/archive/*
+!docs/manuscript/zenodo/archive/README.md

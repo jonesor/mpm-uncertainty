@@ -1,4 +1,4 @@
-# S13: appendix analyses and supplementary figures/tables.
+# S13: supplementary analyses and figures/tables.
 
 # libraries ----
 source("code/setup.R")

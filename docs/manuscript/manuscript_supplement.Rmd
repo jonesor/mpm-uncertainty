@@ -1,0 +1,195 @@
+---
+title: "Supplementary Materials"
+subtitle: "When does sampling uncertainty matter in matrix population models? Evidence from published projection matrices"
+output:
+  bookdown::word_document2:
+    reference_docx: styles/reference.docx
+    number_sections: false
+params:
+  refresh_outputs: false
+---
+# Authors
+
+Owen R. Jones*^1,2^, Patrick Barks^1^, Emily G. Simmonds^2^
+
+# Affiliations
+
+^1^ Department of Biology, University of Southern Denmark, Odense, Denmark
+
+^2^ Institute of Ecology and Evolution, School of Biological Sciences, University of Edinburgh, Edinburgh, UK
+
+# Corresponding author
+
+* Owen R. Jones, jones@biology.sdu.dk
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r prepare-analysis}
+if (isTRUE(params$refresh_outputs)) {
+  source(here::here("scripts", "S01_compadre_correct.R"))
+  source(here::here("scripts", "S02_target_studies.R"))
+  source(here::here("scripts", "S03_sampling_distrib_single_mpm.R"))
+  source(here::here("scripts", "S04_case_study_1_studies.R"))
+  source(here::here("scripts", "S05_case_study_1_studies_spp.R"))
+  source(here::here("scripts", "S06_case_study_1_derived.R"))
+  source(here::here("scripts", "S07_case_study_1_analysis.R"))
+  source(here::here("scripts", "S08_case_study_1_analysis_spp.R"))
+  source(here::here("scripts", "S09_case_study_1_surv_issue.R"))
+  source(here::here("scripts", "S10_case_study_1_var_comp.R"))
+  source(here::here("scripts", "S11_case_study_2_prism.R"))
+  source(here::here("scripts", "S12_case_study_2.R"))
+  source(here::here("scripts", "S13_supplement.R"))
+}
+
+fig1_summary <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "fig1_derived_param_summary.csv"),
+  show_col_types = FALSE
+)
+fig1_mean_summary <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "fig1_mean_mpm_param_summary.csv"),
+  show_col_types = FALSE
+)
+case1_beta <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case1_beta_summary.csv"),
+  show_col_types = FALSE
+)
+case2_gprc <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case2_gprc_beta_summary.csv"),
+  show_col_types = FALSE
+)
+case2_spring <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case2_spring_beta_summary.csv"),
+  show_col_types = FALSE
+)
+studies_sources <- readr::read_csv(
+  here::here("docs", "tables", "studies_additional_sources.csv"),
+  show_col_types = FALSE
+)
+
+make_flextable <- function(df) {
+  ft <- flextable::flextable(df)
+  ft <- flextable::autofit(ft)
+  ft <- flextable::align(ft, align = "left", part = "all")
+  ft
+}
+
+table_s1_2 <- fig1_summary |>
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
+  dplyr::rename(
+    Parameter = par,
+    Median = med,
+    `Lower 95%` = low,
+    `Upper 95%` = upp,
+    `Point estimate` = value
+  )
+
+table_s1_3 <- fig1_mean_summary |>
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
+  dplyr::rename(
+    Parameter = par,
+    Median = med,
+    `Lower 95%` = low,
+    `Upper 95%` = upp,
+    `Point estimate` = value
+  )
+
+table_case1_beta <- case1_beta |>
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
+  dplyr::rename(
+    Model = model,
+    `Median beta` = beta_med,
+    `Lower 95%` = beta_low,
+    `Upper 95%` = beta_upp,
+    `P(beta > 0)` = p_beta_gt0
+  )
+
+table_case2_gprc <- case2_gprc |>
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
+  dplyr::rename(
+    Lag = lag,
+    Model = model,
+    `Median beta` = beta_med,
+    `Lower 95%` = beta_low95,
+    `Upper 95%` = beta_upp95
+  )
+
+table_case2_spring <- case2_spring |>
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
+  dplyr::rename(
+    Model = model,
+    Median = med,
+    `Lower 95%` = low95,
+    `Upper 95%` = upp95
+  )
+
+table_studies_sources <- studies_sources |>
+  dplyr::rename(
+    Authors = Authors,
+    Year = Year,
+    DOI = DOI_ISBN,
+    `Additional source/material` = AdditionalSource
+  )
+```
+
+# Supplementary Tables
+
+
+```{r table-fig1-derived, tab.cap="Single-MPM derived-parameter summary for the focal *Agrimonia eupatoria* example. Reported values are point estimates and uncertainty intervals from bootstrap sampling distributions, showing substantial uncertainty for several derived demographic quantities."}
+ft <- make_flextable(table_s1_2)
+ft
+```
+
+\newpage
+
+```{r table-fig1-mean, tab.cap="Mean-MPM derived-parameter summary for the focal example. Point estimates are compared with sampling-distribution summaries to show how pooling/averaging changes central tendency and uncertainty relative to the single-MPM case."}
+ft <- make_flextable(table_s1_3)
+ft
+```
+
+\newpage
+
+```{r table-case1-beta, tab.cap="Case study 1 posterior summary for the slope parameter (β) in the life expectancy-shape model. The uncertainty-aware model shows greater posterior support for β > 0 than the point-estimate model."}
+ft <- make_flextable(table_case1_beta)
+ft
+```
+
+\newpage
+
+```{r table-case2-gprc, tab.cap="Case study 2 Gaussian-process regression coefficients (monthly lags) for recruitment responses to temperature anomalies. Lag-specific posterior summaries are similar between point-estimate and uncertainty-aware model formulations."}
+ft <- make_flextable(table_case2_gprc)
+ft
+```
+
+\newpage
+
+```{r table-case2-spring, tab.cap="Case study 2 posterior summary for the spring-temperature coefficient. Point-estimate and uncertainty-aware models yield similar medians and interval widths, indicating limited effect of uncertainty propagation on this coefficient."}
+ft <- make_flextable(table_case2_spring)
+ft
+```
+
+\newpage
+
+```{r table-studies-sources, tab.cap="Studies for which additional source materials were used to recover transition-level sample-size information. This table documents provenance for non-standard inputs that contributed directly to the analysis dataset."}
+ft <- make_flextable(table_studies_sources)
+ft
+```
+
+# Supplementary Figures
+
+\newpage
+
+```{r fig-boundary-1, fig.cap="Boundary-estimate diagnostic. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility."}
+knitr::include_graphics(here::here("figures", "boundary.png"))
+```
+
+\newpage
+
+```{r fig-boundary-2, fig.cap="Illustration of survivorship trajectories under boundary survival transitions. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
+knitr::include_graphics(here::here("figures", "boundary2.png"))
+```
