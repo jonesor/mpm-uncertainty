@@ -10,4 +10,4 @@ Files
 -----
 - `Table1_variance_components.docx`   Main manuscript Table 1.
 - `Table_S1-2_single_mpm_derived.docx` Appendix S1 Table S1-2.
-- `Table_S1-3_mean_mpm_derived.docx`  Appendix S1 Table S1-3 (placeholder until source data is produced).
+- `Table_S1-3_mean_mpm_derived.docx`  Appendix S1 Table S1-3.
