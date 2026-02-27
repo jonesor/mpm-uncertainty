@@ -8,6 +8,7 @@ setup_packages(c(
 ))
 source("code/functions.R")
 # Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
+set_mpm_plot_defaults()
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 cols <- mpm_colors()
 

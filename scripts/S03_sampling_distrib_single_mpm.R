@@ -5,6 +5,7 @@ source("code/setup.R")
 setup_packages(c("tidyverse", "Rcompadre", "Rage", "popbio", "gridExtra", "viridisLite"))
 source("code/functions.R")
 # Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
+set_mpm_plot_defaults()
 set.seed(5654)
 cols <- mpm_colors()
 
@@ -158,7 +159,8 @@ p1c <- ggplot(df_sdist) +
     panel.spacing = unit(1.3, "pt")
   )
 
-p1 <- patchwork::wrap_plots(p1a, p1b, p1c, ncol = 3)
+p1 <- patchwork::wrap_plots(p1a, p1b, p1c, ncol = 3) +
+  patchwork::plot_annotation(tag_levels = "A")
 
 if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
 ggsave("figures/fig1_top.png", p1, height = 3.5, width = 10.5, units = "in", dpi = 300)
@@ -238,7 +240,6 @@ p2 <- ggplot(deriv_plot) +
   geom_vline(data = deriv_pt, aes(xintercept = value)) +
   facet_wrap(~par, scales = "free", labeller = label_parsed, nrow = 1) +
   labs(x = "Parameter estimate", y = "Prob. density") +
-  ggtitle("Derived parameters") +
   theme_mpm() +
   theme(
     strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),

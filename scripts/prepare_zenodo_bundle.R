@@ -36,7 +36,7 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
       type = "directory"
     )
     if (length(old_bundles) > 0) {
-      fs::dir_delete(old_bundles)
+      purrr::walk(old_bundles, ~unlink(.x, recursive = TRUE, force = TRUE))
     }
   }
 
@@ -104,7 +104,18 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
     "source('scripts/S12_case_study_2.R')",
     "source('scripts/S13_supplement.R')",
     "source('scripts/99_make_tables.R')",
-    "source('docs/manuscript/render_manuscripts.R')"
+    "rmarkdown::render(",
+    "  'docs/manuscript/manuscript_main.Rmd',",
+    "  output_format = 'bookdown::word_document2',",
+    "  output_file = 'sampling_uncertainty_mpm_main.docx',",
+    "  quiet = TRUE",
+    ")",
+    "rmarkdown::render(",
+    "  'docs/manuscript/manuscript_supplement.Rmd',",
+    "  output_format = 'bookdown::word_document2',",
+    "  output_file = 'sampling_uncertainty_mpm_supplement.docx',",
+    "  quiet = TRUE",
+    ")"
   )
   readr::write_lines(run_script, fs::path(bundle_dir, "RUN_REPRODUCTION.R"))
 

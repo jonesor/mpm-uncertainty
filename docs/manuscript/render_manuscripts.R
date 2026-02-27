@@ -36,6 +36,6 @@ cat("- ", supp_out, "\n", sep = "")
 
 # Build Zenodo bundle after rendering (skip re-render to avoid duplication).
 source("scripts/prepare_zenodo_bundle.R")
-bundle_dir <- prepare_zenodo_bundle(skip_render = FALSE)
+bundle_dir <- prepare_zenodo_bundle(skip_render = TRUE)
 cat("\nZenodo bundle prepared at:\n")
 cat("- ", bundle_dir, "\n", sep = "")

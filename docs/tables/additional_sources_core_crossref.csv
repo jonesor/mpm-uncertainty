@@ -1,0 +1,33 @@
+Authors,YearPublication,Journal,DOI_ISBN,SpeciesAuthor,AdditionalSource,match_status,core_authors,core_year,core_journal,core_doi,core_species
+Andrello,2010,PhD thesis,NA,Dracocephalum_austriacum,Andrello Dracocephalum austriacum 2012; Andrello Cons Biol 2012b,unmatched,NA,NA,NA,NA,NA
+Dangremond; Knight,2010,Ecology,10.1890/09-0418.1,Lupinus_tidestromii,Dangremond et al. ESA 2008 (PDF),unmatched,NA,NA,NA,NA,NA
+Gaoue; Ticktin,2010,Cons Biol,10.1111/j.1523-1739.2009.01345.x,Khaya_senegalensis,Gaoue PhD thesis  2008.pdf,unmatched,NA,NA,NA,NA,NA
+Jacquemyns; Brys; Jongejans,2010,Ecology,10.1890/08-2321.1,Orchis_purpurea,Jacquemyn Ecol 2010 A2.html; Jacquemyn J Ecol 2010,matched,Jacquemyns; Brys; Jongejans,2010,Ecology,10.1890/08-2321.1,Orchis purpurea
+Picard; Mortier; Chagneau,2010,Ecol Model,10.1016/j.ecolmodel.2010.06.010,Dicorynia_guianensis,Picard Ecol Model 2010 (PDF),unmatched,NA,NA,NA,NA,NA
+Sampaio; Scariot,2010,J Trop Ecol,10.1017/S0266467409990599,Geonoma_schottiana,Portela Biodiv; Cons 2010 (PDF),unmatched,NA,NA,NA,NA,NA
+Sletvold; Øien; Moen,2010,Biol Cons,10.1016/j.biocon.2009.12.017,Dactylorhiza_lapponica,Sletvold GCB 2013,unmatched,NA,NA,NA,NA,NA
+Toräng; Ehrlén; Ågren,2010,Oecologia,10.1007/s00442-009-1552-1,Primula_farinosa_4,Toräng Oecologia 2010 Appendix,unmatched,NA,NA,NA,NA,NA
+Csergő; Molnár; Garcia,2011,Popul Ecol,10.1007/s10144-010-0249-y,Saponaria_bellidifolia,Csergo Popul Ecol 2011 Stage structure.xls; Csergo Popul Ecol 2011 Transition matrices.xls,matched,Csergő; Molnár; Garcia,2011,Popul Ecol,10.1007/s10144-010-0249-y,Saponaria bellidifolia
+Dominguez Lozano; Moreno Saiz; Schwartz,2011,J Nat Cons,10.1016/j.jnc.2011.05.005,Vella_pseudocytisus_subsp._paui_2,Iriondo Book 2009,unmatched,NA,NA,NA,NA,NA
+Evju; Halvorsen; Rydgren; Austrheim; Mysterud,2011,Plant Ecol,10.1007/s11258-011-9906-2,Geranium_sylvaticum_2,Evju Plant Ecol 2011 Appendix,unmatched,NA,NA,NA,NA,NA
+Navarro; Galeano; Bernal,2011,Trop Cons Sci,10.1177/19400829110040010,Lepidocaryum_tenue,Warren PhD thesis 2008,unmatched,NA,NA,NA,NA,NA
+Norghauer; Newbery,2011,Ecol Monog,10.1890/10-2268.1,Microberlinia_bisulcata; Tetraberlinia_bifoliolata,Norghauer Ecol Monog 2011 Appendix L.htm,unmatched,NA,NA,NA,NA,NA
+Thorpe; Stanley; Kayne; Latham,2011,Report,NA,Cypripedium_fasciculatum,Ellis Ecol 2012; Crone Cons Biol 2013,unmatched,NA,NA,NA,NA,NA
+Andrello; Bizoux; Barbet-Massin; Gaudeul; Nicolè; Till-Bottraud,2012,Biol Cons,10.1016/j.biocon.2011.12.012,Eryngium_alpinum,Andrello Biol Cons 2012.xls; Tymen Independent Project 2008 (PDF),matched,Andrello; Bizoux; Barbet-Massin; Gaudeul; Nicolè; Till-Bottraud,2012,Biol Cons,10.1016/j.biocon.2011.12.012,Eryngium alpinum
+Ellis,2012,Ecology,10.1890/11-1052.1,Liatris_scariosa,Crone Cons Biol 2013,matched,Ellis,2012,Ecology,10.1890/11-1052.1,Liatris scariosa
+Ellis,2012,Ecology,10.1890/11-1052.1,Liatris_scariosa,Crone Cons Biol 2013,matched,Ellis; Williams; Lesica; Bell; Bierzychudek; Bowles; Crone; Doak; Ehrlén; Ellis-Adam; McEachern; Ganesan; Latham; Luijten; Kaye; Knight; Menges; Morris; Den Nijs; Oostermeijer; Quintana-Ascencio; Shelly; Stanley; Thorpe; Ticktin; Valverde; Weekley,2012,Ecology,10.1890/11-1052.1,Cirsium pitcheri
+Ellis; Williams; Lesica; Bell; Bierzychudek; Bowles; Crone; Doak; Ehrlén; Ellis-Adam; McEachern; Ganesan; Latham; Luijten; Kaye; Knight; Menges; Morris; Den Nijs; Oostermeijer; Quintana-Ascencio; Shelly; Stanley; Thorpe; Ticktin; Valverde; Weekley,2012,Ecology,10.1890/11-1052.1,Cirsium_pitcheri_4,Bell Book 2003.pdf,matched,Ellis,2012,Ecology,10.1890/11-1052.1,Liatris scariosa
+Ellis; Williams; Lesica; Bell; Bierzychudek; Bowles; Crone; Doak; Ehrlén; Ellis-Adam; McEachern; Ganesan; Latham; Luijten; Kaye; Knight; Menges; Morris; Den Nijs; Oostermeijer; Quintana-Ascencio; Shelly; Stanley; Thorpe; Ticktin; Valverde; Weekley,2012,Ecology,10.1890/11-1052.1,Cirsium_pitcheri_4,Bell Book 2003.pdf,matched,Ellis; Williams; Lesica; Bell; Bierzychudek; Bowles; Crone; Doak; Ehrlén; Ellis-Adam; McEachern; Ganesan; Latham; Luijten; Kaye; Knight; Menges; Morris; Den Nijs; Oostermeijer; Quintana-Ascencio; Shelly; Stanley; Thorpe; Ticktin; Valverde; Weekley,2012,Ecology,10.1890/11-1052.1,Cirsium pitcheri
+Groenendijk; Eshete; Sterck; Zuidema; Bongers,2012,J Appl Ecol,10.1111/j.1365-2664.2011.02078.x,Boswellia_papyrifera,MSc thesis 2010,unmatched,NA,NA,NA,NA,NA
+Scanga; Leopold,2012,Biol Cons,10.1016/j.biocon.2012.01.061,Trollius_laxus,Scanga Biol Cons 2012 Appendix.doc; Scanga Plant Ecol 2014,unmatched,NA,NA,NA,NA,NA
+Ticktin; Ganesan; Paramesha; Setty,2012,J Appl Ecol,10.1111/j.1365-2664.2012.02156.x,Phyllanthus_emblica_2; Phyllanthus_indofischeri,Ellis Ecol 2012; Crone Cons Biol 2013; Ticktin J Appl Ecol 2014,unmatched,NA,NA,NA,NA,NA
+Burns; Pardini; Schutzenhofer; Chung; Seidler; Knight,2013,Ecology,10.1890/12-1310.1,Iris_germanica; Lonicera_maackii; Rosa_multiflora; Taraxacum_erythrospermum; Taraxacum_officinale_2,Burns Ecol 2013 – Pers. comm.,unmatched,NA,NA,NA,NA,NA
+Gornish,2013,PhD thesis,NA,Pityopsis_aspera,Gornish AoB Plants Adv Adc 2013,unmatched,NA,NA,NA,NA,NA
+Maines; Knochel; Seastedt,2013,Ecosphere,10.1890/ES13-00094.1,Centaurea_stoebe_2,Maines Master Thesis 2013,unmatched,NA,NA,NA,NA,NA
+Matlaga; Davis,2013,J Appl Ecol,10.1111/1365-2664.12057,Miscanthus_giganteus,Matlaga J Appl Ecol 2013 Appendix,unmatched,NA,NA,NA,NA,NA
+Osunkoya; Perrett; Fernando; Clark; Raghu,2013,Popul Ecol,10.1007/s10144-013-0364-7,Lantana_camara,Osunkoya Popul Ecol 2013 Supplementary material.pdf; Raghu Basic Appl Ecol 2014.pdf,unmatched,NA,NA,NA,NA,NA
+Villellas; Morris; Garcia,2013,Ecography,10.1111/j.1600-0587.2012.07425.x,Plantago_coronopus_2,Villellas Ecol 2013,unmatched,NA,NA,NA,NA,NA
+Scanga,2014,Plant Ecol,10.1007/s11258-014-0344-9,Trollius_laxus_2,Scanga PhD thesis 2009,matched,Scanga,2014,Plant Ecol,10.1007/s11258-014-0344-9,Trollius laxus
+Baldauf; Correa; Ferreira; Santos,2015,Forest Ecol Manag,10.1016/j.foreco.2015.06.022,Himatanthus_drasticus,Baldauf Forest Ecol Manag 2015 Appendix,unmatched,NA,NA,NA,NA,NA
+Gibert; Magda; Hazard,2015,PLoS ONE,10.1371/journal.pone.0139919,Festuca_eskia,Gibert; Magda; Hazard Oikos 2013,unmatched,NA,NA,NA,NA,NA
+Haridas; Keeler; Tenhumberg,2015,Ecology,10.1890/13-1984.1,Opuntia_macrorhiza_2,Keeler SW Nat 2011,unmatched,NA,NA,NA,NA,NA

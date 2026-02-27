@@ -10,6 +10,7 @@ setup_packages(c(
 setup_rstan()
 source("code/functions.R")
 # Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
+set_mpm_plot_defaults()
 seed <- 5654
 set.seed(seed)
 cols <- mpm_colors()
@@ -44,7 +45,7 @@ p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
   geom_vline(xintercept = 0, alpha = 0.3) +
   geom_density_ridges(aes(x = S),
     rel_min_height = 1e-2,
-    scale = 3, fill = cols$fill, linewidth = 0.4
+    scale = 3, fill = cols$accent, alpha = 0.4, color = NA, linewidth = 0
   ) +
   geom_point(data = pt_shape_out, aes(x = S_pt), size = 0.9) +
   annotate("text", x = Inf, y = 2.6, label = "A", vjust = 1.5, size = 5, fontface = "bold") +
@@ -58,7 +59,7 @@ p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
 p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
   geom_density_ridges(aes(x = L),
     rel_min_height = 1e-2,
-    scale = 3, fill = cols$fill, linewidth = 0.4
+    scale = 3, fill = cols$accent, alpha = 0.4, color = NA, linewidth = 0
   ) +
   geom_point(data = pt_shape_out, aes(x = L_pt), size = 0.9) +
   annotate("text", x = Inf, y = 2.6, label = "B", vjust = 1.5, size = 5, fontface = "bold") +
@@ -368,6 +369,12 @@ bars_err <- df_shape %>%
 bars_full <- bind_rows(bars_reg, bars_err) %>%
   mutate(model = factor(model, levels = lev))
 
+pt_ref <- bind_rows(
+  df_shape %>% transmute(l0_pt, shape_pt, model = lev[1]),
+  df_shape %>% transmute(l0_pt, shape_pt, model = lev[2])
+) %>%
+  mutate(model = factor(model, levels = lev))
+
 df_alpha <- bind_rows(
   tibble(alpha = mu_alpha, model = lev[1]),
   tibble(alpha = mu_alpha_error, model = lev[2])
@@ -387,7 +394,10 @@ tt <- theme_mpm() +
   )
 
 p1 <- ggplot(pred_full) +
-  geom_point(data = bars_full, aes(x = l0_pt, y = shape_pt), size = 1.3) +
+  # Open circles show point estimates in both panels.
+  geom_point(data = pt_ref, aes(x = l0_pt, y = shape_pt), shape = 1, size = 1.1, alpha = 0.8) +
+  # Cross centers (plus symbols) are medians of sampling distributions.
+  geom_point(data = bars_full, aes(x = l0_med, y = shape_med), shape = 3, size = 1.3, stroke = 0.4, color = cols$dark) +
   geom_linerange(data = bars_full, aes(x = l0_med, ymin = shape_low, ymax = shape_upp), linewidth = 0.3, alpha = 0.6) +
   geom_errorbarh(data = bars_full, aes(y = shape_med, xmin = l0_low, xmax = l0_upp), linewidth = 0.3, alpha = 0.6) +
   geom_line(aes(x = pred_x, y = pred_med), col = cols$dark) +

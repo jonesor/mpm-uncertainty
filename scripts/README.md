@@ -52,5 +52,6 @@ Manuscript files
 Notes
 -----
 - Scripts load common packages/settings from `code/setup.R` (`setup_packages()`, `setup_rstan()`, `setup_prism()`).
+- Plot styling is centralized in `code/functions.R` (`theme_mpm()`, `mpm_colors()`, `set_mpm_plot_defaults()`).
 - PRISM uses the `sf` + `terra` stack; rasters are stored under `data/raw/prism/`.
 - Set `FAST_RUN=1` to shorten Stan runs in `S08_case_study_1_analysis_spp.R` during development.

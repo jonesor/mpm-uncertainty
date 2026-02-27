@@ -147,9 +147,19 @@ theme_mpm <- function(base_size = 11.5) {
       panel.grid = ggplot2::element_blank(),
       panel.border = ggplot2::element_rect(color = "grey80", linewidth = 0.4, fill = NA),
       strip.background = ggplot2::element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
+      strip.text = ggplot2::element_text(face = "bold"),
       plot.title = ggplot2::element_text(hjust = 0.5, face = "bold"),
+      axis.title = ggplot2::element_text(face = "plain"),
       legend.key = ggplot2::element_blank()
     )
+}
+
+set_mpm_plot_defaults <- function(base_size = 11.5) {
+  ggplot2::theme_set(theme_mpm(base_size = base_size))
+  ggplot2::update_geom_defaults("line", list(linewidth = 0.5))
+  ggplot2::update_geom_defaults("point", list(size = 1.2))
+  ggplot2::update_geom_defaults("linerange", list(linewidth = 0.4))
+  invisible(NULL)
 }
 
 fetch_prism <- function(file_tmp, file_ppt, spp) {

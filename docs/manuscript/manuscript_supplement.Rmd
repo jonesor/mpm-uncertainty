@@ -4,23 +4,14 @@ subtitle: "When does sampling uncertainty matter in matrix population models? Ev
 output:
   bookdown::word_document2:
     reference_docx: styles/reference.docx
+    toc: true
+    toc_depth: 2
     number_sections: false
 params:
   refresh_outputs: false
 ---
-# Authors
 
-Owen R. Jones*^1,2^, Patrick Barks^1^, Emily G. Simmonds^2^
 
-# Affiliations
-
-^1^ Department of Biology, University of Southern Denmark, Odense, Denmark
-
-^2^ Institute of Ecology and Evolution, School of Biological Sciences, University of Edinburgh, Edinburgh, UK
-
-# Corresponding author
-
-* Owen R. Jones, jones@biology.sdu.dk
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -76,6 +67,91 @@ make_flextable <- function(df) {
   ft <- flextable::flextable(df)
   ft <- flextable::autofit(ft)
   ft <- flextable::align(ft, align = "left", part = "all")
+
+  if ("Parameter" %in% names(df)) {
+    vals <- df$Parameter
+    clean_label <- function(x) {
+      x <- gsub("~", " ", x)
+      x <- gsub("italic\\(([^)]+)\\)", "\\1", x)
+      x <- gsub("\\s+", " ", x)
+      trimws(x)
+    }
+
+    idx <- which(vals == "Pop.~growth~rate~(italic(lambda))")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph(
+          "Pop. growth rate (", "λ", ")"
+        )
+      )
+    }
+
+    idx <- which(vals == "Damping~ratio~(italic(rho))")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph(
+          "Damping ratio (", "ρ", ")"
+        )
+      )
+    }
+
+    idx <- which(vals == "Repro.~value~(Veg.)")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph("Reproductive value (vegetative stage)")
+      )
+    }
+
+    idx <- which(vals == "Generation~time~(italic(T))")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph(
+          "Generation time (", flextable::as_i("T"), ")"
+        )
+      )
+    }
+
+    idx <- which(vals == "Life~expectancy~(italic(l[0]))")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph(
+          "Life expectancy (", flextable::as_i("l"), flextable::as_sub("0"), ")"
+        )
+      )
+    }
+
+    idx_other <- setdiff(seq_along(vals), which(vals %in% c(
+      "Pop.~growth~rate~(italic(lambda))",
+      "Damping~ratio~(italic(rho))",
+      "Repro.~value~(Veg.)",
+      "Generation~time~(italic(T))",
+      "Life~expectancy~(italic(l[0]))"
+    )))
+    if (length(idx_other) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx_other,
+        j = "Parameter",
+        value = flextable::as_paragraph(clean_label(vals[idx_other]))
+      )
+    }
+  }
+
   ft
 }
 
@@ -120,6 +196,13 @@ table_case2_gprc <- case2_gprc |>
   )
 
 table_case2_spring <- case2_spring |>
+  dplyr::mutate(
+    model = dplyr::recode(
+      model,
+      reg = "Point-estimate model",
+      err = "Sampling-uncertainty model"
+    )
+  ) |>
   dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
   dplyr::rename(
     Model = model,
@@ -129,67 +212,160 @@ table_case2_spring <- case2_spring |>
   )
 
 table_studies_sources <- studies_sources |>
+  dplyr::mutate(YearPublication = as.character(as.integer(YearPublication))) |>
   dplyr::rename(
     Authors = Authors,
-    Year = Year,
+    Year = YearPublication,
+    Journal = Journal,
     DOI = DOI_ISBN,
-    `Additional source/material` = AdditionalSource
+    `Species (COMPADRE label)` = SpeciesAuthor
+  ) |>
+  dplyr::select(
+    Authors,
+    Year,
+    Journal,
+    DOI,
+    `Species (COMPADRE label)`
   )
 ```
+
+# Supplementary Methods
+
+## S1.1 Sampling-distribution workflow used for each MPM
+
+For each focal matrix population model (MPM), we reconstructed transition-level sampling distributions from reported transition counts (or equivalent sample-size information). We then generated 2,000 parametric bootstrap draws per MPM by sampling each transition from its likelihood (multinomial for survival/growth/retrogression transitions and Poisson for recruitment transitions), rebuilding the full MPM for each draw, and recalculating each derived demographic quantity from that draw.
+
+This produced a sampling distribution for each derived quantity used downstream (e.g. life expectancy, shape, log population growth rate). Point estimates in the manuscript correspond to values derived directly from the reported matrix entries; uncertainty-aware summaries correspond to moments of these bootstrap distributions.
+
+## S1.2 Age-from-stage derivation, truncation, and shape metric
+
+Life expectancy and shape were derived from survivorship trajectories obtained using age-from-stage methods, starting from the first reproductive stage. Shape was calculated using the pace-shape framework metric (Baudisch and Stott 2019). Because stage-based survivorship can converge to an artefactual mortality plateau, shape was calculated on truncated trajectories up to quasi-stable convergence (distance threshold 1%).
+
+## S1.3 Pooled and mean MPM handling
+
+Where population-level pooled MPMs were available, they were used; otherwise, mean MPMs were used. For uncertainty propagation in pooled or mean matrices, stage-specific sample sizes were pooled across years before bootstrap simulation. This captures within-year sampling variation but does not fully represent between-year process variation, so the resulting uncertainty should be interpreted conservatively.
+
+## S1.4 Bayesian model priors and fitting settings
+
+Stan models and priors are defined in `models/*.stan`. For the two main analyses:
+
+- Analysis 1 models use weakly informative normal priors for location/slope terms and normal priors for scale terms (see `models/regress_hier.stan` and `models/regress_hier_error.stan`).
+- Analysis 2 uses two models with Gaussian-process regression forms and normal priors on GP hyperparameters and coefficients (see `models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`).
+
+Fitting settings used in scripts:
+
+- Analysis 1 (`scripts/S07_case_study_1_analysis.R`): `chains = 2`, `iter = 4000`, `warmup = 2000-3000`, `seed = 5654`.
+- Analysis 2 (`scripts/S12_case_study_2.R`): `iter = 5000` for key models, `seed = 5654`, with additional control settings for GP fits.
+
+## S1.5 Variance-component summary (sampling-to-other ratio)
+
+For each parameter, the total observed variance was partitioned into:
+
+- sampling component: mean within-MPM sampling variance from bootstrap draws;
+- residual component: remaining variance among populations/species.
+
+The reported summary is Eq. \@ref(eq:var-ratio):
+
+\begin{equation}
+\text{ratio} = \frac{\sigma^2_{\text{sampling}}}{\sigma^2_{\text{residual}}}
+(\#eq:var-ratio)
+\end{equation}
+
+Ratios above 1 indicate that sampling uncertainty exceeds residual biological variation for that parameter.
+
+## S1.6 Simplified spring-temperature model (analysis 2)
+
+In addition to the monthly-lagged GP model, we fit a simplified spring summary model with mean spring temperature deviation as the predictor, under both point-estimate and uncertainty-aware formulations. The contrasts reported in the manuscript use posterior medians and 95% interval widths from these paired models.
+
+## S1.7 Reporting recommendations for future MPM studies
+
+To support uncertainty propagation in secondary analyses, primary studies should report (at a minimum):
+
+- transition-level sample sizes for each matrix element (or reconstructable transition count tables);
+- clear identification of pooled/mean matrices and pooling rules;
+- uncertainty estimates on model-appropriate scales (e.g. linear predictor where relevant);
+- explicit projection interval, stage definitions, and treatment filters used to derive published matrices.
+
+These items are usually sufficient for parametric uncertainty reconstruction in compiled databases.
+
+## S1.8 Species identities in analysis 1
+
+Analysis 1 used 67 population-level entries representing 26 species (SpeciesAuthor labels from COMPADRE):
+
+*Agave potatorum*, *Agrimonia eupatoria*, *Astragalus peckii*, *Astragalus scaphoides* (labelled `Astragalus_scaphoides_2`), *Dioon merolae*, *Dracocephalum austriacum* (labelled `Dracocephalum_austriacum_2`), *Eriogonum longifolium* var. *gnaphalifolium* (labelled `Eriogonum_longifolium_var._gnaphalifolium_2`), *Eryngium alpinum*, *Lantana camara* (labelled `Lantana_camara_2`), *Liatris scariosa*, *Lophophora diffusa*, *Mammillaria huitzilopochtli*, *Neobuxbaumia polylopha*, *Orchis purpurea*, *Paeonia officinalis*, *Pediocactus bradyi*, *Pimpinella saxifraga*, *Pinus maximartinezii*, *Plantago media*, *Prosopis flexuosa* (labelled `Prosopis_ﬂexuosa`), *Saponaria bellidifolia*, *Tillandsia butzii*, *Trillium persistens*, *Trollius europaeus*, *Trollius laxus* (labelled `Trollius_laxus_2`), and *Viola biflora*.
 
 # Supplementary Tables
 
 
-```{r table-fig1-derived, tab.cap="Single-MPM derived-parameter summary for the focal *Agrimonia eupatoria* example. Reported values are point estimates and uncertainty intervals from bootstrap sampling distributions, showing substantial uncertainty for several derived demographic quantities."}
+Table S1. Single-MPM derived-parameter summary for the focal *Agrimonia eupatoria* example. Reported values are point estimates and uncertainty intervals from parametric bootstrap sampling distributions, showing substantial uncertainty for several derived demographic quantities.
+
+```{r table-fig1-derived}
 ft <- make_flextable(table_s1_2)
 ft
 ```
 
 \newpage
 
-```{r table-fig1-mean, tab.cap="Mean-MPM derived-parameter summary for the focal example. Point estimates are compared with sampling-distribution summaries to show how pooling/averaging changes central tendency and uncertainty relative to the single-MPM case."}
+Table S2. Mean-MPM derived-parameter summary for the focal *Agrimonia eupatoria* example (population B). Point estimates are compared with sampling-distribution summaries to show how pooling/averaging changes central tendency and uncertainty relative to the single-MPM case.
+
+```{r table-fig1-mean}
 ft <- make_flextable(table_s1_3)
 ft
 ```
 
 \newpage
 
-```{r table-case1-beta, tab.cap="Case study 1 posterior summary for the slope parameter (β) in the life expectancy-shape model. The uncertainty-aware model shows greater posterior support for β > 0 than the point-estimate model."}
+Table S3. Analysis 1 posterior summary for the slope parameter (β) in the life expectancy-shape model. The uncertainty-aware model shows greater posterior support for β > 0 than the point-estimate model.
+
+```{r table-case1-beta}
 ft <- make_flextable(table_case1_beta)
 ft
 ```
 
 \newpage
 
-```{r table-case2-gprc, tab.cap="Case study 2 Gaussian-process regression coefficients (monthly lags) for recruitment responses to temperature anomalies. Lag-specific posterior summaries are similar between point-estimate and uncertainty-aware model formulations."}
+Table S4. Analysis 2 Gaussian-process regression coefficients (monthly lags) for recruitment responses to temperature anomalies. Lag-specific posterior summaries are similar between point-estimate and uncertainty-aware model formulations.
+
+```{r table-case2-gprc}
 ft <- make_flextable(table_case2_gprc)
 ft
 ```
 
 \newpage
 
-```{r table-case2-spring, tab.cap="Case study 2 posterior summary for the spring-temperature coefficient. Point-estimate and uncertainty-aware models yield similar medians and interval widths, indicating limited effect of uncertainty propagation on this coefficient."}
+Table S5. Analysis 2 posterior summary for the spring-temperature coefficient. Point-estimate and uncertainty-aware models yield similar medians and interval widths, indicating limited effect of uncertainty propagation on this coefficient.
+
+```{r table-case2-spring}
 ft <- make_flextable(table_case2_spring)
 ft
 ```
 
 \newpage
 
-```{r table-studies-sources, tab.cap="Studies for which additional source materials were used to recover transition-level sample-size information. This table documents provenance for non-standard inputs that contributed directly to the analysis dataset."}
+Table S6. Primary studies represented in the analysis subset, as identified in COMPADRE. For matrix-level metadata and source-link details beyond this summary, refer to the COMPADRE database record for each study.
+
+```{r table-studies-sources}
 ft <- make_flextable(table_studies_sources)
+ft <- flextable::set_table_properties(ft, layout = "fixed")
+ft <- flextable::width(ft, j = "Authors", width = 1.3)
+ft <- flextable::width(ft, j = "Year", width = 0.8)
+ft <- flextable::width(ft, j = "Journal", width = 1.9)
+ft <- flextable::width(ft, j = "DOI", width = 1.8)
+ft <- flextable::width(ft, j = "Species (COMPADRE label)", width = 2.7)
 ft
 ```
 
-# Supplementary Figures
-
 \newpage
 
-```{r fig-boundary-1, fig.cap="Boundary-estimate diagnostic. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility."}
+# Supplementary Figures
+
+
+```{r fig-boundary-1, fig.cap="Figure S1. Boundary-estimate diagnostic. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility."}
 knitr::include_graphics(here::here("figures", "boundary.png"))
 ```
 
 \newpage
 
-```{r fig-boundary-2, fig.cap="Illustration of survivorship trajectories under boundary survival transitions. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
+```{r fig-boundary-2, fig.cap="Figure S2. Illustration of survivorship trajectories under boundary survival transitions. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
 knitr::include_graphics(here::here("figures", "boundary2.png"))
 ```

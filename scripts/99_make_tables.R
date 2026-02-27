@@ -14,6 +14,68 @@ write_table_docx <- function(df, title, path) {
   ft <- flextable::autofit(ft)
   ft <- flextable::align(ft, align = "left", part = "all")
 
+  if ("Parameter" %in% names(df)) {
+    vals <- df$Parameter
+
+    idx <- which(vals == "Pop.~growth~rate~(italic(lambda))")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph(
+          "Pop. growth rate (", "λ", ")"
+        )
+      )
+    }
+
+    idx <- which(vals == "Damping~ratio~(italic(rho))")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph(
+          "Damping ratio (", "ρ", ")"
+        )
+      )
+    }
+
+    idx <- which(vals == "Repro.~value~(Veg.)")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph("Reproductive value (vegetative stage)")
+      )
+    }
+
+    idx <- which(vals == "Generation~time~(italic(T))")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph(
+          "Generation time (", flextable::as_i("T"), ")"
+        )
+      )
+    }
+
+    idx <- which(vals == "Life~expectancy~(italic(l[0]))")
+    if (length(idx) > 0) {
+      ft <- flextable::compose(
+        ft,
+        i = idx,
+        j = "Parameter",
+        value = flextable::as_paragraph(
+          "Life expectancy (", flextable::as_i("l"), flextable::as_sub("0"), ")"
+        )
+      )
+    }
+  }
+
   doc <- officer::read_docx()
   doc <- officer::body_add_par(doc, title, style = "Normal")
   doc <- flextable::body_add_flextable(doc, value = ft)

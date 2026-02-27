@@ -9,6 +9,7 @@ setup_packages(c(
 setup_rstan()
 source("code/functions.R")
 # Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
+set_mpm_plot_defaults()
 seed <- 5654
 set.seed(seed)
 
@@ -314,9 +315,10 @@ p2 <- ggplot(gprc_betas, aes(x = lag)) +
   facet_wrap(~model, ncol = 1) +
   labs(
     x = "Months before survey",
-    y = expression(paste("Monthly temperature coefficient (", italic(b), ")"))
+    y = expression(paste("Temperature coefficient (", italic(b), ")"))
   ) +
-  tt
+  tt +
+  theme(plot.margin = margin(5, 5, 5, 14))
 
 ggsave("figures/clim_2.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 300)
 

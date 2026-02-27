@@ -10,6 +10,7 @@ setup_packages(c(
 setup_rstan()
 source("code/functions.R")
 # Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
+set_mpm_plot_defaults()
 seed <- 5654
 set.seed(seed)
 cols <- mpm_colors()
