@@ -34,6 +34,31 @@ cat("Rendered manuscript files:\n")
 cat("- ", main_out, "\n", sep = "")
 cat("- ", supp_out, "\n", sep = "")
 
+# Copy manuscript figure PNGs to docs/manuscript with manuscript-numbered names.
+figure_map <- c(
+  "figures/Figure_1_transition_rates_single_mpm.png" = "docs/manuscript/Figure_1_transition_rates_single_mpm.png",
+  "figures/Figure_2_derived_parameters_single_mpm.png" = "docs/manuscript/Figure_2_derived_parameters_single_mpm.png",
+  "figures/Figure_3_analysis1_point_vs_sampling_distributions.png" = "docs/manuscript/Figure_3_analysis1_point_vs_sampling_distributions.png",
+  "figures/Figure_4_analysis1_life_expectancy_shape_relationship.png" = "docs/manuscript/Figure_4_analysis1_life_expectancy_shape_relationship.png",
+  "figures/Figure_5_analysis2_climate_effects_recruitment.png" = "docs/manuscript/Figure_5_analysis2_climate_effects_recruitment.png",
+  "figures/Figure_S1_boundary_estimate_diagnostic.png" = "docs/manuscript/Figure_S1_boundary_estimate_diagnostic.png",
+  "figures/Figure_S2_boundary_survivorship_illustration.png" = "docs/manuscript/Figure_S2_boundary_survivorship_illustration.png"
+)
+
+for (src in names(figure_map)) {
+  dst <- figure_map[[src]]
+  if (!file.exists(src)) {
+    warning("Missing figure source file: ", src)
+    next
+  }
+  file.copy(src, dst, overwrite = TRUE)
+}
+
+cat("\nCopied manuscript figure PNGs:\n")
+for (dst in unname(figure_map)) {
+  if (file.exists(dst)) cat("- ", dst, "\n", sep = "")
+}
+
 # Build Zenodo bundle after rendering (skip re-render to avoid duplication).
 source("scripts/prepare_zenodo_bundle.R")
 bundle_dir <- prepare_zenodo_bundle(skip_render = TRUE)

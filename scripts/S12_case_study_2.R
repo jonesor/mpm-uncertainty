@@ -12,6 +12,7 @@ source("code/functions.R")
 set_mpm_plot_defaults()
 seed <- 5654
 set.seed(seed)
+cols <- mpm_colors()
 
 
 # set options for rstan library ----
@@ -105,13 +106,13 @@ silene <- comp_sub %>%
 
 # plot Spring temp vs. fecundity ----
 p_scatter <- ggplot(silene, aes(tmp, fecund)) +
-  geom_point() +
-  geom_linerange(aes(ymin = fec_low, ymax = fec_upp)) +
-  geom_smooth(method = "lm") +
+  geom_point(color = cols$dark) +
+  geom_linerange(aes(ymin = fec_low, ymax = fec_upp), color = cols$dark) +
+  geom_smooth(method = "lm", color = cols$accent, fill = cols$accent, alpha = 0.25) +
   scale_y_log10()
 
 if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
-ggsave("figures/case2_temp_fecundity.png", p_scatter, height = 4, width = 4.5, units = "in", dpi = 300)
+ggsave("figures/Analysis2_spring_temperature_recruitment_scatter.png", p_scatter, height = 4, width = 4.5, units = "in", dpi = 300)
 
 
 # Simple regression of fecundity vs. spring temperature ----
@@ -156,10 +157,20 @@ var_beta_reg <- var(beta_reg)
 var_beta_err <- var(beta_err)
 var_beta_err / var_beta_reg # var(beta_err) is ~12% higher
 
+lev <- c("Point estimates", "Sampling uncertainty")
+model_cols <- c(
+  "Point estimates" = cols$light,
+  "Sampling uncertainty" = cols$dark
+)
 
 # plot beta by model type
 df_beta <- tibble(reg = beta_reg, err = beta_err) %>%
   gather(model, val) %>%
+  mutate(model = recode(model,
+    reg = "Point estimates",
+    err = "Sampling uncertainty"
+  )) %>%
+  mutate(model = factor(model, levels = lev)) %>%
   group_by(model) %>%
   summarize(
     med = quantile(val, 0.500),
@@ -170,13 +181,15 @@ df_beta <- tibble(reg = beta_reg, err = beta_err) %>%
   )
 
 p_beta <- ggplot(df_beta, aes(x = model)) +
-  geom_point(aes(y = med), size = 2.5) +
-  geom_linerange(aes(ymin = low80, ymax = upp80), linewidth = 1.5) +
-  geom_linerange(aes(ymin = low95, ymax = upp95)) +
+  geom_point(aes(y = med, color = model), size = 2.5) +
+  geom_linerange(aes(ymin = low80, ymax = upp80, color = model), linewidth = 1.5) +
+  geom_linerange(aes(ymin = low95, ymax = upp95, color = model)) +
   geom_hline(yintercept = 0, alpha = 0.5, linetype = 2) +
-  coord_flip()
+  coord_flip() +
+  scale_color_manual(values = model_cols) +
+  guides(color = "none")
 
-ggsave("figures/case2_beta_summary.png", p_beta, height = 3.5, width = 4, units = "in", dpi = 300)
+ggsave("figures/Analysis2_spring_temperature_beta_summary.png", p_beta, height = 3.5, width = 4, units = "in", dpi = 300)
 
 if (!dir.exists("data/derived/analysis_cache")) {
   dir.create("data/derived/analysis_cache",
@@ -191,7 +204,7 @@ write_csv(
 )
 
 # plot fit lines ----
-lev <- c("Model of point estimates", "Model with sampling uncertainty")
+# uses lev/model_cols defined above
 
 # fit line
 pred_full <- rbind(
@@ -214,20 +227,177 @@ year_full <- year_err %>%
 tt <- theme_mpm() +
   theme(
     text = element_text(size = 11.5),
-    axis.ticks = element_line(linewidth = 0.4)
+    axis.ticks = element_line(linewidth = 0.4),
+    plot.margin = margin(2, 2, 2, 2)
   )
 
 p1 <- ggplot(pred_full, aes(x = x)) +
-  geom_line(aes(y = med)) +
-  geom_ribbon(aes(ymin = low95, ymax = upp95), alpha = 0.25) +
-  geom_point(data = year_full, aes(y = fecund), size = 1) +
-  geom_linerange(data = year_full, aes(ymin = fec_low, ymax = fec_upp)) +
+  geom_line(aes(y = med, color = model), linewidth = 0.7) +
+  geom_ribbon(aes(ymin = low95, ymax = upp95, fill = model), alpha = 0.20, color = NA) +
+  geom_point(data = year_full, aes(y = fecund, color = model), size = 1) +
+  geom_linerange(data = year_full, aes(ymin = fec_low, ymax = fec_upp, color = model)) +
   scale_y_log10(breaks = 10^(-2:0), labels = c("0.01", "0.1", "1")) +
+  scale_color_manual(values = model_cols) +
+  scale_fill_manual(values = model_cols) +
   facet_wrap(~model, ncol = 1) +
   labs(x = "Spring temperature (Feb-Apr)", y = "Recruitment") +
-  tt
+  tt +
+  guides(color = "none", fill = "none")
 
-ggsave("figures/clim_1.png", p1, height = 4.5, width = 3.5, units = "in", dpi = 300)
+ggsave("figures/Analysis2_recruitment_model_fits.png", p1, height = 4.5, width = 3.5, units = "in", dpi = 300)
+
+
+# Stage-specific survival vs spring temperature ----
+stage_surv <- silene %>%
+  transmute(MatrixStartYear, tmp, N, matU) %>%
+  mutate(
+    stage_tbl = map2(N, matU, ~ {
+      surv_prob <- colSums(.y)
+      ssd <- tryCatch(
+        {
+          w <- popbio::stable.stage(.y)
+          as.numeric(w / sum(w))
+        },
+        error = function(e) rep(NA_real_, length(.x))
+      )
+      tibble(
+        stage = seq_along(.x),
+        n_stage = as.integer(round(.x)),
+        n_surv = as.integer(round(.x * surv_prob)),
+        ssd_w = pmax(ssd, 1e-6)
+      )
+    })
+  ) %>%
+  select(-N, -matU) %>%
+  unnest(stage_tbl) %>%
+  mutate(
+    n_fail = pmax(n_stage - n_surv, 0L),
+    surv = n_surv / pmax(n_stage, 1L)
+  ) %>%
+  filter(n_stage > 0)
+
+stage_beta <- stage_surv %>%
+  group_by(stage) %>%
+  group_modify(~ {
+    if (nrow(.x) < 5 || n_distinct(.x$tmp) < 2 || sum(.x$n_surv) == 0 || sum(.x$n_fail) == 0) {
+      return(tibble(
+        model = c("Point estimates", "Sampling uncertainty"),
+        beta = NA_real_,
+        low95 = NA_real_,
+        upp95 = NA_real_,
+        n_year = nrow(.x)
+      ))
+    }
+
+    surv_clamped <- pmin(pmax(.x$surv, 1e-6), 1 - 1e-6)
+    fit_pt <- glm(surv_clamped ~ tmp, weights = ssd_w, family = quasibinomial(), data = .x)
+    beta_pt <- unname(stats::coef(fit_pt)["tmp"])
+    se_pt <- sqrt(stats::vcov(fit_pt)["tmp", "tmp"])
+
+    fit_bin <- glm(cbind(n_surv, n_fail) ~ tmp, family = binomial(), data = .x)
+    beta_bin <- unname(stats::coef(fit_bin)["tmp"])
+    se_bin <- sqrt(stats::vcov(fit_bin)["tmp", "tmp"])
+
+    tibble(
+      model = c("Point estimates", "Sampling uncertainty"),
+      beta = c(beta_pt, beta_bin),
+      low95 = c(beta_pt - 1.96 * se_pt, beta_bin - 1.96 * se_bin),
+      upp95 = c(beta_pt + 1.96 * se_pt, beta_bin + 1.96 * se_bin),
+      n_year = nrow(.x)
+    )
+  }) %>%
+  ungroup() %>%
+  mutate(
+    model = factor(model, levels = lev),
+    stage_label = paste0("Stage ", stage)
+  )
+
+stage_weight_sensitivity <- stage_surv %>%
+  group_by(stage) %>%
+  group_modify(~ {
+    if (nrow(.x) < 5 || n_distinct(.x$tmp) < 2 || sum(.x$n_surv) == 0 || sum(.x$n_fail) == 0) {
+      return(tibble(
+        weighting = c("No weights", "SSD weights"),
+        beta = NA_real_,
+        low95 = NA_real_,
+        upp95 = NA_real_,
+        n_year = nrow(.x)
+      ))
+    }
+    surv_clamped <- pmin(pmax(.x$surv, 1e-6), 1 - 1e-6)
+    fit_unw <- glm(surv_clamped ~ tmp, family = quasibinomial(), data = .x)
+    fit_ssd <- glm(surv_clamped ~ tmp, weights = ssd_w, family = quasibinomial(), data = .x)
+    beta_unw <- unname(stats::coef(fit_unw)["tmp"])
+    se_unw <- sqrt(stats::vcov(fit_unw)["tmp", "tmp"])
+    beta_ssd <- unname(stats::coef(fit_ssd)["tmp"])
+    se_ssd <- sqrt(stats::vcov(fit_ssd)["tmp", "tmp"])
+    tibble(
+      weighting = c("No weights", "SSD weights"),
+      beta = c(beta_unw, beta_ssd),
+      low95 = c(beta_unw - 1.96 * se_unw, beta_ssd - 1.96 * se_ssd),
+      upp95 = c(beta_unw + 1.96 * se_unw, beta_ssd + 1.96 * se_ssd),
+      n_year = nrow(.x)
+    )
+  }) %>%
+  ungroup()
+write_csv(
+  stage_weight_sensitivity %>% mutate(across(where(is.numeric), ~ signif(.x, 3))),
+  "data/derived/analysis_cache/case2_stage_survival_weight_sensitivity.csv"
+)
+
+stage_levels <- stage_surv %>%
+  distinct(stage) %>%
+  arrange(stage) %>%
+  mutate(stage_label = paste0("Stage ", stage)) %>%
+  pull(stage_label)
+
+# For non-estimable stages, show descriptive markers only (no uncertainty bars).
+stage_placeholders <- stage_surv %>%
+  group_by(stage) %>%
+  summarize(
+    mean_surv = mean(surv, na.rm = TRUE),
+    all_survive = all(n_fail == 0),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    stage_label = paste0("Stage ", stage),
+    x = case_when(
+      stage == 1 ~ mean_surv,
+      stage == 4 & all_survive ~ 1,
+      TRUE ~ NA_real_
+    )
+  ) %>%
+  filter(!is.na(x))
+
+p3 <- ggplot(stage_beta %>% filter(!is.na(beta)),
+  aes(x = beta, y = stage_label, color = model)
+) +
+  geom_vline(xintercept = 0, linetype = 2, alpha = 0.5, color = cols$accent) +
+  geom_linerange(
+    aes(xmin = low95, xmax = upp95),
+    position = position_dodge(width = 0.6),
+    linewidth = 0.7
+  ) +
+  geom_point(position = position_dodge(width = 0.6), size = 1.6) +
+  geom_point(
+    data = stage_placeholders,
+    aes(x = x, y = stage_label),
+    inherit.aes = FALSE,
+    shape = 1,
+    size = 2.2,
+    stroke = 0.8,
+    color = cols$light
+  ) +
+  scale_color_manual(values = model_cols, drop = FALSE) +
+  scale_y_discrete(limits = rev(stage_levels), drop = FALSE) +
+  labs(
+    x = expression(paste("Temperature coefficient (logit scale, ", italic(beta), ")")),
+    y = "Stage-specific survival"
+  ) +
+  tt +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+ggsave("figures/Analysis2_stage_specific_survival_beta_summary.png", p3, height = 4.5, width = 3.5, units = "in", dpi = 300)
 
 
 # Moving beta model ----
@@ -298,29 +468,31 @@ rbind(
 
 
 # plot moving-beta coefficients ----
-lev <- c("Model of point estimates", "Model with sampling uncertainty")
+lev <- c("Point estimates", "Sampling uncertainty")
 
 gprc_betas <- rbind(
-  summarize_beta(fit_gprc_reg, "Model of point estimates"),
-  summarize_beta(fit_gprc_err, "Model with sampling uncertainty")
+  summarize_beta(fit_gprc_reg, "Point estimates"),
+  summarize_beta(fit_gprc_err, "Sampling uncertainty")
 ) %>% mutate(model = factor(model, levels = lev))
 
 
 p2 <- ggplot(gprc_betas, aes(x = lag)) +
   geom_hline(yintercept = 0, linetype = 2, alpha = 0.5) +
-  geom_line(aes(y = beta_med)) +
-  geom_linerange(aes(ymin = beta_low95, ymax = beta_upp95)) +
+  geom_line(aes(y = beta_med, color = model), linewidth = 0.7) +
+  geom_linerange(aes(ymin = beta_low95, ymax = beta_upp95, color = model)) +
   scale_x_continuous(breaks = seq(0, 24, 6)) +
   scale_y_continuous(breaks = c(-0.6, -0.3, 0, 0.3, 0.6)) +
+  scale_color_manual(values = model_cols) +
   facet_wrap(~model, ncol = 1) +
   labs(
     x = "Months before survey",
     y = expression(paste("Temperature coefficient (", italic(b), ")"))
   ) +
   tt +
-  theme(plot.margin = margin(5, 5, 5, 14))
+  theme(plot.margin = margin(2, 2, 2, 2)) +
+  guides(color = "none")
 
-ggsave("figures/clim_2.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 300)
+ggsave("figures/Analysis2_monthly_lag_coefficients.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 300)
 
 write_csv(
   gprc_betas %>% mutate(across(where(is.numeric), ~ signif(.x, 3))),
@@ -329,5 +501,10 @@ write_csv(
 
 
 # combine both climate plots
-p <- p2 / p1 + plot_layout(heights = c(1, 1))
-ggsave("figures/clim.png", p, height = 4.5, width = 6.25, units = "in", dpi = 300)
+p <- p2 / p1 / p3 +
+  plot_layout(heights = c(1, 1, 1)) +
+  plot_annotation(
+    tag_levels = "A",
+    theme = theme(plot.margin = margin(2, 2, 2, 2))
+  )
+ggsave("figures/Figure_5_analysis2_climate_effects_recruitment.png", p, height = 195, width = 90, units = "mm", dpi = 300)

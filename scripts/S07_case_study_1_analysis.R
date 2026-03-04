@@ -4,7 +4,7 @@
 source("code/setup.R")
 setup_packages(c(
   "tidyverse", "popbio", "popdemo", "Rcompadre", "Rage",
-  "ggridges", "cowplot", "gridExtra", "patchwork",
+  "ggridges", "gridExtra", "patchwork",
   "rstan", "loo", "viridisLite"
 ))
 setup_rstan()
@@ -38,16 +38,17 @@ tt <- theme_mpm() +
     axis.title = element_text(size = 12.5),
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
-    panel.border = element_rect(linewidth = 0.5, fill = NA)
+    panel.border = element_rect(linewidth = 0.5, fill = NA),
+    plot.margin = margin(2, 2, 2, 2)
   )
 
 p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
-  geom_vline(xintercept = 0, alpha = 0.3) +
+  geom_vline(xintercept = 0, color = "grey70", alpha = 0.6, linewidth = 0.2, linetype = 2) +
   geom_density_ridges(aes(x = S),
     rel_min_height = 1e-2,
     scale = 3, fill = cols$accent, alpha = 0.4, color = NA, linewidth = 0
   ) +
-  geom_point(data = pt_shape_out, aes(x = S_pt), size = 0.9) +
+  geom_point(data = pt_shape_out, aes(x = S_pt), size = 0.9, shape = 16, color = cols$mid) +
   annotate("text", x = Inf, y = 2.6, label = "A", vjust = 1.5, size = 5, fontface = "bold") +
   coord_flip(xlim = c(-0.3, 0.2)) +
   labs(
@@ -61,7 +62,7 @@ p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
     rel_min_height = 1e-2,
     scale = 3, fill = cols$accent, alpha = 0.4, color = NA, linewidth = 0
   ) +
-  geom_point(data = pt_shape_out, aes(x = L_pt), size = 0.9) +
+  geom_point(data = pt_shape_out, aes(x = L_pt), size = 0.9, shape = 16, color = cols$mid) +
   annotate("text", x = Inf, y = 2.6, label = "B", vjust = 1.5, size = 5, fontface = "bold") +
   scale_x_log10(limits = c(1.2, 1500)) +
   coord_flip() +
@@ -72,10 +73,11 @@ p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
   tt
 
 # arrange plot panels
-g <- patchwork::wrap_plots(p1, p2, ncol = 1)
+g <- patchwork::wrap_plots(p1, p2, ncol = 1) +
+  patchwork::plot_annotation(theme = theme(plot.margin = margin(2, 2, 2, 2)))
 
 if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
-ggsave("figures/fig2_shape_l0_distributions.png", g, height = 7.5, width = 5.5, units = "in", dpi = 300)
+ggsave("figures/Figure_3_analysis1_point_vs_sampling_distributions.png", g, height = 123, width = 90, units = "mm", dpi = 300)
 
 
 # plot sampling distributions vs. point estimate for other parameters ----
@@ -85,7 +87,8 @@ tt <- theme_mpm() +
     axis.text.x = element_blank(),
     axis.text.y = element_text(size = 8.5, angle = 90, hjust = 0.5),
     axis.ticks.x = element_blank(),
-    panel.border = element_rect(linewidth = 0.5, fill = NA)
+    panel.border = element_rect(linewidth = 0.5, fill = NA),
+    plot.margin = margin(2, 2, 2, 2)
   )
 
 pt_size <- 0.7
@@ -158,7 +161,7 @@ g1 <- patchwork::wrap_plots(p1, p2, p3, ncol = 1)
 g2 <- patchwork::wrap_plots(p4, ncol = 1)
 g <- patchwork::wrap_plots(g1, g2, ncol = 2)
 
-ggsave("figures/fig2_other_param_distributions.png", g, height = 7.5, width = 7.5, units = "in", dpi = 300)
+ggsave("figures/Analysis1_additional_parameter_distributions.png", g, height = 7.5, width = 7.5, units = "in", dpi = 300)
 
 
 # prep df for shape vs. pace analysis ----
@@ -226,7 +229,7 @@ p_pace_shape <- ggplot(df_shape) +
   scale_x_log10()
 
 if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
-ggsave("figures/case1_pace_shape.png", p_pace_shape, height = 4, width = 4.5, units = "in", dpi = 300)
+ggsave("figures/Analysis1_pace_shape_scatter.png", p_pace_shape, height = 4, width = 4.5, units = "in", dpi = 300)
 
 
 # model relationship between l0 and shape, assuming no sampling uncertainty ----
@@ -314,8 +317,9 @@ quantile(mu_beta, c(0.025, 0.500, 0.975))
 quantile(mu_beta_error, c(0.025, 0.500, 0.975))
 
 df_beta_error <- data.frame(mu_beta_error)
-pred_x_error <- seq(min(df_shape$log_l0_low - x_cent_error),
-  max(df_shape$log_l0_upp - x_cent_error),
+pred_x_error <- seq(
+  min(log10(df_shape$l0_pt) - x_cent_error),
+  max(log10(df_shape$l0_pt) - x_cent_error),
   length.out = 50
 )
 
@@ -335,7 +339,7 @@ pred_error <- tibble(mu_alpha_error, mu_beta_error, pred_x = list(pred_x_error))
 
 # prepare plot data ----
 # left panel
-lev <- c("Model of point estimates", "Model with sampling uncertainty")
+lev <- c("Model using point estimates", "Model with sampling uncertainty")
 
 # fit line
 pred_full <- rbind(
@@ -390,17 +394,40 @@ df_beta <- bind_rows(
 tt <- theme_mpm() +
   theme(
     text = element_text(size = 11.5),
-    axis.ticks = element_line(linewidth = 0.4)
+    axis.ticks = element_line(linewidth = 0.4),
+    plot.margin = margin(2, 2, 2, 2)
   )
 
 p1 <- ggplot(pred_full) +
-  # Open circles show point estimates in both panels.
-  geom_point(data = pt_ref, aes(x = l0_pt, y = shape_pt), shape = 1, size = 1.1, alpha = 0.8) +
-  # Cross centers (plus symbols) are medians of sampling distributions.
-  geom_point(data = bars_full, aes(x = l0_med, y = shape_med), shape = 3, size = 1.3, stroke = 0.4, color = cols$dark) +
-  geom_linerange(data = bars_full, aes(x = l0_med, ymin = shape_low, ymax = shape_upp), linewidth = 0.3, alpha = 0.6) +
-  geom_errorbarh(data = bars_full, aes(y = shape_med, xmin = l0_low, xmax = l0_upp), linewidth = 0.3, alpha = 0.6) +
-  geom_line(aes(x = pred_x, y = pred_med), col = cols$dark) +
+  # Solid points for the point-estimate model (panel A).
+  geom_point(
+    data = dplyr::filter(pt_ref, model == lev[1]),
+    aes(x = l0_pt, y = shape_pt),
+    shape = 16, size = 1.3, color = cols$mid
+  ) +
+  # Faint overlay of point estimates in the uncertainty panel for comparison.
+  geom_point(
+    data = dplyr::filter(pt_ref, model == lev[2]),
+    aes(x = l0_pt, y = shape_pt),
+    shape = 16, size = 1.1, color = cols$mid, alpha = 0.25
+  ) +
+  # Cross centers (plus symbols) and intervals for sampling-uncertainty model.
+  geom_point(
+    data = dplyr::filter(bars_full, model == lev[2]),
+    aes(x = l0_med, y = shape_med),
+    shape = 3, size = 1.3, stroke = 0.4, color = cols$mid
+  ) +
+  geom_linerange(
+    data = dplyr::filter(bars_full, model == lev[2]),
+    aes(x = l0_med, ymin = shape_low, ymax = shape_upp),
+    linewidth = 0.3, alpha = 0.6, color = cols$mid
+  ) +
+  geom_errorbarh(
+    data = dplyr::filter(bars_full, model == lev[2]),
+    aes(y = shape_med, xmin = l0_low, xmax = l0_upp),
+    linewidth = 0.3, alpha = 0.6, color = cols$mid
+  ) +
+  geom_line(aes(x = pred_x, y = pred_med), col = cols$mid) +
   geom_ribbon(aes(x = pred_x, ymin = pred_low, ymax = pred_upp), fill = cols$accent, alpha = 0.2) +
   scale_x_log10() +
   coord_cartesian(ylim = c(-0.3, 0.2)) +
@@ -409,20 +436,27 @@ p1 <- ggplot(pred_full) +
     x = expression(paste("Mature life expectancy (", italic(L), ")")),
     y = expression(paste("Shape of mortality trajectory (", italic(S), ")"))
   ) +
-  tt
+  tt +
+  theme(panel.border = element_blank())
 
 p2 <- ggplot(df_beta, aes(x = beta)) +
-  geom_vline(xintercept = 0, linetype = 2, alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = 2, alpha = 1, color = cols$mid) +
   geom_density(fill = cols$accent, alpha = 0.4, linewidth = 0) +
   coord_cartesian(xlim = c(-0.07, 0.07)) +
   facet_wrap(~model, ncol = 1) +
   labs(x = expression(paste("Slope coefficient (", italic(beta), ")")), y = "Posterior density") +
-  tt
+  tt +
+  theme(panel.border = element_blank())
 
 # combine both plots
-p <- plot_grid(p1, p2, labels = c("A", "B"), rel_widths = c(1.08, 1), nrow = 1)
+p <- p1 + p2 +
+  patchwork::plot_layout(ncol = 2, widths = c(1.08, 1)) +
+  patchwork::plot_annotation(
+    tag_levels = "A",
+    theme = theme(plot.margin = margin(2, 2, 2, 2))
+  )
 
-ggsave("figures/fig3_shape_l0_regression.png", p, height = 4.2, width = 8.5, units = "in", dpi = 300)
+ggsave("figures/Figure_4_analysis1_life_expectancy_shape_relationship.png", p, height = 89, width = 180, units = "mm", dpi = 300)
 
 
 # posterior summary ----
@@ -528,7 +562,7 @@ p_theta <- ggplot(df_theta, aes(x = x)) +
   geom_errorbar(aes(ymin = low95, ymax = upp95)) +
   coord_flip()
 
-ggsave("figures/case1_varcomp_theta.png", p_theta, height = 4.5, width = 5.5, units = "in", dpi = 300)
+ggsave("figures/Analysis1_variance_components_scatter.png", p_theta, height = 4.5, width = 5.5, units = "in", dpi = 300)
 
 beta_summary <- df_beta %>%
   group_by(model) %>%

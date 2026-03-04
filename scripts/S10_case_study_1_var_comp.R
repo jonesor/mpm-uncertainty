@@ -236,7 +236,7 @@ p_theta <- ggplot(df_theta, aes(x = x)) +
   coord_flip()
 
 if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
-ggsave("figures/case1_varcomp_theta_summary.png", p_theta, height = 4.5, width = 5.5, units = "in", dpi = 300)
+ggsave("figures/Analysis1_variance_components_summary.png", p_theta, height = 4.5, width = 5.5, units = "in", dpi = 300)
 
 
 var_a_pt <- var(dat_stan$y_pt)

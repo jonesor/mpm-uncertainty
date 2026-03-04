@@ -86,7 +86,7 @@ p0 <- ggplot(pt_shape) +
   scale_color_gradientn(colors = mpm_pal(256))
 
 if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
-ggsave("figures/shape_l0_scatter_spp.png", p0, height = 4, width = 4.5, units = "in", dpi = 300)
+ggsave("figures/Analysis1_species_shape_life_expectancy_scatter.png", p0, height = 4, width = 4.5, units = "in", dpi = 300)
 
 if (!dir.exists("data/derived/analysis_cache")) {
   dir.create("data/derived/analysis_cache",
@@ -185,7 +185,7 @@ p2 <- ggplot(sd_shape, aes(y = id_l0)) +
 
 # arrange plot panels and save
 p_shape <- p1 / p2 + plot_layout(heights = c(1, 1))
-ggsave("figures/sds_shape_spp.png", p_shape, height = 5.5, width = 5.5, units = "in", dpi = 300)
+ggsave("figures/Analysis1_species_shape_life_expectancy_distributions.png", p_shape, height = 5.5, width = 5.5, units = "in", dpi = 300)
 
 
 # plot sampling distributions vs. point estimate for other parameters ----
@@ -244,7 +244,7 @@ p4 <- ggplot(sd_other, aes(y = id_gen)) +
 
 # arrange plot panels and save
 p_other <- p1 / p3 / p4 + plot_layout(heights = c(1, 1, 1))
-ggsave("figures/sd_other_spp.png", p_other, height = 7, width = 5, units = "in", dpi = 300)
+ggsave("figures/Analysis1_species_other_parameter_distributions.png", p_other, height = 7, width = 5, units = "in", dpi = 300)
 
 
 # prep df for shape vs. pace analysis ----
@@ -401,7 +401,7 @@ pred_error <- tibble(mu_alpha_error, mu_beta_error, pred_x = list(pred_x_error))
 
 # prepare plot data ----
 # left panel
-lev <- c("Model of point estimates", "Model with sampling uncertainty")
+lev <- c("Model using point estimates", "Model with sampling uncertainty")
 
 # fit line
 pred_full <- rbind(
@@ -479,7 +479,7 @@ p2 <- ggplot(df_beta, aes(x = beta)) +
 
 # combine both plots and save
 p <- p1 + p2 + plot_layout(widths = c(1.08, 1))
-ggsave("figures/shape_spp.png", p, height = 4.5, width = 6.25, units = "in", dpi = 300)
+ggsave("figures/Analysis1_species_shape_life_expectancy_regression.png", p, height = 4.5, width = 6.25, units = "in", dpi = 300)
 
 
 # posterior summary ----
@@ -629,4 +629,4 @@ p_hx <- ggplot(sdist, aes(x, hx)) +
   scale_x_continuous(limits = c(0, 10), breaks = seq(0, 10, 2)) +
   facet_wrap(~SpeciesAuthor, ncol = 1)
 
-ggsave("figures/hazard_trajectories_spp.png", p_hx, height = 6, width = 5, units = "in", dpi = 300)
+ggsave("figures/Analysis1_species_hazard_trajectories.png", p_hx, height = 6, width = 5, units = "in", dpi = 300)

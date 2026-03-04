@@ -1,6 +1,6 @@
 scripts/
 --------
-Analysis scripts to reproduce results. Run in numeric order (`S01` ... `S13`) after `00_check_setup.R`.
+Analysis scripts to reproduce results. Run in numeric order (`S01` ... `S14`) after `00_check_setup.R`.
 
 Run order
 ---------
@@ -19,22 +19,24 @@ Run order
 - `S11_*`              PRISM climate download/extraction (must run before `S12_*`).
 - `S12_*`              Case study 2 analysis.
 - `S13_*`              Supplementary figures and summaries.
+- `S14_*`              Case study 3 (Astragalus, all COMPADRE sites) climate-recruitment analysis.
 - `99_make_tables.R`   Export publication tables as DOCX.
 
 Traceability map (manuscript claims -> code -> outputs)
 --------------------------------------------------------
 | Manuscript item | Script(s) | Primary outputs |
 |---|---|---|
-| Fig. 1 (single MPM sampling distributions) | `S03_*` | `figures/fig1_top.png`, `figures/fig1_bottom.png`; `data/derived/analysis_cache/fig1_derived_param_summary.csv` |
-| Fig. 2 (shape/L and other parameter distributions) | `S07_*` | `figures/fig2_shape_l0_distributions.png`, `figures/fig2_other_param_distributions.png`; `case1_shape_summary.csv`, `case1_other_summary.csv` |
-| Fig. 3 (shape-L regression and beta posterior) | `S07_*` | `figures/fig3_shape_l0_regression.png`; `data/derived/analysis_cache/case1_beta_summary.csv` |
+| Fig. 1 (single MPM sampling distributions) | `S03_*` | `figures/Figure_1_transition_rates_single_mpm.png`, `figures/Figure_2_derived_parameters_single_mpm.png`; `data/derived/analysis_cache/fig1_derived_param_summary.csv` |
+| Fig. 2 (shape/L and other parameter distributions) | `S07_*` | `figures/Figure_3_analysis1_point_vs_sampling_distributions.png`, `figures/Analysis1_additional_parameter_distributions.png`; `case1_shape_summary.csv`, `case1_other_summary.csv` |
+| Fig. 3 (shape-L regression and beta posterior) | `S07_*` | `figures/Figure_4_analysis1_life_expectancy_shape_relationship.png`; `data/derived/analysis_cache/case1_beta_summary.csv` |
 | Table 1 (variance components) | `S10_*` | `data/derived/analysis_cache/case1_variance_ratios.csv`; `docs/tables/Table1_variance_components.docx` |
-| Fig. 4 (climate effects on recruitment) | `S12_*` | `figures/clim_1.png`, `figures/clim_2.png`, `figures/clim.png`; `case2_gprc_beta_summary.csv`, `case2_spring_beta_summary.csv` |
+| Fig. 4 (climate effects on recruitment + stage-specific survival) | `S12_*` | `figures/Analysis2_recruitment_model_fits.png`, `figures/Analysis2_monthly_lag_coefficients.png`, `figures/Analysis2_stage_specific_survival_beta_summary.png`, `figures/Figure_5_analysis2_climate_effects_recruitment.png`; `case2_gprc_beta_summary.csv`, `case2_spring_beta_summary.csv` |
+| Case study 3 exploratory climate analysis (Astragalus sites) | `S14_*` | `figures/Analysis3_<site>_spring_temperature_recruitment_scatter.png`, `figures/Analysis3_<site>_spring_temperature_beta_summary.png`, `figures/Analysis3_<site>_spring_temperature_model_fits.png`, `figures/Analysis3_<site>_survival_model_fits.png`, `figures/Analysis3_<site>_survival_stage_beta_summary.png`, `figures/Analysis3_<site>_survival_stage_curves.png`, `figures/Analysis3_<site>_monthly_lag_coefficients.png`, `figures/Figure_5_case3_climate_effects_recruitment_<site>.png` (A=lag coefficients, B=recruitment fits, C=stage-specific survival coefficients); `case3_astragalus_coverage_<site>.csv`, `case3_astragalus_spring_beta_summary.csv`, `case3_astragalus_gprc_beta_summary.csv`, `case3_astragalus_stan_diagnostics.csv`, `case3_astragalus_site_summary.csv` |
 | Target-study selection counts | `S02_*` | `data/derived/studies/target_studies.csv` |
 | Supplementary Table S1-2 | `S03_*`, `99_make_tables.R` | `fig1_derived_param_summary.csv`; `docs/tables/Table_S1-2_single_mpm_derived.docx` |
 | Supplementary Table S1-3 | `S13_*`, `99_make_tables.R` | `fig1_mean_mpm_param_summary.csv`; `docs/tables/Table_S1-3_mean_mpm_derived.docx` |
-| Supplementary boundary figures | `S13_*` | `figures/boundary.png`, `figures/boundary2.png` |
-| Supplementary species-level diagnostics | `S08_*` | `figures/sds_shape_spp.png`, `figures/sd_other_spp.png`, `figures/shape_spp.png`, `figures/shape_l0_scatter_spp.png`, `figures/hazard_trajectories_spp.png` |
+| Supplementary boundary figures | `S13_*` | `figures/Figure_S1_boundary_estimate_diagnostic.png`, `figures/Figure_S2_boundary_survivorship_illustration.png` |
+| Supplementary species-level diagnostics | `S08_*` | `figures/Analysis1_species_shape_life_expectancy_distributions.png`, `figures/Analysis1_species_other_parameter_distributions.png`, `figures/Analysis1_species_shape_life_expectancy_regression.png`, `figures/Analysis1_species_shape_life_expectancy_scatter.png`, `figures/Analysis1_species_hazard_trajectories.png` |
 
 Output locations
 ----------------

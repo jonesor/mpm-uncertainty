@@ -52,14 +52,31 @@ if (!file.exists(coords_path)) {
   write_csv(comp_time_series, coords_path)
 }
 
+# target sites for climate extraction ----
+# Keep this list explicit so case-study sites are reproducible and easy to extend.
+target_sites <- tibble(
+  SpeciesAuthor = c(
+    "Silene_spaldingii",
+    "Astragalus_scaphoides_2",
+    "Astragalus_scaphoides_2",
+    "Astragalus_scaphoides_2"
+  ),
+  MatrixPopulation = c(
+    "Eureka",
+    "Haynes Creek",
+    "Sheep Corral Gulch",
+    "McDevitt Creek"
+  )
+)
+
 spp_df <- read_csv(coords_path) %>%
-  filter(SpeciesAuthor == "Silene_spaldingii")
+  semi_join(target_sites, by = c("SpeciesAuthor", "MatrixPopulation"))
 
 if (length(bil_files) == 0) {
   compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
   years <- compadre %>%
     as_tibble() %>%
-    filter(SpeciesAuthor == "Silene_spaldingii") %>%
+    semi_join(target_sites, by = c("SpeciesAuthor", "MatrixPopulation")) %>%
     filter(!is.na(MatrixStartYear)) %>%
     pull(MatrixStartYear) %>%
     unique() %>%

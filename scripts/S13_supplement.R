@@ -269,12 +269,13 @@ tt <- theme_mpm() +
   theme(
     panel.grid = element_blank(),
     text = element_text(size = 11.5),
-    axis.ticks = element_line(linewidth = 0.4)
+    axis.ticks = element_line(linewidth = 0.4),
+    plot.margin = margin(2, 2, 2, 2)
   )
 
 p1 <- ggplot(sigma_sim, aes(sigma)) +
   geom_density(fill = cols$accent, color = NA, alpha = 0.5) +
-  geom_vline(data = sigma_point, aes(xintercept = sigma), linetype = 2) +
+  geom_vline(data = sigma_point, aes(xintercept = sigma), linetype = 2, color = cols$mid) +
   scale_x_continuous(limits = c(0, 1), breaks = c(0, 1)) +
   coord_cartesian(ylim = c(0, 20)) +
   facet_wrap(~stage, nrow = 1) +
@@ -286,7 +287,7 @@ p1 <- ggplot(sigma_sim, aes(sigma)) +
 
 p2 <- ggplot(life_sim, aes(L)) +
   geom_density(fill = cols$accent, color = NA, alpha = 0.5) +
-  geom_vline(data = life_point, aes(xintercept = L_pt), linetype = 2) +
+  geom_vline(data = life_point, aes(xintercept = L_pt), linetype = 2, color = cols$mid) +
   scale_x_continuous(limits = c(0, 148)) +
   labs(
     x = "Mature life expectancy (years)",
@@ -294,10 +295,15 @@ p2 <- ggplot(life_sim, aes(L)) +
   ) +
   tt
 
-g1 <- p1 / p2 + plot_layout(heights = c(0.7, 1))
+g1 <- p1 / p2 +
+  plot_layout(heights = c(0.7, 1)) +
+  plot_annotation(
+    tag_levels = "A",
+    theme = theme(plot.margin = margin(2, 2, 2, 2))
+  )
 
 if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
-ggsave("figures/boundary.png", g1, height = 4, width = 6.25, units = "in", dpi = 300)
+ggsave("figures/Figure_S1_boundary_estimate_diagnostic.png", g1, height = 4, width = 6.25, units = "in", dpi = 300)
 
 
 matU_pt <- scanga_t$mat[[1]]@matU
@@ -338,7 +344,7 @@ scanga_traj_sim <- scanga_t %>%
 
 p3 <- ggplot(scanga_traj_sim, aes(x, lx)) +
   geom_line(aes(group = rep), color = cols$accent, alpha = 0.025) +
-  geom_line(data = scanga_traj_pt, linetype = 2) +
+  geom_line(data = scanga_traj_pt, linetype = 2, color = cols$mid) +
   scale_y_continuous(breaks = seq(0, 1, 0.2)) +
   labs(
     x = "Age from reproductive maturity (years)",
@@ -349,10 +355,14 @@ p3 <- ggplot(scanga_traj_sim, aes(x, lx)) +
 
 g2 <- p1 / p2 / p3 +
   plot_layout(heights = c(0.8, 1, 1)) +
-  plot_annotation(tag_levels = "a")
+  plot_annotation(
+    tag_levels = "A",
+    theme = theme(plot.margin = margin(2, 2, 2, 2))
+  ) &
+  theme(plot.margin = margin(2, 2, 2, 2))
 
 
-ggsave("figures/boundary2.png", g2, height = 6, width = 6.25, units = "in", dpi = 300)
+ggsave("figures/Figure_S2_boundary_survivorship_illustration.png", g2, height = 6, width = 6.25, units = "in", dpi = 300)
 
 
 # illustrate pooled ----

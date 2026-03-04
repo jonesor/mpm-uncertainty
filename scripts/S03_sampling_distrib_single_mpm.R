@@ -96,13 +96,13 @@ p1a <- ggplot(df_plot) +
   theme_mpm() +
   theme(
     strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
-    strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
+    strip.text = element_text(size = 8, margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
     axis.text = element_blank(),
     axis.ticks = element_blank(),
     panel.grid = element_blank(),
     plot.title = element_text(hjust = 0.5, face = "bold", size = 11.5, vjust = 0),
     text = element_text(size = 11.7),
-    plot.margin = margin(5, 16, 2, 2),
+    plot.margin = margin(2, 2, 2, 2),
     panel.spacing = unit(1.3, "pt")
   )
 
@@ -114,19 +114,22 @@ p1b <- ggplot(df_plot) +
   theme_mpm() +
   theme(
     strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
-    strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
+    strip.text = element_text(size = 8, margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
     axis.text = element_blank(),
     axis.ticks = element_blank(),
     panel.grid = element_blank(),
     plot.title = element_text(hjust = 0.5, face = "bold", size = 11.5, vjust = 0),
     text = element_text(size = 11.7),
-    plot.margin = margin(5, 16, 2, 2),
+    plot.margin = margin(2, 2, 2, 2),
     panel.spacing = unit(1.3, "pt")
   )
 
 p1c <- ggplot(df_sdist) +
   geom_ribbon(aes(x = p, ymin = 0, ymax = pp), fill = cols$accent, alpha = 0.4) +
-  geom_segment(data = df_pt, aes(x = p, y = 0, xend = p, yend = pp + 0.1), linewidth = 0.3) +
+  geom_segment(
+    data = df_pt, aes(x = p, y = 0, xend = p, yend = pp + 0.1),
+    linewidth = 0.3, color = cols$mid, linetype = 2
+  ) +
   geom_rect(
     data = df_rect, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2),
     fill = NA
@@ -136,7 +139,7 @@ p1c <- ggplot(df_sdist) +
   scale_y_reverse() +
   scale_x_continuous(
     limits = c(0, 1),
-    breaks = seq(0, 1, 1),
+    breaks = c(0, 0.5, 1),
     expand = c(0, 0.11),
     position = "top"
   ) +
@@ -145,7 +148,7 @@ p1c <- ggplot(df_sdist) +
   theme_mpm() +
   theme(
     strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
-    strip.text = element_text(margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
+    strip.text = element_text(size = 8, margin = margin(0.2, 0.25, 0.2, 0.25, "lines")),
     axis.text.x = element_blank(),
     axis.text.y = element_text(size = 7),
     axis.ticks.x = element_blank(),
@@ -155,15 +158,18 @@ p1c <- ggplot(df_sdist) +
     panel.grid.major.x = element_blank(),
     plot.title = element_text(hjust = 0.5, face = "bold", size = 11.5, vjust = 0),
     text = element_text(size = 11.7),
-    plot.margin = margin(5, 2, 2, 2),
+    plot.margin = margin(2, 2, 2, 2),
     panel.spacing = unit(1.3, "pt")
   )
 
 p1 <- patchwork::wrap_plots(p1a, p1b, p1c, ncol = 3) +
-  patchwork::plot_annotation(tag_levels = "A")
+  patchwork::plot_annotation(
+    tag_levels = "A",
+    theme = theme(plot.margin = margin(2, 2, 2, 2))
+  )
 
 if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
-ggsave("figures/fig1_top.png", p1, height = 3.5, width = 10.5, units = "in", dpi = 300)
+ggsave("figures/Figure_1_transition_rates_single_mpm.png", p1, height = 60, width = 180, units = "mm", dpi = 300)
 
 
 # Figure 1 (bottom): Derived parameters ----
@@ -237,9 +243,9 @@ deriv_plot <- deriv_param %>%
 
 p2 <- ggplot(deriv_plot) +
   geom_density(aes(value), fill = cols$accent, alpha = 0.4, linewidth = 0) +
-  geom_vline(data = deriv_pt, aes(xintercept = value)) +
+  geom_vline(data = deriv_pt, aes(xintercept = value), color = cols$mid, linetype = 2) +
   facet_wrap(~par, scales = "free", labeller = label_parsed, nrow = 1) +
-  labs(x = "Parameter estimate", y = "Prob. density") +
+  labs(x = "Parameter estimate", y = "Probability density") +
   theme_mpm() +
   theme(
     strip.background = element_rect(color = "grey80", fill = "grey90", linewidth = 0.4),
@@ -250,10 +256,11 @@ p2 <- ggplot(deriv_plot) +
     axis.ticks.x = element_line(linewidth = 0.3, color = "grey80"),
     plot.title = element_text(hjust = 0, face = "bold", vjust = 0, size = 12),
     text = element_text(size = 11.7),
-    strip.text = element_text(size = 9, margin = margin(0.15, 0, 0.15, 0, "lines"))
+    strip.text = element_text(size = 9, margin = margin(0.15, 0, 0.15, 0, "lines")),
+    plot.margin = margin(2, 2, 2, 2)
   )
 
-ggsave("figures/fig1_bottom.png", p2, height = 3.5, width = 8.5, units = "in", dpi = 300)
+ggsave("figures/Figure_2_derived_parameters_single_mpm.png", p2, height = 74, width = 180, units = "mm", dpi = 300)
 
 
 # table of posterior quantiles for derived parameters ----

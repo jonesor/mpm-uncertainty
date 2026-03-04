@@ -36,6 +36,7 @@ if (isTRUE(params$refresh_outputs)) {
   source(here::here("scripts", "S11_case_study_2_prism.R"))
   source(here::here("scripts", "S12_case_study_2.R"))
   source(here::here("scripts", "S13_supplement.R"))
+  source(here::here("scripts", "S14_case_study_3_astragalus.R"))
 }
 
 fig1_summary <- readr::read_csv(
@@ -56,6 +57,22 @@ case2_gprc <- readr::read_csv(
 )
 case2_spring <- readr::read_csv(
   here::here("data", "derived", "analysis_cache", "case2_spring_beta_summary.csv"),
+  show_col_types = FALSE
+)
+case3_site <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case3_astragalus_site_summary.csv"),
+  show_col_types = FALSE
+)
+case3_spring <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case3_astragalus_spring_beta_summary.csv"),
+  show_col_types = FALSE
+)
+case2_stage_weight <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case2_stage_survival_weight_sensitivity.csv"),
+  show_col_types = FALSE
+)
+case3_stage_weight <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case3_astragalus_stage_weight_sensitivity.csv"),
   show_col_types = FALSE
 )
 studies_sources <- readr::read_csv(
@@ -199,6 +216,8 @@ table_case2_spring <- case2_spring |>
   dplyr::mutate(
     model = dplyr::recode(
       model,
+      "Model of point estimates" = "Point-estimate model",
+      "Model with sampling uncertainty" = "Sampling-uncertainty model",
       reg = "Point-estimate model",
       err = "Sampling-uncertainty model"
     )
@@ -209,6 +228,91 @@ table_case2_spring <- case2_spring |>
     Median = med,
     `Lower 95%` = low95,
     `Upper 95%` = upp95
+  )
+
+table_case3_site <- case3_site |>
+  dplyr::mutate(
+    Site = MatrixPopulation,
+    `Years (total)` = years_total,
+    `Years (modelled)` = years_fit,
+    `Years excluded` = years_excluded,
+    `Spring beta (point)` = round(beta_med_point, 3),
+    `Spring beta (sampling)` = round(beta_med_sampling, 3)
+  ) |>
+  dplyr::select(
+    Site,
+    `Years (total)`,
+    `Years (modelled)`,
+    `Years excluded`,
+    `Spring beta (point)`,
+    `Spring beta (sampling)`
+  )
+
+table_case3_spring <- case3_spring |>
+  dplyr::mutate(
+    Model = dplyr::recode(
+      model,
+      "Model of point estimates" = "Point-estimate model",
+      "Model with sampling uncertainty" = "Sampling-uncertainty model"
+    )
+  ) |>
+  dplyr::mutate(dplyr::across(c(med, low95, upp95), ~ round(.x, 3))) |>
+  dplyr::rename(
+    Site = MatrixPopulation,
+    Median = med,
+    `Lower 95%` = low95,
+    `Upper 95%` = upp95
+  ) |>
+  dplyr::select(Site, Model, Median, `Lower 95%`, `Upper 95%`)
+
+table_case2_stage_weight <- case2_stage_weight |>
+  dplyr::mutate(stage_label = paste0("Stage ", stage)) |>
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
+  dplyr::rename(
+    Stage = stage_label,
+    Weighting = weighting,
+    Median = beta,
+    `Lower 95%` = low95,
+    `Upper 95%` = upp95,
+    `Years used` = n_year
+  ) |>
+  dplyr::select(Stage, Weighting, `Years used`, Median, `Lower 95%`, `Upper 95%`)
+
+table_case3_stage_weight <- case3_stage_weight |>
+  dplyr::mutate(
+    Site = MatrixPopulation,
+    Stage = stage_label,
+    Weighting = weighting
+  ) |>
+  dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
+  dplyr::rename(
+    `Years used` = n_year,
+    Median = beta,
+    `Lower 95%` = low95,
+    `Upper 95%` = upp95
+  ) |>
+  dplyr::select(Site, Stage, Weighting, `Years used`, Median, `Lower 95%`, `Upper 95%`)
+
+case2_stage_cmp <- case2_stage_weight |>
+  dplyr::filter(!is.na(beta)) |>
+  dplyr::mutate(weighting = dplyr::recode(weighting, "No weights" = "no_weights", "SSD weights" = "ssd_weights")) |>
+  dplyr::select(stage, weighting, beta, low95, upp95) |>
+  tidyr::pivot_wider(names_from = weighting, values_from = c(beta, low95, upp95)) |>
+  dplyr::mutate(
+    abs_beta_diff = abs(beta_ssd_weights - beta_no_weights),
+    width_no = upp95_no_weights - low95_no_weights,
+    width_ssd = upp95_ssd_weights - low95_ssd_weights
+  )
+
+case3_stage_cmp <- case3_stage_weight |>
+  dplyr::filter(!is.na(beta)) |>
+  dplyr::mutate(weighting = dplyr::recode(weighting, "No weights" = "no_weights", "SSD weights" = "ssd_weights")) |>
+  dplyr::select(site_slug, stage, weighting, beta, low95, upp95) |>
+  tidyr::pivot_wider(names_from = weighting, values_from = c(beta, low95, upp95)) |>
+  dplyr::mutate(
+    abs_beta_diff = abs(beta_ssd_weights - beta_no_weights),
+    width_no = upp95_no_weights - low95_no_weights,
+    width_ssd = upp95_ssd_weights - low95_ssd_weights
   )
 
 table_studies_sources <- studies_sources |>
@@ -233,7 +337,7 @@ table_studies_sources <- studies_sources |>
 
 ## S1.1 Sampling-distribution workflow used for each MPM
 
-For each focal matrix population model (MPM), we reconstructed transition-level sampling distributions from reported transition counts (or equivalent sample-size information). We then generated 2,000 parametric bootstrap draws per MPM by sampling each transition from its likelihood (multinomial for survival/growth/retrogression transitions and Poisson for recruitment transitions), rebuilding the full MPM for each draw, and recalculating each derived demographic quantity from that draw.
+For each focal matrix population model (MPM), we reconstructed transition-level sampling distributions from reported transition counts (or equivalent sample-size information). We then generated 2,000 parametric bootstrap draws per MPM by sampling each transition from its likelihood (multinomial for survival/growth/retrogression transitions and Poisson for recruitment transitions), rebuilding the full MPM for each draw, and recalculating each derived demographic quantity from that draw. We treated structural zeros (biologically impossible transitions) as fixed zeros in all draws, and treated sampling zeros (possible but unobserved transitions) as uncertain parameters under the same likelihood models used for non-zero transitions.
 
 This produced a sampling distribution for each derived quantity used downstream (e.g. life expectancy, shape, log population growth rate). Point estimates in the manuscript correspond to values derived directly from the reported matrix entries; uncertainty-aware summaries correspond to moments of these bootstrap distributions.
 
@@ -277,6 +381,8 @@ Ratios above 1 indicate that sampling uncertainty exceeds residual biological va
 
 In addition to the monthly-lagged GP model, we fit a simplified spring summary model with mean spring temperature deviation as the predictor, under both point-estimate and uncertainty-aware formulations. The contrasts reported in the manuscript use posterior medians and 95% interval widths from these paired models.
 
+For the stage-specific survival panel in analysis 2 (Fig. 5C), we derived annual stage-specific survival as the column sums of the \(U\) matrix for each year and stage, then compared two logit-scale models per stage: (i) an SSD-weighted quasibinomial point-estimate model, \(\texttt{surv} \sim \texttt{tmp}\), where weights are the stable stage distribution from each annual \(U\) matrix; and (ii) a binomial count model, \(\texttt{cbind}(n_{\text{surv}}, n_{\text{fail}}) \sim \texttt{tmp}\), where \(n_{\text{surv}}\) and \(n_{\text{fail}}\) are survived and non-survived counts implied by stage sample size and \(U\)-column survival probability.
+
 ## S1.7 Reporting recommendations for future MPM studies
 
 To support uncertainty propagation in secondary analyses, primary studies should report (at a minimum):
@@ -288,11 +394,25 @@ To support uncertainty propagation in secondary analyses, primary studies should
 
 These items are usually sufficient for parametric uncertainty reconstruction in compiled databases.
 
-## S1.8 Species identities in analysis 1
+## S1.8 Study and species identities in analysis 1
 
-Analysis 1 used 67 population-level entries representing 26 species (SpeciesAuthor labels from COMPADRE):
+Analysis 1 used 67 population-level entries representing 26 species. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
 
-*Agave potatorum*, *Agrimonia eupatoria*, *Astragalus peckii*, *Astragalus scaphoides* (labelled `Astragalus_scaphoides_2`), *Dioon merolae*, *Dracocephalum austriacum* (labelled `Dracocephalum_austriacum_2`), *Eriogonum longifolium* var. *gnaphalifolium* (labelled `Eriogonum_longifolium_var._gnaphalifolium_2`), *Eryngium alpinum*, *Lantana camara* (labelled `Lantana_camara_2`), *Liatris scariosa*, *Lophophora diffusa*, *Mammillaria huitzilopochtli*, *Neobuxbaumia polylopha*, *Orchis purpurea*, *Paeonia officinalis*, *Pediocactus bradyi*, *Pimpinella saxifraga*, *Pinus maximartinezii*, *Plantago media*, *Prosopis flexuosa* (labelled `Prosopis_ﬂexuosa`), *Saponaria bellidifolia*, *Tillandsia butzii*, *Trillium persistens*, *Trollius europaeus*, *Trollius laxus* (labelled `Trollius_laxus_2`), and *Viola biflora*.
+## S1.9 Multi-site extension for analysis 3 (*Astragalus scaphoides*)
+
+To evaluate whether inference robustness in analysis 2 generalised across populations, we repeated the same paired modelling framework for all available *Astragalus scaphoides* sites with sufficient annual coverage. For each site, we fit (i) a point-estimate model and (ii) a sampling-uncertainty model for recruitment-temperature relationships, using both the monthly-lag Gaussian-process specification and the simplified spring-temperature specification. We then compared posterior medians and 95% intervals between model formulations within site. This design isolates the contribution of uncertainty propagation while preserving site-specific ecological context.
+
+For stage-specific survival in analysis 3, we used the same matched pair as in analysis 2: an SSD-weighted quasibinomial point-estimate model (\(\texttt{surv} \sim \texttt{tmp}\), weights from the stable stage distribution of each annual \(U\) matrix) and a binomial count model (\(\texttt{cbind}(n_{\text{surv}}, n_{\text{fail}}) \sim \texttt{tmp}\)). This keeps the linear predictor and response scale aligned across formulations, differing only in whether survival is treated as a plug-in proportion or as counts with explicit sampling uncertainty.
+
+For sensitivity analyses intended to mimic database-only use (no access to true stage sample sizes), we re-fit stage-specific point-estimate models under two alternatives: (i) no weighting and (ii) stable-stage-distribution (SSD) weighting derived from each annual \(U\) matrix.
+
+# Supplementary Results
+
+## S2.1 Sensitivity to point-estimate weighting choice
+
+Across estimable stages in analysis 2, switching from no weighting to SSD weighting changed temperature-coefficient medians by at most `r round(max(case2_stage_cmp$abs_beta_diff, na.rm = TRUE), 3)` on the logit scale, with interval widths changing by `r round(min(case2_stage_cmp$width_ssd - case2_stage_cmp$width_no, na.rm = TRUE), 3)` to `r round(max(case2_stage_cmp$width_ssd - case2_stage_cmp$width_no, na.rm = TRUE), 3)` (Table S9).
+
+Across estimable site-stage combinations in analysis 3, the corresponding maximum absolute median shift was `r round(max(case3_stage_cmp$abs_beta_diff, na.rm = TRUE), 3)`, and interval-width differences ranged from `r round(min(case3_stage_cmp$width_ssd - case3_stage_cmp$width_no, na.rm = TRUE), 3)` to `r round(max(case3_stage_cmp$width_ssd - case3_stage_cmp$width_no, na.rm = TRUE), 3)` (Table S10). These sensitivity checks show how weighting assumptions alter point-estimate uncertainty when true stage sample sizes are unavailable.
 
 # Supplementary Tables
 
@@ -357,15 +477,53 @@ ft
 
 \newpage
 
-# Supplementary Figures
+Table S7. Analysis 3 site coverage and spring-temperature effect summaries for *Astragalus scaphoides*. Point-estimate and sampling-uncertainty models give similar spring-temperature coefficients within each site, showing that between-site heterogeneity is larger than within-site method differences.
 
-
-```{r fig-boundary-1, fig.cap="Figure S1. Boundary-estimate diagnostic. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility."}
-knitr::include_graphics(here::here("figures", "boundary.png"))
+```{r table-case3-site}
+ft <- make_flextable(table_case3_site)
+ft
 ```
 
 \newpage
 
-```{r fig-boundary-2, fig.cap="Figure S2. Illustration of survivorship trajectories under boundary survival transitions. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
-knitr::include_graphics(here::here("figures", "boundary2.png"))
+Table S8. Analysis 3 posterior summary for the spring-temperature coefficient by site and model formulation. Across all sites, 95% intervals overlap zero under both formulations, showing similar uncertainty conclusions with and without explicit sampling-uncertainty propagation.
+
+```{r table-case3-spring}
+ft <- make_flextable(table_case3_spring)
+ft
 ```
+
+\newpage
+
+Table S9. Analysis 2 stage-specific survival-temperature coefficients under two point-estimate weighting scenarios. “No weights” treats annual stage-specific survival proportions equally, whereas “SSD weights” applies stable-stage-distribution weights from the annual \(U\) matrix.
+
+```{r table-case2-stage-weight}
+ft <- make_flextable(table_case2_stage_weight)
+ft
+```
+
+\newpage
+
+Table S10. Analysis 3 stage-specific survival-temperature coefficients under two point-estimate weighting scenarios across sites. The comparison shows how coefficient estimates and interval widths change when no stage sample-size information is used and SSD weights are substituted.
+
+```{r table-case3-stage-weight}
+ft <- make_flextable(table_case3_stage_weight)
+ft
+```
+
+\newpage
+
+# Supplementary Figures
+
+
+```{r fig-boundary-1, fig.cap="Boundary-estimate diagnostic. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility."}
+knitr::include_graphics(here::here("figures", "Figure_S1_boundary_estimate_diagnostic.png"))
+```
+
+\newpage
+
+```{r fig-boundary-2, fig.cap="Illustration of survivorship trajectories under boundary survival transitions. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
+knitr::include_graphics(here::here("figures", "Figure_S2_boundary_survivorship_illustration.png"))
+```
+
+\newpage
