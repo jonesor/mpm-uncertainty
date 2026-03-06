@@ -159,11 +159,12 @@ id_f <- function(prefix, i, j) paste0(prefix, "_f_", i, "_", j)
 panel_inputs <- function(prefix, k, defs) {
   tagList(
     tags$h4("Stage sample sizes"),
+    tags$small("Number of individuals observed in each stage (column j)."),
     fluidRow(lapply(seq_len(k), function(j) {
       column(width = max(2, floor(12 / k)), numericInput(id_n(prefix, j), paste0("n[", j, "]"), value = defs$n[j], min = 1, step = 1))
     })),
-    tags$h4("U matrix"),
-    tags$small("Counts of surviving/transitioning individuals."),
+    tags$h4("U matrix — survival and transitions"),
+    tags$small("Each cell is the observed count of individuals from stage j (column) that survived into stage i (row). Counts within a column cannot exceed n[j]."),
     fluidRow(lapply(seq_len(k), function(j) column(width = max(2, floor(12 / k)), tags$b(paste("from", j))))),
     lapply(seq_len(k), function(i) {
       fluidRow(
@@ -173,9 +174,9 @@ panel_inputs <- function(prefix, k, defs) {
         })
       )
     }),
-    tags$h4("F matrix"),
-    tags$small("Counts of recruits from each source stage."),
-    tags$p("Note: each F entry is a total recruit count across all individuals in the source stage.", style = "color: #c00000; font-weight: 600;"),
+    tags$h4("F matrix — recruitment"),
+    tags$small("Each cell is the total number of recruits into stage i produced by all n[j] individuals in stage j. Entries are not constrained to n[j]."),
+    tags$p("Tip: recruitment is typically non-zero only in the top row (recruits enter stage 1).", style = "color: #555; font-style: italic; margin-top: 4px;"),
     fluidRow(lapply(seq_len(k), function(j) column(width = max(2, floor(12 / k)), tags$b(paste("from", j))))),
     lapply(seq_len(k), function(i) {
       fluidRow(
@@ -201,16 +202,19 @@ ui <- fluidPage(
   titlePanel("MPM Uncertainty Explorer"),
   sidebarLayout(
     sidebarPanel(
-      tags$p("Choose a matrix size, enter stage sample sizes and observed counts for U and F, then compare point estimates with posterior uncertainty in the plots and summary table."),
+      tags$p("Enter observed counts from a stage-structured population study, then explore how sampling uncertainty in the matrix entries propagates to key demographic quantities (λ, life expectancy, generation time, damping ratio)."),
+      tags$p(tags$b("Step 1:"), " Select a matrix size tab below."),
+      tags$p(tags$b("Step 2:"), " Enter stage sample sizes and observed counts for U and F."),
+      tags$p(tags$b("Step 3:"), " Read the plots and summary table to compare point estimates with posterior uncertainty."),
       tabsetPanel(
         id = "dim_tab",
         tabPanel("2x2", panel_inputs("d2", 2, build_defaults(2))),
         tabPanel("3x3", panel_inputs("d3", 3, build_defaults(3))),
         tabPanel("4x4", panel_inputs("d4", 4, build_defaults(4)))
       ),
-      checkboxInput("fix_zero_structural", "Treat entered zeros as structural zeros (fixed at 0)", value = TRUE),
-      selectInput("nsim", "Posterior draws", choices = c("300", "500", "1000"), selected = "500"),
-      actionButton("reset_defaults", "Reset active tab defaults")
+      checkboxInput("fix_zero_structural", "Fix entered zeros as structural zeros (held at 0 in all posterior draws)", value = TRUE),
+      selectInput("nsim", "Number of posterior draws", choices = c("300", "500", "1000"), selected = "500"),
+      actionButton("reset_defaults", "Reset active tab to defaults")
     ),
     mainPanel(
       fluidRow(
@@ -235,7 +239,7 @@ server <- function(input, output, session) {
   details_open <- reactiveVal(FALSE)
   observeEvent(input$toggle_details, details_open(TRUE))
   observeEvent(input$close_details, details_open(FALSE))
-
+  
   active_cfg <- reactive({
     switch(input$dim_tab,
            "2x2" = list(prefix = "d2", k = 2L, defs = build_defaults(2)),
@@ -243,7 +247,7 @@ server <- function(input, output, session) {
            "4x4" = list(prefix = "d4", k = 4L, defs = build_defaults(4)),
            list(prefix = "d3", k = 3L, defs = build_defaults(3)))
   })
-
+  
   observeEvent(input$reset_defaults, {
     cfg <- active_cfg()
     for (j in seq_len(cfg$k)) updateNumericInput(session, id_n(cfg$prefix, j), value = cfg$defs$n[j])
@@ -256,14 +260,14 @@ server <- function(input, output, session) {
     updateSelectInput(session, "nsim", selected = "500")
     updateCheckboxInput(session, "fix_zero_structural", value = TRUE)
   })
-
+  
   inputs <- reactive({
     cfg <- active_cfg()
     n_vec <- map_dbl(seq_len(cfg$k), function(j) {
       v <- input[[id_n(cfg$prefix, j)]]
       if (is.null(v) || !is.finite(v)) cfg$defs$n[j] else as.numeric(v)
     }) %>% round() %>% pmax(1)
-
+    
     U <- matrix(0, nrow = cfg$k, ncol = cfg$k)
     F <- matrix(0, nrow = cfg$k, ncol = cfg$k)
     for (i in seq_len(cfg$k)) {
@@ -276,7 +280,7 @@ server <- function(input, output, session) {
     }
     list(k = cfg$k, n = n_vec, U = U, F = F)
   })
-
+  
   validity <- reactive({
     x <- inputs()
     u_ok <- all(is.finite(x$U)) && all(x$U >= 0)
@@ -284,7 +288,7 @@ server <- function(input, output, session) {
     n_ok <- all(is.finite(x$n)) && all(x$n > 0)
     list(ok = u_ok && f_ok && n_ok)
   })
-
+  
   observed_data <- reactive({
     req(validity()$ok)
     x <- inputs()
@@ -296,7 +300,7 @@ server <- function(input, output, session) {
     F_hat <- sweep(F_counts, 2, x$n, "/")
     list(k = x$k, n = x$n, U_true = x$U, F_true = x$F, U_counts = U_counts, F_counts = F_counts, U_hat = U_hat, F_hat = F_hat)
   })
-
+  
   posterior_draws <- reactive({
     obs <- observed_data()
     nsim <- suppressWarnings(as.integer(input$nsim)); if (is.na(nsim) || nsim <= 0) nsim <- 500L
@@ -334,7 +338,7 @@ server <- function(input, output, session) {
     }
     list(U = U_draw, F = F_draw, k = obs$k, nsim = nsim)
   })
-
+  
   density_data <- reactive({
     obs <- observed_data(); fix_zero <- isTRUE(input$fix_zero_structural)
     u_cells <- expand_grid(i = seq_len(obs$k), j = seq_len(obs$k)) %>%
@@ -351,22 +355,22 @@ server <- function(input, output, session) {
       })) %>% unnest(dens)
     bind_rows(u_cells, f_cells) %>% mutate(to = factor(paste0("to ", i), levels = paste0("to ", seq_len(obs$k))), from = factor(paste0("from ", j), levels = paste0("from ", seq_len(obs$k))))
   })
-
+  
   cell_draws <- reactive({
     post <- posterior_draws()
     u_tbl <- as.data.frame.table(post$U, responseName = "value") %>% transmute(matrix = "U", i = as.integer(Var1), j = as.integer(Var2), draw = as.integer(Var3), value = value)
     f_tbl <- as.data.frame.table(post$F, responseName = "value") %>% transmute(matrix = "F", i = as.integer(Var1), j = as.integer(Var2), draw = as.integer(Var3), value = value)
     bind_rows(u_tbl, f_tbl)
   })
-
+  
   cell_ci <- reactive({
     cell_draws() %>% group_by(matrix, i, j) %>% summarize(low95 = quantile(value, 0.025, na.rm = TRUE), upp95 = quantile(value, 0.975, na.rm = TRUE), .groups = "drop")
   })
-
+  
   cell_post_med <- reactive({
     cell_draws() %>% group_by(matrix, i, j) %>% summarize(post_med = median(value, na.rm = TRUE), .groups = "drop")
   })
-
+  
   derived_draws <- reactive({
     post <- posterior_draws()
     map_dfr(seq_len(post$nsim), function(r) {
@@ -379,7 +383,7 @@ server <- function(input, output, session) {
       tibble(draw = r, quantity = quantity_levels, value = c(spec$lambda, life_expectancy_from_start(U, start_stage), generation_time_safe(U, F), spec$damping))
     }) %>% mutate(quantity = factor(quantity, levels = quantity_levels))
   })
-
+  
   point_estimates <- reactive({
     obs <- observed_data(); A <- obs$U_hat + obs$F_hat
     spec <- spectral_summary(A)
@@ -387,11 +391,11 @@ server <- function(input, output, session) {
     start_stage <- if (length(repro_cols) > 0) min(repro_cols) else 1L
     tibble(quantity = factor(quantity_levels, levels = quantity_levels), point = c(spec$lambda, life_expectancy_from_start(obs$U_hat, start_stage), generation_time_safe(obs$U_hat, obs$F_hat), spec$damping))
   })
-
+  
   derived_post_med <- reactive({
     derived_draws() %>% group_by(quantity) %>% summarize(post_med = median(value, na.rm = TRUE), .groups = "drop")
   })
-
+  
   cell_labels <- function(which_mat = c("U", "F")) {
     which_mat <- match.arg(which_mat)
     obs <- observed_data()
@@ -405,7 +409,7 @@ server <- function(input, output, session) {
         from = factor(paste0("from ", j), levels = paste0("from ", seq_len(obs$k)))
       )
   }
-
+  
   plot_matrix <- function(which_mat = c("U", "F")) {
     which_mat <- match.arg(which_mat)
     dd <- density_data() %>% filter(matrix == which_mat)
@@ -417,16 +421,16 @@ server <- function(input, output, session) {
     nonempty <- dd2 %>% group_by(i, j) %>% summarize(has_density = any(is.finite(d) & d > 0), .groups = "drop") %>% filter(has_density)
     pts_plot <- pts %>% inner_join(nonempty, by = c("i", "j"))
     pts_post <- pts %>% left_join(cell_post_med() %>% filter(matrix == which_mat), by = c("i", "j")) %>% inner_join(nonempty, by = c("i", "j"))
-
+    
     labs_df <- cell_labels(which_mat) %>%
       inner_join(
         dd_plot %>% group_by(i, j, to, from) %>% summarize(xmin = min(x), xmax = max(x), ymax = max(d), .groups = "drop") %>% mutate(x_text = xmin + 0.03 * (xmax - xmin), y_text = ymax * 0.93),
         by = c("i", "j", "to", "from")
       )
-
+    
     col_fill <- if (which_mat == "U") u_col else f_col
-    subtitle <- if (which_mat == "U") "Rows = to stage, columns = from stage" else "Recruitment in top row: from stage j to stage 1"
-
+    subtitle <- if (which_mat == "U") "Rows = destination stage, columns = source stage" else "Rows = destination stage, columns = source stage"
+    
     ggplot(dd2, aes(x = x, y = d)) +
       geom_ribbon(data = dd_plot, fill = col_fill, alpha = 0.25, aes(ymin = 0, ymax = d)) +
       geom_ribbon(data = dd95_plot, fill = col_fill, alpha = 0.35, aes(ymin = 0, ymax = d95)) +
@@ -434,22 +438,22 @@ server <- function(input, output, session) {
       geom_vline(data = pts_plot, aes(xintercept = point), linetype = 2, linewidth = 0.9, color = point_col) +
       geom_vline(data = pts_post, aes(xintercept = post_med), linetype = 3, linewidth = 0.6, color = post_col) +
       facet_grid(to ~ from, scales = "free_x", switch = "y") +
-      labs(x = NULL, y = NULL, title = paste(which_mat, "matrix sampling distributions"), subtitle = subtitle) +
+      labs(x = NULL, y = NULL, title = paste(which_mat, "matrix — sampling distributions"), subtitle = subtitle) +
       theme_app_plot()
   }
-
+  
   output$u_plot <- renderPlot({
-    validate(need(validity()$ok, "Check inputs: values must be non-negative and sample sizes must be > 0."))
+    validate(need(validity()$ok, "Check inputs: all values must be non-negative and sample sizes must be > 0."))
     plot_matrix("U")
   })
-
+  
   output$f_plot <- renderPlot({
-    validate(need(validity()$ok, "Check inputs: values must be non-negative and sample sizes must be > 0."))
+    validate(need(validity()$ok, "Check inputs: all values must be non-negative and sample sizes must be > 0."))
     plot_matrix("F")
   })
-
+  
   output$derived_plot <- renderPlot({
-    validate(need(validity()$ok, "Check inputs: values must be non-negative and sample sizes must be > 0."))
+    validate(need(validity()$ok, "Check inputs: all values must be non-negative and sample sizes must be > 0."))
     dd <- derived_draws(); pe <- point_estimates(); pm <- derived_post_med()
     ci <- dd %>% group_by(quantity) %>% summarize(low95 = quantile(value, 0.025, na.rm = TRUE), upp95 = quantile(value, 0.975, na.rm = TRUE), .groups = "drop")
     dens <- dd %>% group_by(quantity) %>% group_modify(~ {
@@ -458,7 +462,7 @@ server <- function(input, output, session) {
       kd <- density(x, n = 512, na.rm = TRUE)
       tibble(x = kd$x, d = kd$y)
     }) %>% ungroup() %>% left_join(ci, by = "quantity") %>% mutate(d95 = if_else(x >= low95 & x <= upp95, d, NA_real_))
-
+    
     ggplot(dens, aes(x = x, y = d)) +
       geom_ribbon(data = dens %>% filter(is.finite(d), d > 0), aes(ymin = 0, ymax = d), fill = derived_col, alpha = 0.25) +
       geom_ribbon(data = dens %>% filter(is.finite(d95), d95 > 0), aes(ymin = 0, ymax = d95), fill = derived_col, alpha = 0.35) +
@@ -468,7 +472,7 @@ server <- function(input, output, session) {
       labs(x = NULL, y = "Density", title = "Derived quantities") +
       theme_app_plot()
   })
-
+  
   output$summary_table <- renderTable({
     validate(need(validity()$ok, "Check inputs."))
     dd <- derived_draws(); pe <- point_estimates()
@@ -476,36 +480,55 @@ server <- function(input, output, session) {
       left_join(pe, by = "quantity") %>% mutate(across(where(is.numeric), ~ signif(.x, 4))) %>%
       transmute(`Derived quantity` = quantity, `Point estimate` = point, `Posterior median` = med, `Lower 95% bound` = low95, `Upper 95% bound` = upp95)
   }, digits = 4)
-
+  
   output$details_ui <- renderUI({
     if (!details_open()) return(NULL)
     obs <- tryCatch(observed_data(), error = function(e) NULL)
-    setup_txt <- if (is.null(obs)) "Current setup unavailable." else paste0("Dimension k = ", obs$k, "; n = (", paste(obs$n, collapse = ", "), ")")
-
+    setup_txt <- if (is.null(obs)) "Current setup unavailable." else paste0("k = ", obs$k, "; n = (", paste(obs$n, collapse = ", "), ")")
+    
     tagList(
       div(class = "details-overlay"),
       div(class = "details-panel",
-          div(style = "display:flex; justify-content:space-between; align-items:center;", tags$h4("Details"), actionButton("close_details", "Close")),
-          tags$p("This app mirrors the manuscript workflow for uncertainty propagation in stage-structured matrix population models."),
-          tags$h5("How to use"),
-          tags$ul(
-            tags$li("Pick a dimension tab (2x2, 3x3, or 4x4)."),
-            tags$li("Enter stage sample sizes n[j] for each source stage."),
-            tags$li("Enter observed transition counts in U and observed recruit counts in F."),
-            tags$li("Use the matrix panels to inspect cell-level uncertainty and the right panel/table to inspect derived quantities.")
+          div(style = "display:flex; justify-content:space-between; align-items:center;", tags$h4("About this app"), actionButton("close_details", "Close")),
+          
+          tags$p("This app illustrates how sampling uncertainty in matrix population model (MPM) entries propagates to key demographic outputs. Most published analyses treat matrix entries as exact — here, each entry is estimated from finite counts, and that uncertainty flows through to quantities like λ and generation time."),
+          
+          tags$h5("Workflow"),
+          tags$ol(
+            tags$li("Choose a matrix dimension tab (2×2, 3×3, or 4×4)."),
+            tags$li(HTML("Enter <b>n[j]</b>: the number of individuals observed in each source stage j.")),
+            tags$li(HTML("Enter <b>U counts</b>: how many of those individuals survived into each destination stage.")),
+            tags$li(HTML("Enter <b>F counts</b>: total recruits into each destination stage produced by all individuals in stage j.")),
+            tags$li("Adjust the posterior draws setting and the structural-zero option as needed, then read the plots.")
           ),
-          tags$h5("Model setup"),
+          
+          tags$h5("Statistical model"),
           tags$ul(
-            tags$li("A = U + F, rows = destination stage, columns = source stage."),
-            tags$li("U entries represent surviving transitions; deaths are implicit as the remaining count in each source stage."),
-            tags$li("F entries represent recruit counts per source stage."),
-            tags$li("U uncertainty uses Dirichlet sampling on living transitions plus death residual."),
-            tags$li("F uncertainty uses a Gamma posterior for Poisson count-rate sampling."),
-            tags$li("Structural-zero mode can fix entered zeros at zero in posterior draws."),
-            tags$li("Dashed red lines mark point estimates; dotted grey lines mark posterior medians."),
-            tags$li(paste("Posterior draws currently set to:", input$nsim))
+            tags$li(HTML("<b>Projection matrix:</b> A = U + F, where rows index destination stage and columns index source stage.")),
+            tags$li(HTML("<b>U columns:</b> Sampled from a Dirichlet posterior over (survive to stage 1, survive to stage 2, …, die). Deaths are implicit — the residual count in each column after accounting for all observed transitions.")),
+            tags$li(HTML("<b>F cells:</b> Sampled from a Gamma posterior, treating recruit counts as Poisson with unknown rate. The posterior is Gamma(y + 1, n[j]), where y is the observed count.")),
+            tags$li(HTML("<b>Structural zeros:</b> When enabled, cells entered as zero are fixed at zero in every draw — they represent transitions that are biologically impossible, not just unobserved."))
           ),
-          tags$p(tags$b("Current setup: "), setup_txt)
+          
+          tags$h5("Reading the plots"),
+          tags$ul(
+            tags$li(HTML("<span style='color:#c7352a;'>&#8211;&#8211; Red dashed line:</span> point estimate (observed rate).")),
+            tags$li(HTML("<span style='color:#7a7a7a;'>&#183;&#183;&#183; Grey dotted line:</span> posterior median.")),
+            tags$li("Darker shading shows the central 95% posterior interval; lighter shading shows the full distribution."),
+            tags$li("A wide distribution means high uncertainty — typically from a small sample size. Narrow distributions mean the estimate is well-constrained."),
+            tags$li("If the posterior median diverges from the point estimate, finite-sample bias is present: the posterior accounts for asymmetry and boundary effects that the raw rate ignores.")
+          ),
+          
+          tags$h5("Derived quantities"),
+          tags$ul(
+            tags$li(HTML("<b>Lambda (λ):</b> Asymptotic population growth rate — the dominant eigenvalue of A.")),
+            tags$li(HTML("<b>Mature life expectancy (L):</b> Expected total time spent alive, starting from the first reproductive stage.")),
+            tags$li(HTML("<b>Generation time (T):</b> Mean age of parents of newborns in a stable population (requires the Rage package).")),
+            tags$li(HTML("<b>Damping ratio (ρ):</b> Ratio of the two largest eigenvalue moduli — higher values mean faster convergence to stable stage structure."))
+          ),
+          
+          tags$p(tags$b("Active setup: "), setup_txt),
+          tags$p(tags$b("Posterior draws: "), input$nsim)
       )
     )
   })

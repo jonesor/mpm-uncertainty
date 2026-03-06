@@ -5,7 +5,7 @@ account: jonesor
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 16801428
-bundleId: 11654166
+bundleId: 11671588
 url: https://jonesor.shinyapps.io/MPM_Uncertainty_Explorer/
 version: 1
 asMultiple: FALSE
