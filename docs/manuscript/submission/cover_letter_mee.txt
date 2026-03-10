@@ -1,0 +1,25 @@
+Cover letter: Methods in Ecology and Evolution
+=============================================
+
+Dear Editors,
+
+Please find attached our manuscript, "When does sampling uncertainty matter in matrix population models? Evidence from published projection matrices," submitted for consideration as a Research Article in Methods in Ecology and Evolution.
+
+Demographic databases such as COMPADRE and COMADRE have transformed comparative ecology. Yet, the matrix entries they compile are almost never accompanied by the sample-size information needed to quantify estimation uncertainty. The standard practice — treating published matrix entries as fixed values — is widely acknowledged as a limitation, but it has remained unclear when it actually matters. We provide an empirical answer.
+
+Using 325 matrix population models from 33 studies, we show that the consequences of ignoring sampling uncertainty are strongly trait-dependent. For highly integrated metrics such as population growth rate, sampling uncertainty accounts for a negligible fraction of observed variation, and inference is largely unaffected. For mortality-trajectory traits — particularly the shape of the mortality distribution — sampling uncertainty accounts for the majority of apparent among-population variation, and point estimates are often systematically displaced from their sampling distributions by boundary survival estimates. Counterintuitively, incorporating sampling uncertainty into our comparative analysis produced narrower, better-calibrated posteriors, not wider ones, because boundary estimates had artificially inflated the spread of the point estimates.
+
+We translate these findings into a practical diagnostic framework — including heuristic thresholds for flagging fragile analyses — and provide a reproducible workflow that researchers can apply to their own compiled-database analyses. We also identify improved reporting practices for primary MPM studies that would make uncertainty reconstruction routine rather than exceptional.
+We believe this work is well-suited to Methods in Ecology and Evolution: it addresses a pervasive methodological gap, delivers actionable guidance for a large and active user community, and includes fully reproducible data and code.
+
+This manuscript is original, is not under consideration elsewhere, and all authors have approved the submission.
+
+Sincerely,
+
+Owen R. Jones (corresponding author)
+Department of Biology, University of Southern Denmark
+Institute of Ecology and Evolution, University of Edinburgh
+Email: jones@biology.sdu.dk
+
+Emily G. Simmonds
+Institute of Ecology and Evolution, University of Edinburgh

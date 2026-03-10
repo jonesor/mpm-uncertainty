@@ -8,14 +8,17 @@
 
 
 # Transformations ############################################################ ----
+# Convert probabilities in (0,1) to log-odds.
 logit <- function(p) {
   log(p / (1 - p))
 }
 
+# Convert log-odds to probabilities in (0,1).
 logit_inv <- function(a) {
   exp(a) / (exp(a) + 1)
 }
 
+# Convert a numeric vector to simplex proportions.
 softmax <- function(x) {
   exp(x) / sum(exp(x))
 }
@@ -23,6 +26,7 @@ softmax <- function(x) {
 
 
 # Distributions ############################################################## ----
+# Draw one Dirichlet random vector (alpha is the concentration vector).
 rdirichlet <- function(alpha) {
   M <- length(alpha)
   x <- rgamma(M, alpha)
@@ -31,6 +35,7 @@ rdirichlet <- function(alpha) {
 
 
 # Helpers to convert MPMs from Ellis et al. 2012 ############################# ----
+# Parse a matrix encoded as text into a numeric square matrix.
 string_to_mat <- function(A) {
   A <- gsub(pattern = "\\[|\\]|\\;", "", A)
   A <- strsplit(x = A, split = " ")[[1]]
@@ -38,7 +43,7 @@ string_to_mat <- function(A) {
   return(mat)
 }
 
-
+# Parse stage sample sizes encoded as text into an integer vector.
 nx_to_vec <- function(x) {
   x <- gsub("\\[|\\]", "", x)
   x <- strsplit(x, " ")[[1]]
@@ -50,6 +55,7 @@ nx_to_vec <- function(x) {
 
 
 # Rcompadre helpers ########################################################## ----
+# Return a compact view of a CompadreDB object with selected metadata columns.
 cdb_glimpse <- function(db, cols = NULL) {
   db <- tibble::as_tibble(db)
   db <- dplyr::rename(db, StartYear = MatrixStartYear, EndYear = MatrixEndYear)
@@ -57,6 +63,7 @@ cdb_glimpse <- function(db, cols = NULL) {
          "MatrixTreatment", "StartYear", "EndYear", cols)]
 }
 
+# Row-bind multiple CompadreDB objects while preserving class and version.
 cdb_bind_rows <- function(dbs) {
   vers <- dbs[[1]]@version
   dbs <- dplyr::bind_rows(lapply(dbs, tibble::as_tibble))
@@ -68,12 +75,14 @@ cdb_bind_rows <- function(dbs) {
 
 
 # Other utilities ############################################################ ----
+# Load the first object from an .RData file and return it.
 rdata_load <- function(path) {
   env <- new.env()
   x <- load(path, env)[1]
   return(env[[x]])
 }
 
+# Load the first object from an .RData file and drop unused columns.
 rdata_load2 <- function(path) {
   env <- new.env()
   x <- load(path, env)[1]
@@ -84,6 +93,7 @@ rdata_load2 <- function(path) {
   return(out)
 }
 
+# Wrapper for life expectancy from Rage with default start stage behaviour.
 life_expect <- function(matU, mixdist = NULL, start = NULL) {
   if (is.null(mixdist) && is.null(start)) {
     start <- 1L
@@ -91,18 +101,22 @@ life_expect <- function(matU, mixdist = NULL, start = NULL) {
   Rage::life_expect_mean(matU, mixdist = mixdist, start = start)
 }
 
+# Proportion of cohort expected to be in reproductive stages at first maturity.
 repro_prop_start <- function(matU, start, rep_stages) {
   Rage::mature_distrib(matU, start = start, repro_stages = rep_stages)
 }
 
+# Survivorship trajectory starting from mature-stage mixture.
 lx_from_mature <- function(matU, rep_prop1, xmax = 1000, lx_crit = -1) {
   Rage::mpm_to_lx(matU, start = rep_prop1, xmax = xmax, lx_crit = lx_crit)
 }
 
+# Time to quasi-stationary distribution for a projection matrix.
 qsd <- function(matU, rep_prop1, conv = 0.01, nmax = 1e5) {
   Rage::qsd_converge(matU, rep_prop1, conv = conv, N = nmax)
 }
 
+# Safe qsd wrapper that returns NA when convergence fails.
 qsd_safe <- function(matU, rep_prop1, conv = 0.01, nmax = 1e5) {
   tryCatch(
     Rage::qsd_converge(matU, rep_prop1, conv = conv, N = nmax),
@@ -110,11 +124,13 @@ qsd_safe <- function(matU, rep_prop1, conv = 0.01, nmax = 1e5) {
   )
 }
 
+# Net reproductive rate from U and F submatrices.
 R0 <- function(matU, matF) {
   Rage::net_repro_rate(matU, matF)
 }
 
 # Script helpers ############################################################# ----
+# Collapse multiple source strings into a single ';'-separated unique string.
 collapse_fn <- function(x) {
   ifelse(all(is.na(x)),
          NA_character_,
@@ -122,6 +138,7 @@ collapse_fn <- function(x) {
 }
 
 # Plot helpers ############################################################### ----
+# Generate a viridis palette used across manuscript figures.
 mpm_pal <- function(n = 5, option = "viridis", begin = 0.1, end = 0.85) {
   if (!requireNamespace("viridisLite", quietly = TRUE)) {
     stop("Missing package: viridisLite. Install with install.packages(\"viridisLite\").",
@@ -130,6 +147,7 @@ mpm_pal <- function(n = 5, option = "viridis", begin = 0.1, end = 0.85) {
   viridisLite::viridis(n, option = option, begin = begin, end = end)
 }
 
+# Named color list used for consistent point/line/fill assignments.
 mpm_colors <- function(option = "viridis") {
   pal <- mpm_pal(5, option = option)
   list(
@@ -141,6 +159,7 @@ mpm_colors <- function(option = "viridis") {
   )
 }
 
+# Common ggplot theme used across analyses.
 theme_mpm <- function(base_size = 11.5) {
   ggplot2::theme_bw(base_size = base_size) +
     ggplot2::theme(
@@ -154,6 +173,7 @@ theme_mpm <- function(base_size = 11.5) {
     )
 }
 
+# Apply common plotting defaults (theme and geom defaults) globally.
 set_mpm_plot_defaults <- function(base_size = 11.5) {
   ggplot2::theme_set(theme_mpm(base_size = base_size))
   ggplot2::update_geom_defaults("line", list(linewidth = 0.5))
@@ -162,6 +182,7 @@ set_mpm_plot_defaults <- function(base_size = 11.5) {
   invisible(NULL)
 }
 
+# Extract PRISM temperature and precipitation at species coordinates.
 fetch_prism <- function(file_tmp, file_ppt, spp) {
   prism_tmp <- terra::rast(file_tmp)
   prism_ppt <- terra::rast(file_ppt)
@@ -179,6 +200,7 @@ fetch_prism <- function(file_tmp, file_ppt, spp) {
 
 
 # Confirm that stage-specific sample sizes match transition rates ############ ----
+# Check all U columns for compatibility with observed stage sample sizes.
 check_freqs_mat <- function(matU, N, prec = 0.001) {
   dim <- nrow(matU)
   out <- character(dim)
@@ -190,6 +212,7 @@ check_freqs_mat <- function(matU, N, prec = 0.001) {
   return(data.frame(N, x = out))
 }
 
+# Check whether proportions are representable by integer counts at sample size n.
 check_freqs <- function(n, x, prec = 0.001) {
   if (is.na(n) || n == 0) {
     return(NA)
@@ -213,6 +236,8 @@ check_freqs <- function(n, x, prec = 0.001) {
 
 
 # Sampling distributions for single mpm ###################################### ----
+# Posterior density over transition probability with flat prior.
+# Uses binomial for survival transitions and Poisson for fecundity entries.
 dens_fn <- function(x, n, fec) {
   # x is number of successes
   # n is number of trials
@@ -233,7 +258,7 @@ dens_fn <- function(x, n, fec) {
   }
 }
 
-
+# Simulate one U-column from observed stage size using Dirichlet posterior.
 sim_stage_U <- function(x, vital_ind, n) {
   colsum <- sum(x)
   if (length(vital_ind) == 0) {
@@ -250,7 +275,7 @@ sim_stage_U <- function(x, vital_ind, n) {
   return(out)
 }
 
-
+# Simulate one F-column from observed stage size using gamma-Poisson update.
 sim_stage_F <- function(x, vital_ind, n) {
   if (length(vital_ind) == 0 || is.na(n)) {
     out <- x
@@ -264,7 +289,7 @@ sim_stage_F <- function(x, vital_ind, n) {
   return(out)
 }
 
-
+# Simulate full U matrix conditional on column sample sizes.
 sim_U <- function(matU, posU, N) {
   if ("list" %in% class(matU)) matU <- matU[[1]]
   if ("list" %in% class(N)) N <- unlist(N)
@@ -284,7 +309,7 @@ sim_U <- function(matU, posU, N) {
   return(simU)
 }
 
-
+# Simulate full F matrix conditional on column sample sizes.
 sim_F <- function(matF, posF, N) {
   if ("list" %in% class(matF)) matF <- matF[[1]]
   if ("list" %in% class(N)) N <- unlist(N)
@@ -304,12 +329,12 @@ sim_F <- function(matF, posF, N) {
   return(simF)
 }
 
-
+# Generate nsim sampled U matrices.
 sim_U_wrapper <- function(matU, posU = matU > 0, N, nsim) {
   return(replicate(nsim, sim_U(matU, posU, N), simplify = FALSE))
 }
 
-
+# Generate nsim sampled F matrices.
 sim_F_wrapper <- function(matF, posF = matF > 0, N, nsim) {
   return(replicate(nsim, sim_F(matF, posF, N), simplify = FALSE))
 }
@@ -317,16 +342,18 @@ sim_F_wrapper <- function(matF, posF = matF > 0, N, nsim) {
 
 
 # Rstan helpers ############################################################## ----
+# Standard control settings used for Stan model fitting.
 ctrl1 <- list(adapt_delta = 0.95, stepsize = 0.05)
 ctrl2 <- list(adapt_delta = 0.99, stepsize = 0.01, max_treedepth = 11)
 ctrl3 <- list(adapt_delta = 0.999, stepsize = 0.001, max_treedepth = 12)
 
 
+# Extract one parameter array from a stanfit object.
 rstan_extract <- function(fit, var) {
   rstan::extract(fit, var)[[var]]
 }
 
-
+# Summarize key convergence diagnostics from a stanfit object.
 stan_diagnostics <- function(fit) {
   n <- length(rstan_extract(fit, "lp__"))
   stan_summary <- as.data.frame(summary(fit)$summary)
@@ -337,7 +364,7 @@ stan_diagnostics <- function(fit) {
   return(tibble::tibble(rhat_high, n_eff_low, mcse_high, n_diverg))
 }
 
-
+# Fit Stan model with fallback to stricter controls if diagnostics are poor.
 stanfn <- function(object, data, control = ctrl1, iter = 3000,
                    pars_excl = NULL, seed = 12345) {
   fit <- rstan::sampling(object = object, data = data, warmup = 2000,
@@ -354,7 +381,7 @@ stanfn <- function(object, data, control = ctrl1, iter = 3000,
   return(fit)
 }
 
-
+# Summarize posterior intervals for a vector-valued parameter.
 posterior_vec <- function(fit, x, var, exp = FALSE) {
   var <- rstan::extract(fit, var)[[var]]
   fn <- ifelse(exp,
@@ -372,7 +399,7 @@ posterior_vec <- function(fit, x, var, exp = FALSE) {
   )
 }
 
-
+# Summarize posterior predictions yhat for plotting model fit.
 summarize_yhat <- function(fit, label) {
   yhat <- rstan::extract(fit, "yhat")$yhat
 
@@ -384,7 +411,7 @@ summarize_yhat <- function(fit, label) {
                         yhat_upp90 = apply(yhat, 2, function(x) quantile(x, 0.95))))
 }
 
-
+# Summarize posterior regression coefficients across lags.
 summarize_beta <- function(fit, label, wt = FALSE) {
   if (wt) {
     beta <- rstan::extract(fit, "beta_wt")$beta_wt
@@ -399,7 +426,7 @@ summarize_beta <- function(fit, label, wt = FALSE) {
                         beta_upp95 = apply(beta, 2, function(x) quantile(x, 0.95))))
 }
 
-
+# Summarize model fit statistics (LOO/WAIC) and diagnostics.
 summarize_fit <- function(fit, label) {
   ll <- extract_log_lik(fit)
   lppd <- sum(log(colMeans(exp(ll))))
@@ -417,7 +444,7 @@ summarize_fit <- function(fit, label) {
                tibble::tibble(elpd_loo, elpd_loo_se, elpd_waic, elpd_waic_se)))
 }
 
-
+# Summarize out-of-sample predictions and test log-likelihood.
 summarize_xval <- function(fit, label) {
   ll_test <- extract_log_lik(fit, "log_lik_test")
   lppd_test <- sum(log(colMeans(exp(ll_test))))
@@ -433,6 +460,7 @@ summarize_xval <- function(fit, label) {
 
 
 # MPM manipulations ########################################################## ----
+# Convert matrix entries to a long data frame with indices and stage labels.
 mpm_flatten <- function(matA, matU, matF, matC, stage_names) {
   d <- nrow(matU)
   base_int <- expand.grid(to_col = seq_len(d), from_col = seq_len(d))
@@ -445,7 +473,7 @@ mpm_flatten <- function(matA, matU, matF, matC, stage_names) {
   return(out)
 }
 
-
+# Rescale U columns with total survival > 1 back to sum 1.
 scale_U <- function(matU) {
   out <- apply(matU, 2, function(x) {
     if (any(sum(x) > 1)) {
@@ -458,13 +486,14 @@ scale_U <- function(matU) {
   return(out)
 }
 
-
+# Mean matrix across a list, optionally replacing NA with zero.
 mat_mean2 <- function(l, na.rm = TRUE, replace_na = TRUE) {
   m <- list_mean(l, na.rm = na.rm)
   if (replace_na) m[is.na(m)] <- 0
   return(m)
 }
 
+# Mean matrix across a list of same-dimension matrices.
 list_mean <- function(l, na.rm = TRUE) {
   arr <- simplify2array(l)
   m <- apply(arr, 1:2, function(x) mean(x, na.rm = na.rm))
@@ -475,6 +504,7 @@ list_mean <- function(l, na.rm = TRUE) {
 
 
 # MPM and age-from-stage analyses ############################################ ----
+# Truncate survivorship vector at tmax and optionally drop trailing zeros.
 lx_submax <- function(lx, tmax, strip_zero = TRUE) {
   upp <- min(tmax, length(lx))
   lx <- lx[1L:upp] / lx[1L]
@@ -482,7 +512,7 @@ lx_submax <- function(lx, tmax, strip_zero = TRUE) {
   return(lx)
 }
 
-
+# Compute shape metric on truncated survivorship (safe for short vectors).
 shape_surv2 <- function(lx, q) {
   upp <- min(q, length(lx))
   if (q < 4) {
@@ -495,18 +525,18 @@ shape_surv2 <- function(lx, q) {
   }
 }
 
-
+# Sum with NA propagation if all values are missing.
 sum2 <- function(x) {
   ifelse(all(is.na(x)), NA_real_, sum(x, na.rm = TRUE))
 }
 
-
+# Pool transition count vectors across replicate samples.
 pool_counts <- function(nl) {
   X <- do.call(rbind, nl)
   return(apply(X, 2, sum2))
 }
 
-
+# Build transition matrix from row/col index table and value column name.
 make_mat <- function(df, d, tr) {
   m <- matrix(0, nrow = d, ncol = d)
   m[cbind(df$row, df$col)] <- df[[tr]]

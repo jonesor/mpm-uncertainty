@@ -371,7 +371,7 @@ For each parameter, the total observed variance was partitioned into:
 The reported summary is Eq. \@ref(eq:var-ratio):
 
 \begin{equation}
-\text{ratio} = \frac{\sigma^2_{\text{sampling}}}{\sigma^2_{\text{residual}}}
+\text{ratio} = \frac{v_{\text{sampling}}}{v_{\text{residual}}}
 (\#eq:var-ratio)
 \end{equation}
 
@@ -466,12 +466,15 @@ Table S6. Primary studies represented in the analysis subset, as identified in C
 
 ```{r table-studies-sources}
 ft <- make_flextable(table_studies_sources)
-ft <- flextable::set_table_properties(ft, layout = "fixed")
-ft <- flextable::width(ft, j = "Authors", width = 1.3)
-ft <- flextable::width(ft, j = "Year", width = 0.8)
-ft <- flextable::width(ft, j = "Journal", width = 1.9)
-ft <- flextable::width(ft, j = "DOI", width = 1.8)
-ft <- flextable::width(ft, j = "Species (COMPADRE label)", width = 2.7)
+ft <- flextable::set_table_properties(ft, layout = "fixed", width = 0.95)
+ft <- flextable::fontsize(ft, size = 8, part = "all")
+ft <- flextable::padding(ft, padding = 1, part = "all")
+ft <- flextable::width(ft, j = "Authors", width = 0.5)
+ft <- flextable::width(ft, j = "Year", width = 0.45)
+ft <- flextable::width(ft, j = "Journal", width = 1.0)
+ft <- flextable::width(ft, j = "DOI", width = 0.95)
+ft <- flextable::width(ft, j = "Species (COMPADRE label)", width = 2.45)
+ft <- flextable::fit_to_width(ft, max_width = 5.35)
 ft
 ```
 
@@ -481,6 +484,16 @@ Table S7. Analysis 3 site coverage and spring-temperature effect summaries for *
 
 ```{r table-case3-site}
 ft <- make_flextable(table_case3_site)
+ft <- flextable::set_table_properties(ft, layout = "fixed", width = 0.95)
+ft <- flextable::fontsize(ft, size = 9.5, part = "all")
+ft <- flextable::padding(ft, padding = 1, part = "all")
+ft <- flextable::width(ft, j = "Site", width = 1.25)
+ft <- flextable::width(ft, j = "Years (total)", width = 0.6)
+ft <- flextable::width(ft, j = "Years (modelled)", width = 0.75)
+ft <- flextable::width(ft, j = "Years excluded", width = 0.7)
+ft <- flextable::width(ft, j = "Spring beta (point)", width = 0.9)
+ft <- flextable::width(ft, j = "Spring beta (sampling)", width = 0.95)
+ft <- flextable::fit_to_width(ft, max_width = 5.15)
 ft
 ```
 
@@ -516,13 +529,13 @@ ft
 # Supplementary Figures
 
 
-```{r fig-boundary-1, fig.cap="Boundary-estimate diagnostic. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility."}
+```{r fig-boundary-1, fig.cap="Boundary-estimate diagnostic. Purple lines indicate point-estimate-derived quantities and green densities indicate uncertainty-aware summaries from sampling distributions. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility."}
 knitr::include_graphics(here::here("figures", "Figure_S1_boundary_estimate_diagnostic.png"))
 ```
 
 \newpage
 
-```{r fig-boundary-2, fig.cap="Illustration of survivorship trajectories under boundary survival transitions. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
+```{r fig-boundary-2, fig.cap="Illustration of survivorship trajectories under boundary survival transitions. Age/time is shown in years. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
 knitr::include_graphics(here::here("figures", "Figure_S2_boundary_survivorship_illustration.png"))
 ```
 

@@ -17,7 +17,7 @@ COMPADRE
 Ellis et al. (2012)
 -------------------
 - Source: Ellis et al. 2012, Ecology (supplemental matrices and metadata)
-- Files in repo: `data/raw/ellis_2012/Transition_Matrices.txt`, `Population_data.txt`, `Species_Information.txt`, `metadata.htm`, `default.htm`
+- Files in repo: `data/raw/ellis_2012/Transition_Matrices.txt`, `Population_data.txt`, `Species_Information.txt`
 
 PRISM climate data
 ------------------

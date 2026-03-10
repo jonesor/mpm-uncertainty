@@ -23,6 +23,16 @@ This folder contains the paper source files, rendered outputs, style template, a
   - `staging/` temporary bundle builds (git-ignored except `README.md`).
   - `archive/` zipped bundles for deposition (git-ignored except `README.md`).
 
+## Submission bundle
+
+- `submission/` curated submission-ready files:
+  - main and supplement `.docx`,
+  - combined manuscript+supplement `.docx`,
+  - latest Zenodo `.zip`,
+  - plain-text Zenodo description,
+  - draft cover letters,
+  - main manuscript figure files.
+
 ## Usage
 
 From the project root in R:

@@ -1,14 +1,14 @@
 MPM Sampling Uncertainty
 ========================
 
-Data and code for analyses in Barks and Jones: Accounting for sampling uncertainty in analyses of published projection matrices.
+Data and code for analyses of sampling uncertainty in published projection matrices.
 
 This repository is organized to support replicability and FAIR principles. The main analysis workflow lives in `scripts/`, reusable functions in `code/`, models in `models/`, and data split into `data/raw/` (as obtained) and `data/derived/` (processed/intermediate).
 
 Quick start
 -----------
 - Run `scripts/00_check_setup.R` to verify packages and required inputs.
-- Start with `scripts/` in numeric order (S01 ... S13). Each script is intended to be run after prior steps.
+- Start with `scripts/` in numeric order (S01 ... S14). Each script is intended to be run after prior steps.
 - Outputs that are reused across scripts are cached under `data/derived/analysis_cache/`.
 - Figures are written to `figures/` with filenames set in the scripts.
 
@@ -27,10 +27,8 @@ Folder guide
 - `data/derived/`       Processed data and intermediate analysis artifacts.
 - `data/metadata/`      Data dictionaries and provenance notes.
 - `figures/`            Generated figures for the paper.
-- `supplement/`         Non-reproducible source assets (e.g., figure source files).
 - `docs/`               Notes, methods, and documentation.
 - `docs/manuscript/`    Main manuscript and supplement Rmd files plus archived DOCX drafts.
-- `docs/analysis_summary.md`   Traceability map keyed to scripts, figures, and tables.
 
 Notes
 -----

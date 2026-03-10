@@ -19,3 +19,7 @@ docs/manuscript/zenodo/staging/*
 !docs/manuscript/zenodo/staging/README.md
 docs/manuscript/zenodo/archive/*
 !docs/manuscript/zenodo/archive/README.md
+
+# Shiny deployment metadata
+rsconnect/
+apps/**/rsconnect/

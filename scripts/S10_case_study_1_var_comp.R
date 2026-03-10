@@ -103,10 +103,48 @@ sd_shape <- pt_shape %>%
 
 
 # load sampling distributions ----
+if (exists("sd_shape")) rm(sd_shape)
+if (exists("sd_shape_out")) rm(sd_shape_out)
+if (exists("sd_other")) rm(sd_other)
+if (exists("sd_other_out")) rm(sd_other_out)
+
 load(file = "data/derived/analysis_cache/full_sd_shape.RData")
 load(file = "data/derived/analysis_cache/full_sd_other.RData")
-if (!exists("sd_other") && exists("sd_other_out")) {
+
+if (exists("sd_shape_out")) {
+  sd_shape <- sd_shape_out
+}
+if (exists("sd_other_out")) {
   sd_other <- sd_other_out
+}
+
+# Harmonize legacy/new object schemas for sd_other.
+if (!exists("sd_other")) {
+  stop("Expected object 'sd_other' (or 'sd_other_out') was not found in full_sd_other.RData")
+}
+if (!exists("sd_shape")) {
+  stop("Expected object 'sd_shape' (or 'sd_shape_out') was not found in full_sd_shape.RData")
+}
+
+col_map <- c(
+  loglam = "loglam_pt",
+  damp = "damp_pt",
+  gen = "gen_pt",
+  pmature = "pmature_pt"
+)
+for (nm in names(col_map)) {
+  if (!nm %in% names(sd_other) && col_map[[nm]] %in% names(sd_other)) {
+    sd_other[[nm]] <- sd_other[[col_map[[nm]]]]
+  }
+}
+
+required_sd_other <- c("SpeciesAuthor", "MatrixPopulation", "loglam", "damp", "gen", "pmature")
+missing_sd_other <- setdiff(required_sd_other, names(sd_other))
+if (length(missing_sd_other) > 0) {
+  stop(
+    "full_sd_other.RData is missing required columns: ",
+    paste(missing_sd_other, collapse = ", ")
+  )
 }
 
 

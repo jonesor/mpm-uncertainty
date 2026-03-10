@@ -9,6 +9,8 @@ setup_packages(c(
 source("code/functions.R")
 # Plot style helpers (theme_mpm(), mpm_colors()) from code/functions.R
 set_mpm_plot_defaults()
+seed <- 5654
+set.seed(seed)
 compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
 cols <- mpm_colors()
 
@@ -44,7 +46,6 @@ xF <- round(t(n * t(matF))) # reproductive transitions
 round(n * (1 - colSums(matU))) # deaths
 
 # draw from sampling distribution
-set.seed(5654)
 drawsU <- sim_U_wrapper(matU, N = n, nsim = 2000)
 drawsF <- sim_U_wrapper(matF, N = n, nsim = 2000)
 drawsA <- mapply(function(x, y) x + y, drawsU, drawsF, SIMPLIFY = FALSE)
@@ -98,7 +99,6 @@ round(damping.ratio(mA), 2)
 round(life_expect(mU), 2)
 
 # draw from the sampling distributions of component MPMs
-set.seed(5654)
 drawsU1 <- sim_U_wrapper(mU1, N = n1, nsim = 2000)
 drawsF1 <- sim_U_wrapper(mF1, N = n1, nsim = 2000)
 drawsA1 <- mapply(function(x, y) x + y, drawsU, drawsF, SIMPLIFY = FALSE)

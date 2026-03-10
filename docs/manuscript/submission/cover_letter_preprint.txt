@@ -1,0 +1,7 @@
+Please consider this manuscript for posting as a preprint. The paper examines when transition-rate sampling uncertainty in published matrix population models materially affects downstream inference. Using comparative and climate-demography analyses, we show that sensitivity is trait-dependent: integrated metrics are often robust, whereas mortality-trajectory traits can be strongly affected.
+
+All data and code required to reproduce the analyses are provided via the linked Zenodo package.
+
+Sincerely,
+Owen R. Jones (corresponding author)
+

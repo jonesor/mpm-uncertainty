@@ -7,8 +7,6 @@ Contents
 - `Transition_Matrices.txt`
 - `Population_data.txt`
 - `Species_Information.txt`
-- `metadata.htm`
-- `default.htm`
 
 Notes
 -----

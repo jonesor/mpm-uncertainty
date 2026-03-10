@@ -242,6 +242,10 @@ analyze_site <- function(SpeciesAuthor, MatrixPopulation, ellis_spp, ellis_pop) 
     "Model of point estimates" = cols$light,
     "Model with sampling uncertainty" = cols$dark
   )
+  model_alpha <- c(
+    "Model of point estimates" = 1.0,
+    "Model with sampling uncertainty" = 0.72
+  )
 
   df_beta <- tibble(reg = beta_reg, err = beta_err) %>%
     pivot_longer(cols = everything(), names_to = "model", values_to = "val") %>%
@@ -305,31 +309,38 @@ analyze_site <- function(SpeciesAuthor, MatrixPopulation, ellis_spp, ellis_pop) 
     rename(x = tmp) %>%
     mutate(model = lev[2])
 
-  year_pts <- bind_rows(
-    year_err %>% mutate(model = lev[1]),
+  year_full <- bind_rows(
+    year_err %>% mutate(model = lev[1], fec_low = NA_real_, fec_upp = NA_real_),
     year_err
   ) %>% mutate(model = factor(model, levels = lev))
 
   p_fit <- ggplot(pred_full, aes(x = x)) +
     geom_ribbon(aes(ymin = low95, ymax = upp95, fill = model), alpha = 0.18, color = NA) +
-    geom_line(aes(y = med, color = model), linewidth = 0.8, alpha = 0.85) +
-    geom_point(data = year_pts, aes(y = fecund, color = model), size = 1, alpha = 0.65) +
+    geom_line(aes(y = med, color = model, alpha = model), linewidth = 0.8) +
+    geom_point(
+      data = year_full,
+      aes(y = fecund, color = model, group = model),
+      size = 1,
+      alpha = 0.85,
+      position = position_dodge(width = 0.07)
+    ) +
     geom_linerange(
-      data = year_err,
-      aes(ymin = fec_low, ymax = fec_upp),
-      color = model_cols[[lev[2]]],
-      alpha = 0.75
+      data = year_full,
+      aes(ymin = fec_low, ymax = fec_upp, color = model, group = model),
+      alpha = 0.85,
+      position = position_dodge(width = 0.07)
     ) +
     scale_y_log10() +
     scale_color_manual(values = model_cols) +
     scale_fill_manual(values = model_cols) +
+    scale_alpha_manual(values = model_alpha) +
     labs(
       x = "Spring temperature (Feb-Apr; z-scored)",
       y = "Recruitment",
       title = pop_target
     ) +
     tt +
-    guides(color = "none", fill = "none")
+    guides(color = "none", fill = "none", alpha = "none")
 
 
   pred_surv <- bind_rows(
@@ -628,6 +639,7 @@ analyze_site <- function(SpeciesAuthor, MatrixPopulation, ellis_spp, ellis_pop) 
   ) %>%
     mutate(
       model = factor(model, levels = c("Model of point estimates", "Model with sampling uncertainty")),
+      lag_err = lag + if_else(model == "Model of point estimates", -0.18, 0.18),
       SpeciesAuthor = spp_target,
       MatrixPopulation = pop_target,
       site_slug = site_slug
@@ -641,17 +653,21 @@ analyze_site <- function(SpeciesAuthor, MatrixPopulation, ellis_spp, ellis_pop) 
 
   p2 <- ggplot(gprc_betas, aes(x = lag)) +
     geom_hline(yintercept = 0, linetype = 2, alpha = 0.5, color = cols$accent) +
-    geom_linerange(aes(ymin = beta_low95, ymax = beta_upp95, color = model), alpha = 0.70) +
-    geom_line(aes(y = beta_med, color = model), linewidth = 0.8, alpha = 0.85) +
+    geom_linerange(
+      aes(x = lag_err, ymin = beta_low95, ymax = beta_upp95, color = model),
+      alpha = 0.85
+    ) +
+    geom_line(aes(y = beta_med, color = model, alpha = model), linewidth = 0.8) +
     scale_x_continuous(breaks = seq(0, 24, 6)) +
     scale_color_manual(values = model_cols) +
+    scale_alpha_manual(values = model_alpha) +
     labs(
       x = "Months before survey",
       y = expression(paste("Temperature coefficient (", italic(b), ")"))
     ) +
     tt +
     theme(plot.margin = margin(2, 2, 2, 2)) +
-    guides(color = "none")
+    guides(color = "none", alpha = "none")
 
 
   site_component_panels[[site_slug]] <<- list(

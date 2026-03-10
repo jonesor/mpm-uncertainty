@@ -1,20 +1,20 @@
 # MPM Uncertainty Explorer
 
-This Shiny app provides a matrix-population-model uncertainty explorer using separate `U` and `F` matrices with fixed-dimension tabs.
+This Shiny app provides a matrix-population-model uncertainty explorer with fixed-dimension tabs and single-matrix (`A`) data entry.
 
 ## What it does
 
-- Supports three fixed matrix sizes via tabs: `2x2`, `3x3`, `4x4`.
-- Left panel: cell-level sampling distributions for `U` and `F` matrix entries.
+- Supports four fixed matrix sizes via tabs: `2x2`, `3x3`, `4x4`, `5x5`.
+- Left panel: cell-level sampling distributions for `A` matrix entries, color-coded by internal `U`/`F` assignment.
 - Right panel: sampling distributions for derived quantities.
 - Bottom table: point estimate, posterior median, and 95% interval summary for derived quantities.
 
 ## Inputs and assumptions
 
 - Stage sample sizes are entered as one value per source stage (`n[j]`).
-- `U` inputs are transition counts among living stages.
-- `F` inputs are recruit counts from each source stage.
-- `U` is normalised by `n[j]`; excess counts are snapped down to respect stage totals.
+- Data entry is through a single `A` matrix.
+- Internal mapping is fixed: top row except `[1,1]` is treated as `F`; all other cells are treated as `U`.
+- `U` is normalised by `n[j]`; excess `U` counts are snapped down to respect stage totals.
 - Optional structural-zero mode fixes entered zeros at zero during posterior sampling.
 - Posterior draws are selectable (`300`, `500`, `1000`; default `500`).
 

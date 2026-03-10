@@ -162,6 +162,10 @@ model_cols <- c(
   "Point estimates" = cols$light,
   "Sampling uncertainty" = cols$dark
 )
+model_alpha <- c(
+  "Point estimates" = 1.0,
+  "Sampling uncertainty" = 0.72
+)
 
 # plot beta by model type
 df_beta <- tibble(reg = beta_reg, err = beta_err) %>%
@@ -232,17 +236,28 @@ tt <- theme_mpm() +
   )
 
 p1 <- ggplot(pred_full, aes(x = x)) +
-  geom_line(aes(y = med, color = model), linewidth = 0.7) +
   geom_ribbon(aes(ymin = low95, ymax = upp95, fill = model), alpha = 0.20, color = NA) +
-  geom_point(data = year_full, aes(y = fecund, color = model), size = 1) +
-  geom_linerange(data = year_full, aes(ymin = fec_low, ymax = fec_upp, color = model)) +
+  geom_line(aes(y = med, color = model, alpha = model), linewidth = 0.8) +
+  geom_point(
+    data = year_full,
+    aes(y = fecund, color = model, group = model),
+    size = 1,
+    alpha = 0.85,
+    position = position_dodge(width = 0.07)
+  ) +
+  geom_linerange(
+    data = year_full,
+    aes(ymin = fec_low, ymax = fec_upp, color = model, group = model),
+    alpha = 0.85,
+    position = position_dodge(width = 0.07)
+  ) +
   scale_y_log10(breaks = 10^(-2:0), labels = c("0.01", "0.1", "1")) +
   scale_color_manual(values = model_cols) +
   scale_fill_manual(values = model_cols) +
-  facet_wrap(~model, ncol = 1) +
+  scale_alpha_manual(values = model_alpha) +
   labs(x = "Spring temperature (Feb-Apr)", y = "Recruitment") +
   tt +
-  guides(color = "none", fill = "none")
+  guides(color = "none", fill = "none", alpha = "none")
 
 ggsave("figures/Analysis2_recruitment_model_fits.png", p1, height = 4.5, width = 3.5, units = "in", dpi = 300)
 
@@ -390,12 +405,18 @@ p3 <- ggplot(stage_beta %>% filter(!is.na(beta)),
   ) +
   scale_color_manual(values = model_cols, drop = FALSE) +
   scale_y_discrete(limits = rev(stage_levels), drop = FALSE) +
+  guides(color = guide_legend(nrow = 1, byrow = TRUE)) +
   labs(
     x = expression(paste("Temperature coefficient (logit scale, ", italic(beta), ")")),
     y = "Stage-specific survival"
   ) +
   tt +
-  theme(legend.position = "bottom", legend.title = element_blank())
+  theme(
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    legend.text = element_text(size = 8.5),
+    legend.key.width = unit(10, "pt")
+  )
 
 ggsave("figures/Analysis2_stage_specific_survival_beta_summary.png", p3, height = 4.5, width = 3.5, units = "in", dpi = 300)
 
@@ -473,24 +494,31 @@ lev <- c("Point estimates", "Sampling uncertainty")
 gprc_betas <- rbind(
   summarize_beta(fit_gprc_reg, "Point estimates"),
   summarize_beta(fit_gprc_err, "Sampling uncertainty")
-) %>% mutate(model = factor(model, levels = lev))
+) %>%
+  mutate(model = factor(model, levels = lev)) %>%
+  mutate(
+    lag_err = lag + if_else(model == "Point estimates", -0.18, 0.18)
+  )
 
 
 p2 <- ggplot(gprc_betas, aes(x = lag)) +
   geom_hline(yintercept = 0, linetype = 2, alpha = 0.5) +
-  geom_line(aes(y = beta_med, color = model), linewidth = 0.7) +
-  geom_linerange(aes(ymin = beta_low95, ymax = beta_upp95, color = model)) +
+  geom_line(aes(y = beta_med, color = model, alpha = model), linewidth = 0.8) +
+  geom_linerange(
+    aes(x = lag_err, ymin = beta_low95, ymax = beta_upp95, color = model),
+    alpha = 0.85
+  ) +
   scale_x_continuous(breaks = seq(0, 24, 6)) +
   scale_y_continuous(breaks = c(-0.6, -0.3, 0, 0.3, 0.6)) +
   scale_color_manual(values = model_cols) +
-  facet_wrap(~model, ncol = 1) +
+  scale_alpha_manual(values = model_alpha) +
   labs(
     x = "Months before survey",
     y = expression(paste("Temperature coefficient (", italic(b), ")"))
   ) +
   tt +
   theme(plot.margin = margin(2, 2, 2, 2)) +
-  guides(color = "none")
+  guides(color = "none", alpha = "none")
 
 ggsave("figures/Analysis2_monthly_lag_coefficients.png", p2, height = 4.5, width = 3.5, units = "in", dpi = 300)
 

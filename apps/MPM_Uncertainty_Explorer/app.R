@@ -1,4 +1,4 @@
-# MPM Uncertainty Explorer (tabbed dimensions: 2x2, 3x3, 4x4)
+# MPM Uncertainty Explorer (tabbed dimensions: 2x2, 3x3, 4x4, 5x5)
 
 library(shiny)
 library(ggplot2)
@@ -56,6 +56,7 @@ build_defaults <- function(k) {
     U[3, 2] <- 5L
     U[3, 3] <- 7L
     F <- matrix(0L, 3, 3)
+    F[1, 2] <- 10L
     F[1, 3] <- 20L
     return(list(n = n, U = U, F = F))
   }
@@ -67,18 +68,39 @@ build_defaults <- function(k) {
     F[1, 2] <- 15L
     return(list(n = n, U = U, F = F))
   }
-  # k == 4
-  n <- c(20L, 15L, 10L, 8L)
-  U <- matrix(0L, 4, 4)
+  if (k == 4) {
+    n <- c(20L, 15L, 10L, 8L)
+    U <- matrix(0L, 4, 4)
+    U[1, 1] <- 6L
+    U[2, 1] <- 7L
+    U[2, 2] <- 6L
+    U[3, 2] <- 5L
+    U[3, 3] <- 4L
+    U[4, 3] <- 3L
+    U[4, 4] <- 5L
+    F <- matrix(0L, 4, 4)
+    F[1, 2] <- 6L
+    F[1, 3] <- 11L
+    F[1, 4] <- 16L
+    return(list(n = n, U = U, F = F))
+  }
+  # k == 5
+  n <- c(20L, 18L, 15L, 10L, 8L)
+  U <- matrix(0L, 5, 5)
   U[1, 1] <- 6L
-  U[2, 1] <- 7L
-  U[2, 2] <- 6L
-  U[3, 2] <- 5L
-  U[3, 3] <- 4L
-  U[4, 3] <- 3L
+  U[2, 1] <- 8L
+  U[2, 2] <- 7L
+  U[3, 2] <- 6L
+  U[3, 3] <- 6L
+  U[4, 3] <- 4L
   U[4, 4] <- 5L
-  F <- matrix(0L, 4, 4)
-  F[1, 4] <- 16L
+  U[5, 4] <- 3L
+  U[5, 5] <- 5L
+  F <- matrix(0L, 5, 5)
+  F[1, 2] <- 5L
+  F[1, 3] <- 9L
+  F[1, 4] <- 13L
+  F[1, 5] <- 18L
   list(n = n, U = U, F = F)
 }
 
@@ -95,7 +117,7 @@ calc_density_beta <- function(p_hat, n) {
   tibble(x = grid, d = dens / max(dens, na.rm = TRUE))
 }
 
-calc_density_gamma <- function(rate_hat, n) {
+calc_density_gamma <- function(rate_hat, n, x_max = NULL) {
   if (length(n) != 1 || is.na(n) || !is.finite(n) || n <= 0) {
     return(tibble(x = seq(0, 12, length.out = 400), d = NA_real_))
   }
@@ -103,7 +125,9 @@ calc_density_gamma <- function(rate_hat, n) {
     return(tibble(x = seq(0, 12, length.out = 400), d = NA_real_))
   }
   y_obs <- round(rate_hat * n)
-  x_max <- max(12, qgamma(0.995, shape = y_obs + 1, rate = n))
+  if (is.null(x_max) || !is.finite(x_max) || x_max <= 0) {
+    x_max <- max(12, qgamma(0.995, shape = y_obs + 1, rate = n))
+  }
   grid <- seq(0, x_max, length.out = 400)
   dens <- dgamma(grid, shape = y_obs + 1, rate = n)
   tibble(x = grid, d = dens / max(dens, na.rm = TRUE))
@@ -153,36 +177,42 @@ theme_app_plot <- function() {
 }
 
 id_n <- function(prefix, j) paste0(prefix, "_n_", j)
-id_u <- function(prefix, i, j) paste0(prefix, "_u_", i, "_", j)
-id_f <- function(prefix, i, j) paste0(prefix, "_f_", i, "_", j)
+id_a <- function(prefix, i, j) paste0(prefix, "_a_", i, "_", j)
+
+is_f_cell <- function(i, j) {
+  i == 1 && j > 1
+}
 
 panel_inputs <- function(prefix, k, defs) {
+  A <- defs$U + defs$F
   tagList(
     tags$h4("Stage sample sizes"),
     tags$small("Number of individuals observed in each stage (column j)."),
     fluidRow(lapply(seq_len(k), function(j) {
       column(width = max(2, floor(12 / k)), numericInput(id_n(prefix, j), paste0("n[", j, "]"), value = defs$n[j], min = 1, step = 1))
     })),
-    tags$h4("U matrix — survival and transitions"),
-    tags$small("Each cell is the observed count of individuals from stage j (column) that survived into stage i (row). Counts within a column cannot exceed n[j]."),
+    tags$h4("A matrix input"),
+    tags$small("Enter observed counts in A. Top row (except [1,1]) is treated as F (pink). All other cells are treated as U (green)."),
     fluidRow(lapply(seq_len(k), function(j) column(width = max(2, floor(12 / k)), tags$b(paste("from", j))))),
     lapply(seq_len(k), function(i) {
       fluidRow(
         column(12, tags$small(tags$b(paste("to", i)))),
         lapply(seq_len(k), function(j) {
-          column(width = max(2, floor(12 / k)), numericInput(id_u(prefix, i, j), paste0("u[", i, ",", j, "]"), value = defs$U[i, j], min = 0, step = 1))
-        })
-      )
-    }),
-    tags$h4("F matrix — recruitment"),
-    tags$small("Each cell is the total number of recruits into stage i produced by all n[j] individuals in stage j. Entries are not constrained to n[j]."),
-    tags$p("Tip: recruitment is typically non-zero only in the top row (recruits enter stage 1).", style = "color: #555; font-style: italic; margin-top: 4px;"),
-    fluidRow(lapply(seq_len(k), function(j) column(width = max(2, floor(12 / k)), tags$b(paste("from", j))))),
-    lapply(seq_len(k), function(i) {
-      fluidRow(
-        column(12, tags$small(tags$b(paste("to", i)))),
-        lapply(seq_len(k), function(j) {
-          column(width = max(2, floor(12 / k)), numericInput(id_f(prefix, i, j), paste0("f[", i, ",", j, "]"), value = defs$F[i, j], min = 0, step = 1))
+          cell_class <- if (is_f_cell(i, j)) "cell-f" else "cell-u"
+          cell_tag <- if (is_f_cell(i, j)) tags$span(style = "color:#b03a86;", "F") else tags$span(style = "color:#1e7f56;", "U")
+          column(
+            width = max(2, floor(12 / k)),
+            div(
+              class = cell_class,
+              numericInput(
+                id_a(prefix, i, j),
+                tagList("a[", i, ",", j, "] ", cell_tag),
+                value = A[i, j],
+                min = 0,
+                step = 1
+              )
+            )
+          )
         })
       )
     })
@@ -194,6 +224,8 @@ ui <- fluidPage(
       .well { border-radius: 14px; border: 1px solid #d7e3dd; background: linear-gradient(180deg, #ffffff 0%, #f8fcfa 100%); box-shadow: 0 8px 24px rgba(31, 42, 36, 0.08); }
       .plot-card { border: 1px solid #d7e3dd; border-radius: 14px; background: #ffffff; padding: 8px 10px 2px 10px; margin-bottom: 10px; box-shadow: 0 8px 24px rgba(31, 42, 36, 0.06); }
       .table-card { border: 1px solid #d7e3dd; border-radius: 14px; background: #ffffff; padding: 10px 14px; box-shadow: 0 8px 24px rgba(31, 42, 36, 0.06); }
+      .cell-u .form-control { border-left: 4px solid #35b779; }
+      .cell-f .form-control { border-left: 4px solid #e78ac3; }
       .details-overlay { position: fixed; inset: 0; background: rgba(15, 25, 20, 0.22); z-index: 2500; }
       .details-panel { position: fixed; top: 0; right: 0; width: 430px; max-width: 94vw; height: 100vh; overflow-y: auto; background: #ffffff; border-left: 1px solid #d7e3dd; box-shadow: -10px 0 30px rgba(31, 42, 36, 0.18); z-index: 2600; padding: 14px 16px 18px 16px; }
       .details-fab-wrap { position: fixed; right: 18px; bottom: 18px; z-index: 2400; }
@@ -204,13 +236,15 @@ ui <- fluidPage(
     sidebarPanel(
       tags$p("Enter observed counts from a stage-structured population study, then explore how sampling uncertainty in the matrix entries propagates to key demographic quantities (λ, life expectancy, generation time, damping ratio)."),
       tags$p(tags$b("Step 1:"), " Select a matrix size tab below."),
-      tags$p(tags$b("Step 2:"), " Enter stage sample sizes and observed counts for U and F."),
+      tags$p(tags$b("Step 2:"), " Enter stage sample sizes and observed counts in the A matrix."),
       tags$p(tags$b("Step 3:"), " Read the plots and summary table to compare point estimates with posterior uncertainty."),
       tabsetPanel(
         id = "dim_tab",
+        selected = "3x3",
         tabPanel("2x2", panel_inputs("d2", 2, build_defaults(2))),
         tabPanel("3x3", panel_inputs("d3", 3, build_defaults(3))),
-        tabPanel("4x4", panel_inputs("d4", 4, build_defaults(4)))
+        tabPanel("4x4", panel_inputs("d4", 4, build_defaults(4))),
+        tabPanel("5x5", panel_inputs("d5", 5, build_defaults(5)))
       ),
       checkboxInput("fix_zero_structural", "Fix entered zeros as structural zeros (held at 0 in all posterior draws)", value = TRUE),
       selectInput("nsim", "Number of posterior draws", choices = c("300", "500", "1000"), selected = "500"),
@@ -219,8 +253,7 @@ ui <- fluidPage(
     mainPanel(
       fluidRow(
         column(8,
-               div(class = "plot-card", plotOutput("u_plot", height = "380px")),
-               div(class = "plot-card", plotOutput("f_plot", height = "380px"))
+               div(class = "plot-card", plotOutput("a_plot", height = "760px"))
         ),
         column(4, div(class = "plot-card", plotOutput("derived_plot", height = "800px")))
       ),
@@ -245,16 +278,17 @@ server <- function(input, output, session) {
            "2x2" = list(prefix = "d2", k = 2L, defs = build_defaults(2)),
            "3x3" = list(prefix = "d3", k = 3L, defs = build_defaults(3)),
            "4x4" = list(prefix = "d4", k = 4L, defs = build_defaults(4)),
+           "5x5" = list(prefix = "d5", k = 5L, defs = build_defaults(5)),
            list(prefix = "d3", k = 3L, defs = build_defaults(3)))
   })
   
   observeEvent(input$reset_defaults, {
     cfg <- active_cfg()
     for (j in seq_len(cfg$k)) updateNumericInput(session, id_n(cfg$prefix, j), value = cfg$defs$n[j])
+    A_def <- cfg$defs$U + cfg$defs$F
     for (i in seq_len(cfg$k)) {
       for (j in seq_len(cfg$k)) {
-        updateNumericInput(session, id_u(cfg$prefix, i, j), value = cfg$defs$U[i, j])
-        updateNumericInput(session, id_f(cfg$prefix, i, j), value = cfg$defs$F[i, j])
+        updateNumericInput(session, id_a(cfg$prefix, i, j), value = A_def[i, j])
       }
     }
     updateSelectInput(session, "nsim", selected = "500")
@@ -268,37 +302,52 @@ server <- function(input, output, session) {
       if (is.null(v) || !is.finite(v)) cfg$defs$n[j] else as.numeric(v)
     }) %>% round() %>% pmax(1)
     
-    U <- matrix(0, nrow = cfg$k, ncol = cfg$k)
-    F <- matrix(0, nrow = cfg$k, ncol = cfg$k)
+    A <- matrix(0, nrow = cfg$k, ncol = cfg$k)
     for (i in seq_len(cfg$k)) {
       for (j in seq_len(cfg$k)) {
-        uij <- suppressWarnings(as.numeric(input[[id_u(cfg$prefix, i, j)]]))
-        fij <- suppressWarnings(as.numeric(input[[id_f(cfg$prefix, i, j)]]))
-        U[i, j] <- if (is.null(uij) || !is.finite(uij)) cfg$defs$U[i, j] else uij
-        F[i, j] <- if (is.null(fij) || !is.finite(fij)) cfg$defs$F[i, j] else fij
+        aij <- suppressWarnings(as.numeric(input[[id_a(cfg$prefix, i, j)]]))
+        def_aij <- cfg$defs$U[i, j] + cfg$defs$F[i, j]
+        A[i, j] <- if (is.null(aij) || !is.finite(aij)) def_aij else aij
       }
     }
-    list(k = cfg$k, n = n_vec, U = U, F = F)
+    list(k = cfg$k, n = n_vec, A = A)
   })
   
   validity <- reactive({
     x <- inputs()
-    u_ok <- all(is.finite(x$U)) && all(x$U >= 0)
-    f_ok <- all(is.finite(x$F)) && all(x$F >= 0)
+    a_ok <- all(is.finite(x$A)) && all(x$A >= 0)
     n_ok <- all(is.finite(x$n)) && all(x$n > 0)
-    list(ok = u_ok && f_ok && n_ok)
+    list(ok = a_ok && n_ok)
   })
   
   observed_data <- reactive({
     req(validity()$ok)
     x <- inputs()
+    is_f <- outer(seq_len(x$k), seq_len(x$k), Vectorize(is_f_cell))
+    is_u <- !is_f
+    A_counts <- matrix(pmax(as.integer(round(x$A)), 0L), nrow = x$k, ncol = x$k)
+
+    U_raw <- A_counts
+    U_raw[is_f] <- 0L
+    F_raw <- matrix(0L, nrow = x$k, ncol = x$k)
+    F_raw[is_f] <- A_counts[is_f]
+
     U_counts <- matrix(0, nrow = x$k, ncol = x$k)
     F_counts <- matrix(0, nrow = x$k, ncol = x$k)
-    for (j in seq_len(x$k)) U_counts[, j] <- snap_u_count_column(x$U[, j], x$n[j])
-    for (j in seq_len(x$k)) for (i in seq_len(x$k)) F_counts[i, j] <- pmax(as.integer(round(x$F[i, j])), 0L)
+    for (j in seq_len(x$k)) U_counts[, j] <- snap_u_count_column(U_raw[, j], x$n[j])
+    F_counts[is_f] <- F_raw[is_f]
+
     U_hat <- sweep(U_counts, 2, x$n, "/")
     F_hat <- sweep(F_counts, 2, x$n, "/")
-    list(k = x$k, n = x$n, U_true = x$U, F_true = x$F, U_counts = U_counts, F_counts = F_counts, U_hat = U_hat, F_hat = F_hat)
+    A_hat <- U_hat + F_hat
+
+    list(
+      k = x$k, n = x$n, is_f = is_f, is_u = is_u,
+      A_true = x$A, U_true = U_raw, F_true = F_raw,
+      U_counts = U_counts, F_counts = F_counts,
+      U_hat = U_hat, F_hat = F_hat, A_hat = A_hat,
+      A_counts = A_counts
+    )
   })
   
   posterior_draws <- reactive({
@@ -312,7 +361,7 @@ server <- function(input, output, session) {
     for (r in seq_len(nsim)) {
       for (j in seq_len(obs$k)) {
         if (fix_zero) {
-          active <- !U_struct_zero[, j]
+          active <- obs$is_u[, j] & !U_struct_zero[, j]
           if (any(active)) {
             y_col <- obs$U_counts[active, j]
             d_col <- max(obs$n[j] - sum(y_col), 0)
@@ -320,15 +369,18 @@ server <- function(input, output, session) {
             U_draw[active, j, r] <- s_col[seq_along(y_col)]
           }
         } else {
-          y_col <- obs$U_counts[, j]
+          active <- obs$is_u[, j]
+          y_col <- obs$U_counts[active, j]
           d_col <- max(obs$n[j] - sum(y_col), 0)
           s_col <- rdirichlet1(c(y_col, d_col) + 1)
-          U_draw[, j, r] <- s_col[seq_len(obs$k)]
+          U_draw[active, j, r] <- s_col[seq_along(y_col)]
         }
       }
       for (j in seq_len(obs$k)) {
         for (i in seq_len(obs$k)) {
-          if (fix_zero && F_struct_zero[i, j]) {
+          if (!obs$is_f[i, j]) {
+            F_draw[i, j, r] <- 0
+          } else if (fix_zero && F_struct_zero[i, j]) {
             F_draw[i, j, r] <- 0
           } else {
             F_draw[i, j, r] <- rgamma(1, shape = obs$F_counts[i, j] + 1, rate = obs$n[j])
@@ -336,39 +388,55 @@ server <- function(input, output, session) {
         }
       }
     }
-    list(U = U_draw, F = F_draw, k = obs$k, nsim = nsim)
+    list(U = U_draw, F = F_draw, A = U_draw + F_draw, k = obs$k, nsim = nsim)
   })
   
   density_data <- reactive({
     obs <- observed_data(); fix_zero <- isTRUE(input$fix_zero_structural)
-    u_cells <- expand_grid(i = seq_len(obs$k), j = seq_len(obs$k)) %>%
-      mutate(matrix = "U", point = obs$U_hat[cbind(i, j)], n = obs$n[j], structural_zero = obs$U_true[cbind(i, j)] == 0) %>%
-      mutate(dens = pmap(list(point, n, structural_zero), function(point, n, structural_zero) {
-        if (fix_zero && structural_zero) return(tibble(x = seq(0, 1, by = 0.01), d = NA_real_))
+    f_cells_meta <- expand_grid(i = seq_len(obs$k), j = seq_len(obs$k)) %>%
+      filter(obs$is_f[cbind(i, j)]) %>%
+      mutate(
+        point = obs$A_hat[cbind(i, j)],
+        n = obs$n[j],
+        y_obs = round(point * n),
+        q995 = qgamma(0.995, shape = y_obs + 1, rate = n)
+      )
+    f_xmax_common <- if (nrow(f_cells_meta) > 0) max(12, max(f_cells_meta$q995, na.rm = TRUE)) else 12
+
+    expand_grid(i = seq_len(obs$k), j = seq_len(obs$k)) %>%
+      mutate(
+        cell_type = if_else(obs$is_f[cbind(i, j)], "F", "U"),
+        point = obs$A_hat[cbind(i, j)],
+        n = obs$n[j],
+        structural_zero = if_else(cell_type == "F", obs$F_true[cbind(i, j)] == 0, obs$U_true[cbind(i, j)] == 0)
+      ) %>%
+      mutate(dens = pmap(list(point, n, structural_zero, cell_type), function(point, n, structural_zero, cell_type) {
+        if (fix_zero && structural_zero) {
+          if (cell_type == "F") return(tibble(x = seq(0, f_xmax_common, length.out = 400), d = NA_real_))
+          return(tibble(x = seq(0, 1, by = 0.01), d = NA_real_))
+        }
+        if (cell_type == "F") return(calc_density_gamma(point, n, x_max = f_xmax_common))
         calc_density_beta(point, n)
-      })) %>% unnest(dens)
-    f_cells <- expand_grid(i = seq_len(obs$k), j = seq_len(obs$k)) %>%
-      mutate(matrix = "F", point = obs$F_hat[cbind(i, j)], n = obs$n[j], structural_zero = obs$F_true[cbind(i, j)] == 0) %>%
-      mutate(dens = pmap(list(point, n, structural_zero), function(point, n, structural_zero) {
-        if (fix_zero && structural_zero) return(tibble(x = seq(0, 12, length.out = 400), d = NA_real_))
-        calc_density_gamma(point, n)
-      })) %>% unnest(dens)
-    bind_rows(u_cells, f_cells) %>% mutate(to = factor(paste0("to ", i), levels = paste0("to ", seq_len(obs$k))), from = factor(paste0("from ", j), levels = paste0("from ", seq_len(obs$k))))
+      })) %>%
+      unnest(dens) %>%
+      mutate(
+        to = factor(paste0("to ", i), levels = paste0("to ", seq_len(obs$k))),
+        from = factor(paste0("from ", j), levels = paste0("from ", seq_len(obs$k)))
+      )
   })
   
   cell_draws <- reactive({
     post <- posterior_draws()
-    u_tbl <- as.data.frame.table(post$U, responseName = "value") %>% transmute(matrix = "U", i = as.integer(Var1), j = as.integer(Var2), draw = as.integer(Var3), value = value)
-    f_tbl <- as.data.frame.table(post$F, responseName = "value") %>% transmute(matrix = "F", i = as.integer(Var1), j = as.integer(Var2), draw = as.integer(Var3), value = value)
-    bind_rows(u_tbl, f_tbl)
+    as.data.frame.table(post$A, responseName = "value") %>%
+      transmute(i = as.integer(Var1), j = as.integer(Var2), draw = as.integer(Var3), value = value)
   })
   
   cell_ci <- reactive({
-    cell_draws() %>% group_by(matrix, i, j) %>% summarize(low95 = quantile(value, 0.025, na.rm = TRUE), upp95 = quantile(value, 0.975, na.rm = TRUE), .groups = "drop")
+    cell_draws() %>% group_by(i, j) %>% summarize(low95 = quantile(value, 0.025, na.rm = TRUE), upp95 = quantile(value, 0.975, na.rm = TRUE), .groups = "drop")
   })
   
   cell_post_med <- reactive({
-    cell_draws() %>% group_by(matrix, i, j) %>% summarize(post_med = median(value, na.rm = TRUE), .groups = "drop")
+    cell_draws() %>% group_by(i, j) %>% summarize(post_med = median(value, na.rm = TRUE), .groups = "drop")
   })
   
   derived_draws <- reactive({
@@ -396,60 +464,81 @@ server <- function(input, output, session) {
     derived_draws() %>% group_by(quantity) %>% summarize(post_med = median(value, na.rm = TRUE), .groups = "drop")
   })
   
-  cell_labels <- function(which_mat = c("U", "F")) {
-    which_mat <- match.arg(which_mat)
+  cell_labels <- function() {
     obs <- observed_data()
     expand_grid(i = seq_len(obs$k), j = seq_len(obs$k)) %>%
       mutate(
-        num = if (which_mat == "U") obs$U_counts[cbind(i, j)] else obs$F_counts[cbind(i, j)],
+        num = obs$A_counts[cbind(i, j)],
         den = obs$n[j],
-        rate = if (which_mat == "U") obs$U_hat[cbind(i, j)] else obs$F_hat[cbind(i, j)],
+        rate = obs$A_hat[cbind(i, j)],
         lab = paste0(num, "/", den, " (", fmt_val(rate), ")"),
+        cell_type = if_else(obs$is_f[cbind(i, j)], "F", "U"),
         to = factor(paste0("to ", i), levels = paste0("to ", seq_len(obs$k))),
         from = factor(paste0("from ", j), levels = paste0("from ", seq_len(obs$k)))
       )
   }
   
-  plot_matrix <- function(which_mat = c("U", "F")) {
-    which_mat <- match.arg(which_mat)
-    dd <- density_data() %>% filter(matrix == which_mat)
-    pts <- dd %>% distinct(to, from, i, j, point)
-    ci <- cell_ci() %>% filter(matrix == which_mat)
+  plot_matrix_a <- function() {
+    dd <- density_data()
+    obs <- observed_data()
+    panel_levels <- unlist(lapply(seq_len(obs$k), function(i) {
+      paste0("to ", i, " | from ", seq_len(obs$k))
+    }))
+    pts <- dd %>% distinct(to, from, i, j, point, cell_type)
+    ci <- cell_ci()
     dd2 <- dd %>% left_join(ci %>% select(i, j, low95, upp95), by = c("i", "j")) %>% mutate(d95 = if_else(x >= low95 & x <= upp95, d, NA_real_))
+    dd2 <- dd2 %>% mutate(panel = factor(paste0("to ", i, " | from ", j), levels = panel_levels))
     dd_plot <- dd2 %>% filter(is.finite(d), d > 0)
     dd95_plot <- dd2 %>% filter(is.finite(d95), d95 > 0)
     nonempty <- dd2 %>% group_by(i, j) %>% summarize(has_density = any(is.finite(d) & d > 0), .groups = "drop") %>% filter(has_density)
-    pts_plot <- pts %>% inner_join(nonempty, by = c("i", "j"))
-    pts_post <- pts %>% left_join(cell_post_med() %>% filter(matrix == which_mat), by = c("i", "j")) %>% inner_join(nonempty, by = c("i", "j"))
+    pts_plot <- pts %>% inner_join(nonempty, by = c("i", "j")) %>% mutate(panel = factor(paste0("to ", i, " | from ", j), levels = panel_levels))
+    pts_post <- pts %>% left_join(cell_post_med(), by = c("i", "j")) %>% inner_join(nonempty, by = c("i", "j")) %>% mutate(panel = factor(paste0("to ", i, " | from ", j), levels = panel_levels))
     
-    labs_df <- cell_labels(which_mat) %>%
+    labs_df <- cell_labels() %>%
       inner_join(
         dd_plot %>% group_by(i, j, to, from) %>% summarize(xmin = min(x), xmax = max(x), ymax = max(d), .groups = "drop") %>% mutate(x_text = xmin + 0.03 * (xmax - xmin), y_text = ymax * 0.93),
         by = c("i", "j", "to", "from")
+      ) %>%
+      mutate(panel = factor(paste0("to ", i, " | from ", j), levels = panel_levels))
+    
+    panel_limits <- expand_grid(i = seq_len(obs$k), j = seq_len(obs$k)) %>%
+      mutate(
+        cell_type = if_else(obs$is_f[cbind(i, j)], "F", "U"),
+        xmin = 0,
+        xmax = if_else(cell_type == "U", 1, max(dd2$x[dd2$cell_type == "F"], na.rm = TRUE)),
+        to = factor(paste0("to ", i), levels = paste0("to ", seq_len(obs$k))),
+        from = factor(paste0("from ", j), levels = paste0("from ", seq_len(obs$k))),
+        panel = factor(paste0("to ", i, " | from ", j), levels = panel_levels)
       )
-    
-    col_fill <- if (which_mat == "U") u_col else f_col
-    subtitle <- if (which_mat == "U") "Rows = destination stage, columns = source stage" else "Rows = destination stage, columns = source stage"
-    
+
     ggplot(dd2, aes(x = x, y = d)) +
-      geom_ribbon(data = dd_plot, fill = col_fill, alpha = 0.25, aes(ymin = 0, ymax = d)) +
-      geom_ribbon(data = dd95_plot, fill = col_fill, alpha = 0.35, aes(ymin = 0, ymax = d95)) +
+      geom_blank(data = panel_limits, aes(x = xmin, y = 0), inherit.aes = FALSE) +
+      geom_blank(data = panel_limits, aes(x = xmax, y = 0), inherit.aes = FALSE) +
+      geom_ribbon(data = dd_plot, aes(ymin = 0, ymax = d, fill = cell_type), alpha = 0.25) +
+      geom_ribbon(data = dd95_plot, aes(ymin = 0, ymax = d95, fill = cell_type), alpha = 0.35) +
       geom_label(data = labs_df, aes(x = x_text, y = y_text, label = lab), inherit.aes = FALSE, hjust = 0, vjust = 1, size = 3.4, label.size = 0.15, fill = "white", alpha = 0.85) +
       geom_vline(data = pts_plot, aes(xintercept = point), linetype = 2, linewidth = 0.9, color = point_col) +
       geom_vline(data = pts_post, aes(xintercept = post_med), linetype = 3, linewidth = 0.6, color = post_col) +
       facet_grid(to ~ from, scales = "free_x", switch = "y") +
-      labs(x = NULL, y = NULL, title = paste(which_mat, "matrix — sampling distributions"), subtitle = subtitle) +
-      theme_app_plot()
+      scale_fill_manual(values = c("U" = u_col, "F" = f_col), breaks = c("U", "F"), labels = c("U matrix entry", "F matrix entry")) +
+      labs(
+        x = NULL, y = NULL,
+        title = "A matrix — sampling distributions",
+        subtitle = "Top row except [1,1] treated as F; all other cells treated as U",
+        fill = "Cell type"
+      ) +
+      facet_wrap(~ panel, ncol = obs$k, scales = "free_x") +
+      theme_app_plot() +
+      theme(
+        legend.position = "bottom",
+        strip.text = element_text(size = 8),
+        panel.spacing = grid::unit(0.7, "lines")
+      )
   }
   
-  output$u_plot <- renderPlot({
+  output$a_plot <- renderPlot({
     validate(need(validity()$ok, "Check inputs: all values must be non-negative and sample sizes must be > 0."))
-    plot_matrix("U")
-  })
-  
-  output$f_plot <- renderPlot({
-    validate(need(validity()$ok, "Check inputs: all values must be non-negative and sample sizes must be > 0."))
-    plot_matrix("F")
+    plot_matrix_a()
   })
   
   output$derived_plot <- renderPlot({
@@ -477,9 +566,9 @@ server <- function(input, output, session) {
     validate(need(validity()$ok, "Check inputs."))
     dd <- derived_draws(); pe <- point_estimates()
     dd %>% group_by(quantity) %>% summarize(med = median(value, na.rm = TRUE), low95 = quantile(value, 0.025, na.rm = TRUE), upp95 = quantile(value, 0.975, na.rm = TRUE), .groups = "drop") %>%
-      left_join(pe, by = "quantity") %>% mutate(across(where(is.numeric), ~ signif(.x, 4))) %>%
+      left_join(pe, by = "quantity") %>% mutate(across(where(is.numeric), ~ round(.x, 2))) %>%
       transmute(`Derived quantity` = quantity, `Point estimate` = point, `Posterior median` = med, `Lower 95% bound` = low95, `Upper 95% bound` = upp95)
-  }, digits = 4)
+  }, digits = 2)
   
   output$details_ui <- renderUI({
     if (!details_open()) return(NULL)
@@ -495,10 +584,10 @@ server <- function(input, output, session) {
           
           tags$h5("Workflow"),
           tags$ol(
-            tags$li("Choose a matrix dimension tab (2×2, 3×3, or 4×4)."),
+            tags$li("Choose a matrix dimension tab (2×2, 3×3, 4×4, or 5×5)."),
             tags$li(HTML("Enter <b>n[j]</b>: the number of individuals observed in each source stage j.")),
-            tags$li(HTML("Enter <b>U counts</b>: how many of those individuals survived into each destination stage.")),
-            tags$li(HTML("Enter <b>F counts</b>: total recruits into each destination stage produced by all individuals in stage j.")),
+            tags$li(HTML("Enter observed counts in the <b>A matrix</b>.")),
+            tags$li("The app maps A to submatrices internally: top row except [1,1] is treated as F, and all other cells are treated as U."),
             tags$li("Adjust the posterior draws setting and the structural-zero option as needed, then read the plots.")
           ),
           
