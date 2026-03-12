@@ -1,4 +1,4 @@
-# S05: generate species-level sampling distributions for case study 1.
+# S05: generate species-level sampling distributions for analysis 1.
 
 # libraries ----
 source("code/setup.R")
@@ -8,7 +8,20 @@ set.seed(5654)
 
 
 # load compadre data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE)
+compadre <- compadre %>%
+  mutate(
+    MatrixStartYear = suppressWarnings(as.integer(MatrixStartYear)),
+    MatrixEndYear = suppressWarnings(as.integer(MatrixEndYear)),
+    YearPublication = suppressWarnings(as.integer(YearPublication))
+  )
+
+if (!("Observation" %in% names(compadre)) && ("Observations" %in% names(compadre))) {
+  compadre <- compadre %>% mutate(Observation = as.character(Observations))
+}
+if (!("Observation" %in% names(compadre))) {
+  compadre <- compadre %>% mutate(Observation = NA_character_)
+}
 
 
 # Load data from Ellis et al. (2012) ----
@@ -128,8 +141,19 @@ satterthwaite <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>%
   ungroup()
 
+has_counts <- function(x) {
+  !is.null(x) && length(x) > 0 && !all(is.na(x))
+}
+
+satterthwaite <- satterthwaite %>%
+  mutate(
+    has_Nu = map_lgl(Nu, has_counts),
+    has_Nf = map_lgl(Nf, has_counts)
+  )
+
 # sampling distribution
 sd_satterthwaite <- satterthwaite %>%
+  filter(has_Nu, has_Nf) %>%
   mutate(simU = pmap(list(matU, posU, Nu), ~ sim_U_wrapper(..1, ..2, ..3, 1000))) %>%
   mutate(simF = pmap(list(matF, posF, Nf), ~ sim_F_wrapper(..1, ..2, ..3, 1000))) %>%
   as_tibble() %>%
@@ -154,6 +178,7 @@ satterthwaite_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  filter(MatrixPopulation %in% sd_satterthwaite$MatrixPopulation) %>%
   left_join(sd_satterthwaite)
 
 save(satterthwaite_out, file = "data/derived/analysis_cache/sds_satterthwaite.RData")
@@ -204,9 +229,8 @@ sd_andrello <- andrello %>%
 
 andrello_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
-  filter(grepl(";", MatrixPopulation)) %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(sd_andrello)
 
 save(andrello_out, file = "data/derived/analysis_cache/sds_andrello.RData")
@@ -443,9 +467,8 @@ sd_lazaro <- lazaro %>%
 
 lazaro_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
-  filter(grepl(";", MatrixPopulation)) %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(sd_lazaro)
 
 save(lazaro_out, file = "data/derived/analysis_cache/sds_lazaro.RData")
@@ -522,6 +545,7 @@ plank <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixComposite == "Individual") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  filter(!grepl("fecundity", MatrixPopulation, ignore.case = TRUE)) %>%
   cdb_unnest() %>%
   left_join(plank_n) %>%
   group_by(MatrixPopulation) %>%
@@ -530,8 +554,16 @@ plank <- compadre %>%
   ungroup()
 
 # moody and panther had 0 seedlings... use pooled value of 5 instead
-plank$N[[3]][1] <- 5
-plank$N[[4]][1] <- 5
+plank <- plank %>%
+  mutate(
+    N = case_when(
+      MatrixPopulation %in% c("Moody Creek", "Panther Creek") ~ map(N, ~ {
+        .x[1] <- 5
+        .x
+      }),
+      TRUE ~ N
+    )
+  )
 
 # sampling distribution
 sd_plank <- plank %>%
@@ -557,6 +589,7 @@ plank_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixComposite == "Individual") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  filter(!grepl("fecundity", MatrixPopulation, ignore.case = TRUE)) %>%
   cdb_collapse("SpeciesAuthor") %>%
   left_join(sd_plank)
 
@@ -724,8 +757,9 @@ sd_andrieu <- andrieu %>%
 andrieu_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixPopulation %in% pops) %>%
-  filter(MatrixComposite == "Pooled") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  population_matrices_from_available(preferred = c("Pooled", "Mean", "Individual")) %>%
+  tibble_to_cdb(version = compadre@version) %>%
   cdb_collapse("SpeciesAuthor") %>%
   left_join(sd_andrieu)
 
@@ -841,9 +875,8 @@ sd_assc <- assc %>%
 
 assc_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
-  filter(!grepl(";", MatrixPopulation)) %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(sd_assc)
 
 save(assc_out, file = "data/derived/analysis_cache/sds_assc.RData")
@@ -918,44 +951,52 @@ toledo_n <- read_csv("data/derived/studies/toledo_n.csv") %>%
   group_by(MatrixStartYear) %>%
   summarize(N = list(N))
 
-toledo <- compadre %>%
+toledo_raw <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixComposite == "Individual") %>%
-  filter(MatrixTreatment == "Unmanipulated") %>%
-  cdb_unnest() %>%
-  left_join(toledo_n) %>%
-  group_by(MatrixPopulation) %>%
-  mutate(posU = list(mat_mean(matU) > 0)) %>%
-  mutate(posF = list(mat_mean(matF) > 0)) %>%
-  ungroup()
+  filter(MatrixTreatment == "Unmanipulated")
 
-# sampling distribution
-sd_toledo <- toledo %>%
-  mutate(simU = pmap(list(matU, posU, N), ~ sim_U_wrapper(..1, ..2, ..3, 1000))) %>%
-  mutate(simF = pmap(list(matF, posF, N), ~ sim_U_wrapper(..1, ..2, ..3, 1000))) %>%
-  mutate(rep = list(1:1000)) %>%
-  as_tibble() %>%
-  select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>%
-  unnest(cols = everything()) %>%
-  group_by(SpeciesAuthor, rep) %>%
-  summarize(
-    simU = list(mat_mean(simU)),
-    simF = list(mat_mean(simF))
-  ) %>%
-  ungroup() %>%
-  group_by(SpeciesAuthor) %>%
-  summarize(
-    simU = list(simU),
-    simF = list(simF)
+if (nrow(as_tibble(toledo_raw)) > 0) {
+  toledo <- toledo_raw %>%
+    cdb_unnest() %>%
+    left_join(toledo_n) %>%
+    group_by(MatrixPopulation) %>%
+    mutate(posU = list(mat_mean(matU) > 0)) %>%
+    mutate(posF = list(mat_mean(matF) > 0)) %>%
+    ungroup()
+
+  # sampling distribution
+  sd_toledo <- toledo %>%
+    mutate(simU = pmap(list(matU, posU, N), ~ sim_U_wrapper(..1, ..2, ..3, 1000))) %>%
+    mutate(simF = pmap(list(matF, posF, N), ~ sim_U_wrapper(..1, ..2, ..3, 1000))) %>%
+    mutate(rep = list(1:1000)) %>%
+    as_tibble() %>%
+    select(SpeciesAuthor, MatrixPopulation, MatrixStartYear, rep, simU, simF) %>%
+    unnest(cols = everything()) %>%
+    group_by(SpeciesAuthor, rep) %>%
+    summarize(
+      simU = list(mat_mean(simU)),
+      simF = list(mat_mean(simF))
+    ) %>%
+    ungroup() %>%
+    group_by(SpeciesAuthor) %>%
+    summarize(
+      simU = list(simU),
+      simF = list(simF)
+    )
+
+  toledo_out <- compadre %>%
+    filter(SpeciesAuthor == spp) %>%
+    filter(MatrixComposite == "Mean") %>%
+    filter(MatrixTreatment == "Unmanipulated") %>%
+    left_join(sd_toledo)
+
+  save(toledo_out, file = "data/derived/analysis_cache/sds_toledo.RData")
+} else {
+  warning(
+    "Skipping Toledo (species-level SD block): no individual unmanipulated Tillandsia_butzii matrices in active COMPADRE."
   )
-
-toledo_out <- compadre %>%
-  filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
-  filter(MatrixTreatment == "Unmanipulated") %>%
-  left_join(sd_toledo)
-
-save(toledo_out, file = "data/derived/analysis_cache/sds_toledo.RData")
+}
 
 
 # Crone ----
@@ -1061,8 +1102,9 @@ sd_dostalek <- dostalek %>%
 
 dostalek_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
+  tibble_to_cdb(version = compadre@version) %>%
   cdb_collapse("SpeciesAuthor") %>%
   left_join(sd_dostalek)
 
@@ -1220,8 +1262,7 @@ sd_shryock <- shryock %>%
 
 shryock_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
-  filter(grepl(";", MatrixPopulation)) %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(sd_shryock)
 
 save(shryock_out, file = "data/derived/analysis_cache/sds_shryock.RData")

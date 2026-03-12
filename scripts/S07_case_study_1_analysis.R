@@ -1,4 +1,4 @@
-# S07: analyze case study 1 results and create figures.
+# S07: analyse analysis 1 results and create figures.
 
 # libraries ----
 source("code/setup.R")
@@ -21,7 +21,7 @@ cols <- mpm_colors()
 
 
 # load compadre data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE)
 
 
 # load sampling distributions ----
@@ -289,9 +289,9 @@ dat_stan <- list(
   N_spp = length(unique(df_shape$spp_int)),
   spp = df_shape$spp_int,
   x_mean = df_shape$log_l0_mean - x_cent_error,
-  x_se = df_shape$log_l0_se,
+  x_se = pmax(df_shape$log_l0_se, 1e-6),
   y_mean = df_shape$shape_mean,
-  y_se = df_shape$shape_se
+  y_se = pmax(df_shape$shape_se, 1e-6)
 )
 
 # fit stan model
@@ -534,6 +534,8 @@ dat_stan <- list(
   y_se = df_other$pmature_se,
   y_pt = df_other$pmature_pt
 )
+
+dat_stan$y_se <- pmax(dat_stan$y_se, 1e-6)
 
 # fit stan model
 stan_fit_varcomp <- sampling(

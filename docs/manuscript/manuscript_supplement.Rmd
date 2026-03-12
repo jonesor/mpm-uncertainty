@@ -22,6 +22,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r prepare-analysis}
+source(here::here("code", "setup.R"))
+compadre_version_label <- get_compadre_version_label(corrected = FALSE)
 if (isTRUE(params$refresh_outputs)) {
   source(here::here("scripts", "S01_compadre_correct.R"))
   source(here::here("scripts", "S02_target_studies.R"))
@@ -337,7 +339,7 @@ table_studies_sources <- studies_sources |>
 
 ## S1.1 Sampling-distribution workflow used for each MPM
 
-For each focal matrix population model (MPM), we reconstructed transition-level sampling distributions from reported transition counts (or equivalent sample-size information). We then generated 2,000 parametric bootstrap draws per MPM by sampling each transition from its likelihood (multinomial for survival/growth/retrogression transitions and Poisson for recruitment transitions), rebuilding the full MPM for each draw, and recalculating each derived demographic quantity from that draw. We treated structural zeros (biologically impossible transitions) as fixed zeros in all draws, and treated sampling zeros (possible but unobserved transitions) as uncertain parameters under the same likelihood models used for non-zero transitions.
+For each focal matrix population model (MPM), we reconstructed transition-level sampling distributions from reported transition counts (or equivalent sample-size information). We then generated 2,000 parametric bootstrap draws per MPM by sampling each transition from its likelihood (multinomial for survival/growth/retrogression transitions and Poisson for recruitment transitions), rebuilding the full MPM for each draw, and recalculating each derived demographic quantity from that draw. We treated structural zeros (biologically impossible transitions) as fixed zeros in all draws, and treated sampling zeros (possible but unobserved transitions) as uncertain parameters under the same likelihood models used for non-zero transitions. When a recovered stage-specific sample size was zero, we retained the published point-estimate transition column unchanged in all bootstrap draws rather than treating it as structurally fixed at zero; this preserves the published matrix while acknowledging that no additional sampling variance can be propagated for that column.
 
 This produced a sampling distribution for each derived quantity used downstream (e.g. life expectancy, shape, log population growth rate). Point estimates in the manuscript correspond to values derived directly from the reported matrix entries; uncertainty-aware summaries correspond to moments of these bootstrap distributions.
 
@@ -347,7 +349,7 @@ Life expectancy and shape were derived from survivorship trajectories obtained u
 
 ## S1.3 Pooled and mean MPM handling
 
-Where population-level pooled MPMs were available, they were used; otherwise, mean MPMs were used. For uncertainty propagation in pooled or mean matrices, stage-specific sample sizes were pooled across years before bootstrap simulation. This captures within-year sampling variation but does not fully represent between-year process variation, so the resulting uncertainty should be interpreted conservatively.
+Analysis 1 used one population-level MPM per population. Where a pooled population MPM was available, it was used; otherwise, a mean population MPM was used; if neither was available, a population-level matrix was constructed as the element-wise mean of the available annual individual MPMs. When COMPADRE included both site-specific population rows and aggregate rows that combined multiple populations, only the site-specific population rows were retained, so that each population contributed a single analysis unit. For uncertainty propagation in pooled or mean matrices, stage-specific sample sizes were pooled across years before bootstrap simulation. This captures within-year sampling variation but does not fully represent between-year process variation, so the resulting uncertainty should be interpreted conservatively.
 
 ## S1.4 Bayesian model priors and fitting settings
 
@@ -396,7 +398,7 @@ These items are usually sufficient for parametric uncertainty reconstruction in 
 
 ## S1.8 Study and species identities in analysis 1
 
-Analysis 1 used 67 population-level entries representing 26 species. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
+Analysis 1 used 68 population-level entries representing 25 species. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
 
 ## S1.9 Multi-site extension for analysis 3 (*Astragalus scaphoides*)
 

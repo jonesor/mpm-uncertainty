@@ -18,6 +18,10 @@ validate_reproduction <- function(run_pipeline = FALSE, check_manifest = TRUE) {
     source("RUN_REPRODUCTION.R")
   }
 
+  source("code/setup.R")
+  active_raw <- get_compadre_path(corrected = FALSE)
+  active_corrected <- get_compadre_path(corrected = TRUE)
+
   expected_bundle_files <- c(
     "docs/manuscript/sampling_uncertainty_mpm_main.docx",
     "docs/manuscript/sampling_uncertainty_mpm_supplement.docx",
@@ -27,8 +31,8 @@ validate_reproduction <- function(run_pipeline = FALSE, check_manifest = TRUE) {
     "figures/Figure_4_analysis1_life_expectancy_shape_relationship.png",
     "figures/Figure_5_analysis2_climate_effects_recruitment.png",
     "figures/Figure_6_analysis3_climate_effects_multisite.png",
-    "data/raw/compadre/COMPADRE_v.X.X.X.RData",
-    "data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData",
+    active_raw,
+    active_corrected,
     "data/raw/ellis_2012/Transition_Matrices.txt",
     "data/derived/climate/species_coords.csv",
     "data/derived/climate/species_clim_prism.csv",

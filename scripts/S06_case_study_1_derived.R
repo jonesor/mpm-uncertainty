@@ -1,4 +1,4 @@
-# S06: derive parameters and summaries from case study 1 sampling distributions.
+# S06: derive parameters and summaries from analysis 1 sampling distributions.
 
 # libraries ----
 source("code/setup.R")
@@ -13,7 +13,7 @@ cols <- mpm_colors()
 
 
 # load compadre data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE)
 
 
 # load study-specific sampling distribution files ----

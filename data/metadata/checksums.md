@@ -5,9 +5,9 @@ Record checksums for raw data files here to support verification.
 
 Template
 --------
-- path: data/raw/compadre/COMPADRE_v.X.X.X.RData
+- path: data/raw/compadre/COMPADRE_v6.26.3.0.RData
   sha256: <fill>
-- path: data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData
+- path: data/raw/compadre/COMPADRE_v6.26.3.0_Corrected.RData
   sha256: <fill>
 - path: data/raw/ellis_2012/Transition_Matrices.txt
   sha256: <fill>

@@ -11,7 +11,9 @@ source("code/functions.R")
 set_mpm_plot_defaults()
 seed <- 5654
 set.seed(seed)
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE)
+compadre$MatrixStartYear <- suppressWarnings(as.integer(compadre$MatrixStartYear))
+compadre$MatrixEndYear <- suppressWarnings(as.integer(compadre$MatrixEndYear))
 cols <- mpm_colors()
 
 

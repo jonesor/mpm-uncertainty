@@ -11,11 +11,16 @@ cols <- mpm_colors()
 
 
 # load compadre ----
-compadre <- Rcompadre::cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE) %>%
+  mutate(
+    MatrixStartYear = suppressWarnings(as.integer(as.character(MatrixStartYear))),
+    MatrixEndYear = suppressWarnings(as.integer(as.character(MatrixEndYear)))
+  )
 
 
 # kiviniemi example ----
 kiviniemi_n <- readr::read_csv("data/derived/studies/kiviniemi_n.csv", show_col_types = FALSE) %>%
+  mutate(MatrixStartYear = as.integer(MatrixStartYear)) %>%
   group_by(MatrixPopulation, MatrixStartYear) %>%
   summarize(N = list(N), .groups = "drop")
 

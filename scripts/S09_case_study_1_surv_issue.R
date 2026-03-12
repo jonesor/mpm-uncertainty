@@ -7,7 +7,7 @@ source("code/functions.R")
 
 
 # load COMPADRE ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE)
 
 
 # possible columns to collapse on ----

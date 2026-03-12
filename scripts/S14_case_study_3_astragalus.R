@@ -1,4 +1,4 @@
-# S14: case study 3 climate analysis for Astragalus scaphoides across sites.
+# S14: analysis 3 climate analysis for Astragalus scaphoides across sites.
 
 
 # libraries ----
@@ -15,7 +15,7 @@ set.seed(seed)
 cols <- mpm_colors()
 
 
-# case study settings ----
+# analysis settings ----
 site_key <- tibble(
   SpeciesAuthor = "Astragalus_scaphoides_2",
   MatrixPopulation = c("Haynes Creek", "Sheep Corral Gulch", "McDevitt Creek"),
@@ -27,7 +27,11 @@ site_component_panels <- list()
 
 
 # load data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE) %>%
+  mutate(
+    MatrixStartYear = suppressWarnings(as.integer(MatrixStartYear)),
+    MatrixEndYear = suppressWarnings(as.integer(MatrixEndYear))
+  )
 ellis_data <- read.table(
   "data/raw/ellis_2012/Transition_Matrices.txt",
   sep = "\t",

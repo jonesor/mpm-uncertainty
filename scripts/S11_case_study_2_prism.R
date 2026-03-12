@@ -1,4 +1,4 @@
-# S11: download/extract PRISM climate rasters and build climate inputs for case study 2.
+# S11: download/extract PRISM climate rasters and build climate inputs for analysis 2.
 
 # libraries ----
 source("code/setup.R")
@@ -27,7 +27,7 @@ files_tmp <- month_files[grepl("tmean", month_files)]
 # coordinates for each species/pop of interest ----
 coords_path <- "data/derived/climate/species_coords.csv"
 if (!file.exists(coords_path)) {
-  compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+  compadre <- load_compadre(corrected = TRUE)
   comp_sub <- compadre %>%
     filter(
       MatrixComposite == "Individual",
@@ -53,7 +53,7 @@ if (!file.exists(coords_path)) {
 }
 
 # target sites for climate extraction ----
-# Keep this list explicit so case-study sites are reproducible and easy to extend.
+# Keep this list explicit so analysis sites are reproducible and easy to extend.
 target_sites <- tibble(
   SpeciesAuthor = c(
     "Silene_spaldingii",
@@ -73,7 +73,7 @@ spp_df <- read_csv(coords_path) %>%
   semi_join(target_sites, by = c("SpeciesAuthor", "MatrixPopulation"))
 
 if (length(bil_files) == 0) {
-  compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+  compadre <- load_compadre(corrected = TRUE)
   years <- compadre %>%
     as_tibble() %>%
     semi_join(target_sites, by = c("SpeciesAuthor", "MatrixPopulation")) %>%

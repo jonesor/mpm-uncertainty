@@ -1,4 +1,4 @@
-# S01: correct and harmonize COMPADRE entries using Ellis et al. (2012) data.
+# S01: correct and harmonize the active COMPADRE snapshot for this project.
 
 # libraries ----
 source("code/setup.R")
@@ -7,38 +7,7 @@ source("code/functions.R")
 
 
 # load compadre data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X.RData")
-
-
-# Load data from Ellis et al. (2012) ----
-ellis_data <- read.table("data/raw/ellis_2012/Transition_Matrices.txt",
-  sep = "\t",
-  header = TRUE, stringsAsFactors = FALSE
-) %>%
-  as_tibble() %>%
-  mutate(matA = map(Mx, string_to_mat)) %>%
-  mutate(matU = map(Tmx, string_to_mat)) %>%
-  mutate(matF = map2(matA, matU, ~ .x - .y)) %>%
-  mutate(N = map(Nx, nx_to_vec))
-
-
-# fix typo in A matrix for Eriogonum longifolium (3.420 should be 0.342) ----
-satterthwaite_fix <- which(
-  compadre$SpeciesAuthor == "Eriogonum_longifolium_var._gnaphalifolium_2" &
-    compadre$MatrixPopulation == "Unburned" &
-    compadre$MatrixStartYear == 1991
-)
-
-compadre$mat[[satterthwaite_fix]]@matA[5, 5] <- 0.342
-
-
-# fix lazaro MatrixComposite ----
-lazaro_fix <- which(
-  compadre$SpeciesAuthor == "Dioon_merolae" &
-    (compadre$MatrixEndYear - compadre$MatrixStartYear == 1)
-)
-
-compadre$MatrixComposite[lazaro_fix] <- "Individual"
+compadre <- load_compadre(corrected = FALSE)
 
 
 # fix ehrlen ----
@@ -48,27 +17,14 @@ ehrlen_fix <- which(
 )
 
 purrr::walk(ehrlen_fix, ~ {
-  compadre$mat[[.x]]@matA <- compadre$mat[[.x]]@matA[-7, -7]
-  compadre$mat[[.x]]@matU <- compadre$mat[[.x]]@matU[-7, -7]
-  compadre$mat[[.x]]@matF <- compadre$mat[[.x]]@matF[-7, -7]
-  compadre$mat[[.x]]@matC <- compadre$mat[[.x]]@matC[-7, -7]
-  compadre$mat[[.x]]@matrixClass <- compadre$mat[[.x]]@matrixClass[-7, ]
+  if (nrow(compadre$mat[[.x]]@matA) == 7) {
+    compadre$mat[[.x]]@matA <- compadre$mat[[.x]]@matA[-7, -7]
+    compadre$mat[[.x]]@matU <- compadre$mat[[.x]]@matU[-7, -7]
+    compadre$mat[[.x]]@matF <- compadre$mat[[.x]]@matF[-7, -7]
+    compadre$mat[[.x]]@matC <- compadre$mat[[.x]]@matC[-7, -7]
+    compadre$mat[[.x]]@matrixClass <- compadre$mat[[.x]]@matrixClass[-7, ]
+  }
 })
-
-
-# fix lemke ----
-lemke_fix <- which(compadre$SpeciesAuthor == "Trollius_europaeus")
-compadre$MatrixTreatment[lemke_fix] <- "Unmanipulated"
-
-
-# fix dostalek ----
-dostalek_fix <- which(
-  compadre$SpeciesAuthor == "Dracocephalum_austriacum_2" &
-    compadre$MatrixTreatment == "Mean"
-)
-
-compadre$MatrixComposite[dostalek_fix] <- "Mean"
-compadre$MatrixTreatment[dostalek_fix] <- "Unmanipulated"
 
 
 # fix Aschero ----
@@ -77,75 +33,71 @@ aschero_fix <- which(
     compadre$MatrixTreatment == "Unmanipulated"
 )
 
-load("data/derived/studies/aschero_U.RData")
-compadre$mat[[aschero_fix]]@matU <- U
-compadre$mat[[aschero_fix]]@matA <- compadre$mat[[aschero_fix]]@matU +
-  compadre$mat[[aschero_fix]]@matF + compadre$mat[[aschero_fix]]@matC
-rm(U)
+if (length(aschero_fix) >= 1) {
+  load("data/derived/studies/aschero_U.RData")
+  for (i in aschero_fix) {
+    if (!isTRUE(all.equal(compadre$mat[[i]]@matU, U, tolerance = 0))) {
+      compadre$mat[[i]]@matU <- U
+      compadre$mat[[i]]@matA <- compadre$mat[[i]]@matU +
+        compadre$mat[[i]]@matF + compadre$mat[[i]]@matC
+    }
+  }
+  rm(U)
+}
 
 
-# fix Astragalus_scaphoides_2 ----
-assc_fix <- which(
-  compadre$SpeciesAuthor == "Astragalus_scaphoides_2" &
-    compadre$MatrixPopulation == "McDevitt Creek" &
-    compadre$MatrixComposite == "Mean"
-)
-
-assc_rep <- ellis_data %>%
-  filter(SPP == "ASSC", POP == "ASSC_mcdevi") %>%
-  .$matF %>%
-  mat_mean()
-
-compadre$mat[[assc_fix]]@matF <- assc_rep
-compadre$mat[[assc_fix]]@matA <- compadre$mat[[assc_fix]]@matU +
-  compadre$mat[[assc_fix]]@matF + compadre$mat[[assc_fix]]@matC
-rm(assc_rep)
-
-
-# fix Shryock; Esque; Hughes ----
-shryock_fix1 <- which(
-  compadre$SpeciesAuthor == "Pediocactus_bradyi" &
-    compadre$MatrixPopulation == "Badger Creek" &
-    compadre$MatrixStartYear == 1999 &
-    compadre$MatrixEndYear == 2000
-)
-
-shryock_fix2 <- which(
-  compadre$SpeciesAuthor == "Pediocactus_bradyi" &
-    compadre$MatrixPopulation == "Soap Creek" &
-    compadre$MatrixStartYear == 1997 &
-    compadre$MatrixEndYear == 1998
-)
-
-i1 <- is.na(compadre$mat[[shryock_fix1]]@matU)
-i2 <- is.na(compadre$mat[[shryock_fix2]]@matU)
-
-compadre$mat[[shryock_fix1]]@matU[i1] <- 0
-compadre$mat[[shryock_fix2]]@matU[i2] <- 0
-
-
-# lazaro ----
+# fix Lazaro clonal transitions recorded in C rather than U ----
 lazaro_fix <- which(
   compadre$SpeciesAuthor == "Dioon_merolae" &
     compadre$MatrixPopulation == "EC"
 )
 
 for (i in lazaro_fix) {
-  compadre$mat[[i]]@matU <- compadre$mat[[i]]@matU + compadre$mat[[i]]@matC
-  compadre$mat[[i]]@matC[compadre$mat[[i]]@matC > 0] <- 0
+  if (any(compadre$mat[[i]]@matC > 0)) {
+    compadre$mat[[i]]@matU <- compadre$mat[[i]]@matU + compadre$mat[[i]]@matC
+    compadre$mat[[i]]@matC[compadre$mat[[i]]@matC > 0] <- 0
+  }
 }
 
 
-# portela ----
+# fix Portela clonal transitions recorded in C rather than U ----
 portela_fix1 <- which(
   compadre$SpeciesAuthor == "Astrocaryum_aculeatissimum"
 )
 
 for (i in portela_fix1) {
-  compadre$mat[[i]]@matU <- compadre$mat[[i]]@matU + compadre$mat[[i]]@matC
-  compadre$mat[[i]]@matC[compadre$mat[[i]]@matC > 0] <- 0
+  if (any(compadre$mat[[i]]@matC > 0)) {
+    compadre$mat[[i]]@matU <- compadre$mat[[i]]@matU + compadre$mat[[i]]@matC
+    compadre$mat[[i]]@matC[compadre$mat[[i]]@matC > 0] <- 0
+  }
+}
+
+
+# fix Plank Trillium population labels in recent COMPADRE versions ----
+trillium_fix <- which(
+  compadre$SpeciesAuthor == "Trillium_persistens" &
+    compadre$MatrixTreatment == "Unmanipulated"
+)
+
+if (length(trillium_fix) > 0) {
+  tr_min_mislabeled <- which(
+    compadre$SpeciesAuthor == "Trillium_persistens" &
+      compadre$MatrixTreatment == "Unmanipulated" &
+      compadre$MatrixPopulation == "Moody Creek" &
+      seq_along(compadre$mat) %in% trillium_fix
+  )
+
+  if (length(tr_min_mislabeled) > 0) {
+    tr_min_mislabeled <- tr_min_mislabeled[
+      vapply(compadre$mat[tr_min_mislabeled], function(x) abs(x@matF[1, 4] - 0.125) < 1e-8, logical(1))
+    ]
+  }
+
+  if (length(tr_min_mislabeled) > 0) {
+    compadre$MatrixPopulation[tr_min_mislabeled] <- "Moody Creek; Minimum fecundity"
+  }
 }
 
 
 # write corrected db to file ----
-save(compadre, file = "data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+save(compadre, file = get_compadre_path(corrected = TRUE))

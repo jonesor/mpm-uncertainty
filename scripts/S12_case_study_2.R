@@ -1,4 +1,4 @@
-# S12: case study 2 climate analysis and figures (uses PRISM inputs from S11).
+# S12: analysis 2 climate analysis and figures (uses PRISM inputs from S11).
 
 # libraries ----
 source("code/setup.R")
@@ -20,7 +20,11 @@ cols <- mpm_colors()
 
 
 # load compadre data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE) %>%
+  mutate(
+    MatrixStartYear = suppressWarnings(as.integer(MatrixStartYear)),
+    MatrixEndYear = suppressWarnings(as.integer(MatrixEndYear))
+  )
 
 
 # find long time-series for climate analysis ----

@@ -5,21 +5,20 @@ Analysis scripts to reproduce results. Run in numeric order (`S01` ... `S14`) af
 Run order
 ---------
 - `00_check_setup.R`   Validate packages and required input files.
-- `check_compadre_latest_concordance.R`  Optional concordance check against latest public COMPADRE release.
 - `S01_*`              Data corrections and preprocessing (COMPADRE fixes, Ellis data).
 - `S02_*`              Study selection and filtering.
 - `S03_*`              Single MPM sampling distribution exploration.
-- `S04_*`              Case study 1 (study-level) preprocessing and sampling caches.
-- `S05_*`              Case study 1 (species-level) preprocessing and sampling caches.
-- `S06_*`              Derived summaries for case study 1.
-- `S07_*`              Case study 1 analysis and figures.
-- `S08_*`              Case study 1 species-level supplementary analysis.
+- `S04_*`              Analysis 1 (study-level) preprocessing and sampling caches.
+- `S05_*`              Analysis 1 (species-level) preprocessing and sampling caches.
+- `S06_*`              Derived summaries for analysis 1.
+- `S07_*`              Analysis 1 figures and model outputs.
+- `S08_*`              Analysis 1 species-level supplementary analysis.
 - `S09_*`              Survival issue exploration.
 - `S10_*`              Variance component models.
 - `S11_*`              PRISM climate download/extraction (must run before `S12_*`).
-- `S12_*`              Case study 2 analysis.
+- `S12_*`              Analysis 2.
 - `S13_*`              Supplementary figures and summaries.
-- `S14_*`              Case study 3 (Astragalus, all COMPADRE sites) climate-recruitment analysis.
+- `S14_*`              Analysis 3 (Astragalus, all COMPADRE sites) climate-recruitment analysis.
 - `99_make_tables.R`   Export publication tables as DOCX.
 
 Traceability map (manuscript claims -> code -> outputs)
@@ -31,7 +30,7 @@ Traceability map (manuscript claims -> code -> outputs)
 | Fig. 3 (shape-L regression and beta posterior) | `S07_*` | `figures/Figure_4_analysis1_life_expectancy_shape_relationship.png`; `data/derived/analysis_cache/case1_beta_summary.csv` |
 | Table 1 (variance components) | `S10_*` | `data/derived/analysis_cache/case1_variance_ratios.csv`; `docs/tables/Table1_variance_components.docx` |
 | Fig. 4 (climate effects on recruitment + stage-specific survival) | `S12_*` | `figures/Analysis2_recruitment_model_fits.png`, `figures/Analysis2_monthly_lag_coefficients.png`, `figures/Analysis2_stage_specific_survival_beta_summary.png`, `figures/Figure_5_analysis2_climate_effects_recruitment.png`; `case2_gprc_beta_summary.csv`, `case2_spring_beta_summary.csv` |
-| Case study 3 exploratory climate analysis (Astragalus sites) | `S14_*` | `figures/Analysis3_<site>_spring_temperature_recruitment_scatter.png`, `figures/Analysis3_<site>_spring_temperature_beta_summary.png`, `figures/Analysis3_<site>_spring_temperature_model_fits.png`, `figures/Analysis3_<site>_survival_model_fits.png`, `figures/Analysis3_<site>_survival_stage_beta_summary.png`, `figures/Analysis3_<site>_survival_stage_curves.png`, `figures/Analysis3_<site>_monthly_lag_coefficients.png`, `figures/Figure_5_case3_climate_effects_recruitment_<site>.png` (A=lag coefficients, B=recruitment fits, C=stage-specific survival coefficients); `case3_astragalus_coverage_<site>.csv`, `case3_astragalus_spring_beta_summary.csv`, `case3_astragalus_gprc_beta_summary.csv`, `case3_astragalus_stan_diagnostics.csv`, `case3_astragalus_site_summary.csv` |
+| Analysis 3 climate analysis (Astragalus sites) | `S14_*` | `figures/Analysis3_<site>_spring_temperature_recruitment_scatter.png`, `figures/Analysis3_<site>_spring_temperature_beta_summary.png`, `figures/Analysis3_<site>_spring_temperature_model_fits.png`, `figures/Analysis3_<site>_survival_model_fits.png`, `figures/Analysis3_<site>_survival_stage_beta_summary.png`, `figures/Analysis3_<site>_survival_stage_curves.png`, `figures/Analysis3_<site>_monthly_lag_coefficients.png`, `figures/Figure_5_case3_climate_effects_recruitment_<site>.png` (A=lag coefficients, B=recruitment fits, C=stage-specific survival coefficients); `case3_astragalus_coverage_<site>.csv`, `case3_astragalus_spring_beta_summary.csv`, `case3_astragalus_gprc_beta_summary.csv`, `case3_astragalus_stan_diagnostics.csv`, `case3_astragalus_site_summary.csv` |
 | Target-study selection counts | `S02_*` | `data/derived/studies/target_studies.csv` |
 | Supplementary Table S1-2 | `S03_*`, `99_make_tables.R` | `fig1_derived_param_summary.csv`; `docs/tables/Table_S1-2_single_mpm_derived.docx` |
 | Supplementary Table S1-3 | `S13_*`, `99_make_tables.R` | `fig1_mean_mpm_param_summary.csv`; `docs/tables/Table_S1-3_mean_mpm_derived.docx` |
@@ -57,3 +56,4 @@ Notes
 - Plot styling is centralized in `code/functions.R` (`theme_mpm()`, `mpm_colors()`, `set_mpm_plot_defaults()`).
 - PRISM uses the `sf` + `terra` stack; rasters are stored under `data/raw/prism/`.
 - Set `FAST_RUN=1` to shorten Stan runs in `S08_case_study_1_analysis_spp.R` during development.
+- Legacy local comparison scripts may still be present in `scripts/`, but they are not part of the canonical workflow.

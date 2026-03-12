@@ -1,4 +1,4 @@
-# S10: variance component analysis for case study 1.
+# S10: variance component analysis for analysis 1.
 
 # libraries ----
 source("code/setup.R")
@@ -17,7 +17,7 @@ set.seed(seed)
 
 
 # load compadre data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE)
 
 
 # load study-specific sampling distribution files ----

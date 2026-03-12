@@ -1,4 +1,4 @@
-# S04: generate study-level sampling distributions for case study 1.
+# S04: generate study-level sampling distributions for analysis 1.
 
 # libraries ----
 source("code/setup.R")
@@ -8,7 +8,20 @@ set.seed(5654)
 
 
 # load compadre data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE)
+compadre <- compadre %>%
+  mutate(
+    MatrixStartYear = suppressWarnings(as.integer(MatrixStartYear)),
+    MatrixEndYear = suppressWarnings(as.integer(MatrixEndYear)),
+    YearPublication = suppressWarnings(as.integer(YearPublication))
+  )
+
+if (!("Observation" %in% names(compadre)) && ("Observations" %in% names(compadre))) {
+  compadre <- compadre %>% mutate(Observation = as.character(Observations))
+}
+if (!("Observation" %in% names(compadre))) {
+  compadre <- compadre %>% mutate(Observation = NA_character_)
+}
 
 
 # Load data from Ellis et al. (2012) ----
@@ -133,15 +146,101 @@ satterthwaite <- compadre %>%
   mutate(posF = list(mat_mean(matF) > 0)) %>%
   ungroup()
 
-npool <- satterthwaite %>%
+has_counts <- function(x) {
+  !is.null(x) && length(x) > 0 && !all(is.na(x))
+}
+
+satterthwaite_tbl <- satterthwaite %>%
   as_tibble() %>%
+  mutate(
+    has_Nu = map_lgl(Nu, has_counts),
+    has_Nf = map_lgl(Nf, has_counts)
+  )
+
+satterthwaite_excluded <- satterthwaite_tbl %>%
+  filter(!has_Nu | !has_Nf) %>%
+  distinct(MatrixPopulation, MatrixStartYear, MatrixEndYear, Authors, DOI_ISBN)
+
+satterthwaite_latest_summary <- satterthwaite_tbl %>%
   group_by(MatrixPopulation) %>%
-  summarize(N = list(pool_counts(Nu)))
+  summarize(
+    latest_n_mats = n(),
+    latest_year_min = suppressWarnings(min(as.integer(MatrixStartYear), na.rm = TRUE)),
+    latest_year_max = suppressWarnings(max(as.integer(MatrixStartYear), na.rm = TRUE)),
+    missing_count_rows = sum(!has_Nu | !has_Nf),
+    .groups = "drop"
+  )
+
+old_compadre_candidates <- list.files(
+  "data/raw/compadre",
+  pattern = "^COMPADRE_v\\.X\\.X\\.X_pre_case1_check_.*\\.RData$",
+  full.names = TRUE
+)
+old_compadre_path <- if (length(old_compadre_candidates) > 0) {
+  old_compadre_candidates[which.max(file.info(old_compadre_candidates)$mtime)]
+} else {
+  NA_character_
+}
+
+if (!is.na(old_compadre_path) && file.exists(old_compadre_path)) {
+  old_compadre <- cdb_fetch(old_compadre_path)
+  old_satterthwaite_summary <- old_compadre %>%
+    filter(SpeciesAuthor == spp) %>%
+    filter(MatrixComposite == "Individual") %>%
+    filter(MatrixTreatment == "Unmanipulated") %>%
+    cdb_unnest() %>%
+    as_tibble() %>%
+    group_by(MatrixPopulation) %>%
+    summarize(
+      old_n_mats = n(),
+      old_year_min = suppressWarnings(min(as.integer(MatrixStartYear), na.rm = TRUE)),
+      old_year_max = suppressWarnings(max(as.integer(MatrixStartYear), na.rm = TRUE)),
+      .groups = "drop"
+    )
+} else {
+  old_satterthwaite_summary <- tibble(
+    MatrixPopulation = character(),
+    old_n_mats = integer(),
+    old_year_min = integer(),
+    old_year_max = integer()
+  )
+}
+
+satterthwaite_accounting <- full_join(
+  old_satterthwaite_summary,
+  satterthwaite_latest_summary,
+  by = "MatrixPopulation"
+) %>%
+  mutate(
+    excluded_in_latest = MatrixPopulation %in% satterthwaite_excluded$MatrixPopulation,
+    exclusion_reason = ifelse(
+      excluded_in_latest,
+      "No matching stage-count rows in data/derived/studies/satterthwaite_n.csv",
+      NA_character_
+    )
+  ) %>%
+  arrange(MatrixPopulation)
+
+write_csv(
+  satterthwaite_accounting,
+  "data/derived/studies/satterthwaite_population_accounting.csv"
+)
+
+write_csv(
+  satterthwaite_excluded,
+  "data/derived/studies/satterthwaite_excluded_latest.csv"
+)
+
+npool <- satterthwaite_tbl %>%
+  filter(has_Nu) %>%
+  group_by(MatrixPopulation) %>%
+  summarize(N = list(pool_counts(Nu)), .groups = "drop")
 
 satterthwaite_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  filter(MatrixPopulation %in% npool$MatrixPopulation) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
@@ -187,9 +286,8 @@ npool <- andrello %>%
 
 andrello_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
-  slice(-grepl(";", MatrixPopulation)) %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
@@ -408,9 +506,8 @@ npool <- lazaro %>%
 
 lazaro_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
-  slice(-grep(";", MatrixPopulation)) %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
@@ -494,6 +591,7 @@ plank <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixComposite == "Individual") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  filter(!grepl("fecundity", MatrixPopulation, ignore.case = TRUE)) %>%
   cdb_unnest() %>%
   left_join(plank_n) %>%
   group_by(MatrixPopulation) %>%
@@ -504,16 +602,25 @@ plank <- compadre %>%
 npool <- plank %>%
   as_tibble() %>%
   group_by(MatrixPopulation) %>%
-  summarize(N = list(pool_counts(N)))
+  summarize(N = list(pool_counts(N)), .groups = "drop")
 
 # moody and panther had 0 seedlings... use pooled value of 5 instead
-npool$N[[3]][1] <- 5
-npool$N[[4]][1] <- 5
+npool <- npool %>%
+  mutate(
+    N = case_when(
+      MatrixPopulation %in% c("Moody Creek", "Panther Creek") ~ map(N, ~ {
+        .x[1] <- 5
+        .x
+      }),
+      TRUE ~ N
+    )
+  )
 
 plank_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixComposite == "Individual") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  filter(!grepl("fecundity", MatrixPopulation, ignore.case = TRUE)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
@@ -667,8 +774,8 @@ npool <- andrieu %>%
 andrieu_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixPopulation %in% pops) %>%
-  filter(MatrixComposite == "Pooled") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  population_matrices_from_available(preferred = c("Pooled", "Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
@@ -775,9 +882,8 @@ npool <- assc %>%
 
 assc_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
-  filter(!grepl(";", MatrixPopulation)) %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
@@ -864,10 +970,52 @@ toledo_n <- read_csv("data/derived/studies/toledo_n.csv") %>%
   group_by(MatrixStartYear) %>%
   summarize(N = list(N))
 
-toledo <- compadre %>%
+toledo_raw <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
   filter(MatrixComposite == "Individual") %>%
-  filter(MatrixTreatment == "Unmanipulated") %>%
+  filter(MatrixTreatment == "Unmanipulated")
+
+if (nrow(as_tibble(toledo_raw)) == 0) {
+  old_compadre_candidates <- list.files(
+    "data/raw/compadre",
+    pattern = "^COMPADRE_v\\.X\\.X\\.X_pre_case1_check_.*\\.RData$",
+    full.names = TRUE
+  )
+  old_compadre_path <- if (length(old_compadre_candidates) > 0) {
+    old_compadre_candidates[which.max(file.info(old_compadre_candidates)$mtime)]
+  } else {
+    NA_character_
+  }
+
+  old_n_individual <- NA_integer_
+  if (!is.na(old_compadre_path) && file.exists(old_compadre_path)) {
+    old_compadre <- cdb_fetch(old_compadre_path)
+    old_n_individual <- old_compadre %>%
+      filter(SpeciesAuthor == spp) %>%
+      filter(MatrixComposite == "Individual") %>%
+      filter(MatrixTreatment == "Unmanipulated") %>%
+      as_tibble() %>%
+      nrow()
+  }
+
+  toledo_exclusion <- tibble(
+    study = "Toledo",
+    SpeciesAuthor = spp,
+    reason = "No matching individual unmanipulated matrices in active COMPADRE version",
+    old_n_individual = old_n_individual,
+    new_n_individual = 0L
+  )
+  write_csv(
+    toledo_exclusion,
+    "data/derived/studies/toledo_excluded_latest.csv"
+  )
+
+  warning(
+    "Skipping Toledo block: no individual unmanipulated Tillandsia_butzii matrices in active COMPADRE."
+  )
+} else {
+
+toledo <- toledo_raw %>%
   cdb_unnest() %>%
   left_join(toledo_n) %>%
   group_by(MatrixPopulation) %>%
@@ -898,6 +1046,7 @@ dataf <- unique(dataf)
 mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_ISBN, dataf$SpeciesAccepted, sep = ", ")
 
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
+}
 
 
 # Crone ----
@@ -984,8 +1133,8 @@ npool <- dostalek %>%
 
 dostalek_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
@@ -1125,8 +1274,7 @@ npool <- shryock %>%
 
 shryock_out <- compadre %>%
   filter(SpeciesAuthor == spp) %>%
-  filter(MatrixComposite == "Mean") %>%
-  filter(!grepl(";", MatrixPopulation)) %>%
+  population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
   mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%

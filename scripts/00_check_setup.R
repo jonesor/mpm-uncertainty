@@ -22,8 +22,8 @@ setup_packages(required_pkgs)
 setup_rstan()
 
 required_files <- c(
-  "data/raw/compadre/COMPADRE_v.X.X.X.RData",
-  "data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData",
+  get_compadre_path(corrected = FALSE),
+  get_compadre_path(corrected = TRUE),
   "data/raw/ellis_2012/Transition_Matrices.txt",
   "data/derived/studies/_data_sources.csv",
   "data/derived/studies/aschero_U.RData",

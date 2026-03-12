@@ -1,6 +1,6 @@
 data/derived/climate/
 ---------------------
-Derived climate datasets used in case study 2.
+Derived climate datasets used in analysis 2.
 
 Contents
 --------

@@ -4,11 +4,15 @@ Raw COMPADRE database files used in the analysis.
 
 Contents
 --------
-- `COMPADRE_v.X.X.X.RData`            Original pre-release database dump.
-- `COMPADRE_v.X.X.X_Corrected.RData`  Corrected version produced by `scripts/S01_compadre_correct.R`.
+- `COMPADRE_v6.26.3.0.RData`            Active raw COMPADRE snapshot.
+- `COMPADRE_v6.26.3.0_Corrected.RData`  Corrected active snapshot produced by `scripts/S01_compadre_correct.R`.
 
 Version
 -------
-- Pre-release COMPADRE build compiled 2017-11-22.
-- This pre-release dataset can be released with the paper; consider updating analyses to the latest public COMPADRE release and recording the exact version/DOI in `data/metadata/sources.md`.
- - PRISM rasters for case study 2 live in `data/raw/prism/`.
+- Active snapshot: `COMPADRE_v6.26.3.0.RData`.
+- Record the exact COMPADRE version used in `data/metadata/sources.md` and manuscript methods text.
+- PRISM rasters for analysis 2 live in `data/raw/prism/`.
+
+Notes
+-----
+- Older COMPADRE snapshots are not kept once a new canonical version has been adopted.

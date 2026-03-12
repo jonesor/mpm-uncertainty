@@ -36,3 +36,39 @@ setup_prism <- function(prism_dir = "data/raw/prism") {
   prism::prism_set_dl_dir(prism_dir)
   invisible(prism_dir)
 }
+
+get_compadre_version <- function(default = "6.26.3.0") {
+  version <- getOption("mpm.compadre_version", default = Sys.getenv("MPM_COMPADRE_VERSION", unset = default))
+  if (!nzchar(version)) {
+    version <- default
+  }
+  return(version)
+}
+
+get_compadre_path <- function(corrected = FALSE, version = get_compadre_version()) {
+  suffix <- if (corrected) "_Corrected" else ""
+  version_tag <- if (grepl("^v", version)) {
+    version
+  } else {
+    paste0("v", version)
+  }
+  path <- here::here("data", "raw", "compadre", paste0("COMPADRE_", version_tag, suffix, ".RData"))
+  return(path)
+}
+
+load_compadre <- function(corrected = FALSE, version = get_compadre_version()) {
+  path <- get_compadre_path(corrected = corrected, version = version)
+  if (!file.exists(path)) {
+    stop("COMPADRE file not found: ", path, call. = FALSE)
+  }
+  return(Rcompadre::cdb_fetch(path))
+}
+
+get_compadre_metadata <- function(corrected = FALSE, version = get_compadre_version()) {
+  load_compadre(corrected = corrected, version = version)@version
+}
+
+get_compadre_version_label <- function(corrected = FALSE, version = get_compadre_version()) {
+  meta <- get_compadre_metadata(corrected = corrected, version = version)
+  paste0(meta$Database, " version ", meta$Version, " (created ", meta$DateCreated, ")")
+}

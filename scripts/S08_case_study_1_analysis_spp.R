@@ -1,4 +1,4 @@
-# S08: species-level analysis for case study 1 and related figures.
+# S08: species-level analysis for analysis 1 and related figures.
 
 # libraries ----
 source("code/setup.R")
@@ -21,7 +21,7 @@ cols <- mpm_colors()
 
 
 # load compadre data ----
-compadre <- cdb_fetch("data/raw/compadre/COMPADRE_v.X.X.X_Corrected.RData")
+compadre <- load_compadre(corrected = TRUE)
 
 
 
@@ -104,10 +104,27 @@ write_csv(pt_other_out, "data/derived/analysis_cache/case1_spp_other_point_estim
 # sampling distributions for derived parameters (cached) ----
 sd_shape_path <- "data/derived/analysis_cache/full_sd_spp_shape.RData"
 sd_other_path <- "data/derived/analysis_cache/full_sd_spp_other.RData"
+cache_keys_match <- function(cached_df, current_df) {
+  cached_keys <- cached_df %>%
+    distinct(SpeciesAuthor, MatrixPopulation)
+  current_keys <- current_df %>%
+    distinct(SpeciesAuthor, MatrixPopulation)
+  nrow(anti_join(cached_keys, current_keys,
+    by = c("SpeciesAuthor", "MatrixPopulation")
+  )) == 0 &&
+    nrow(anti_join(current_keys, cached_keys,
+      by = c("SpeciesAuthor", "MatrixPopulation")
+    )) == 0
+}
 
 if (file.exists(sd_shape_path)) {
   load(sd_shape_path)
-} else {
+  if (!cache_keys_match(sd_shape, pt_shape)) {
+    message("Rebuilding species-level shape cache for current COMPADRE version.")
+    rm(sd_shape)
+  }
+}
+if (!exists("sd_shape")) {
   sd_shape <- pt_shape %>%
     select(id, SpeciesAuthor, MatrixPopulation, simU, simF, q) %>%
     unnest(cols = c(simU, simF)) %>%
@@ -129,7 +146,12 @@ if (file.exists(sd_shape_path)) {
 
 if (file.exists(sd_other_path)) {
   load(sd_other_path)
-} else {
+  if (!cache_keys_match(sd_other, pt_other)) {
+    message("Rebuilding species-level additional-parameter cache for current COMPADRE version.")
+    rm(sd_other)
+  }
+}
+if (!exists("sd_other")) {
   sd_other <- pt_other %>%
     select(id, SpeciesAuthor, MatrixPopulation, simU, simF) %>%
     unnest(cols = c(simU, simF)) %>%

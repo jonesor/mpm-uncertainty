@@ -65,11 +65,90 @@ cdb_glimpse <- function(db, cols = NULL) {
 
 # Row-bind multiple CompadreDB objects while preserving class and version.
 cdb_bind_rows <- function(dbs) {
-  vers <- dbs[[1]]@version
+  if (methods::is(dbs[[1]], "CompadreDB")) {
+    vers <- dbs[[1]]@version
+  } else {
+    vers <- load_compadre(corrected = TRUE)@version
+  }
   dbs <- dplyr::bind_rows(lapply(dbs, tibble::as_tibble))
   new("CompadreDB",
       data = dbs,
       version = vers)
+}
+
+# Wrap a tibble with a `mat` list-column as a CompadreDB object.
+tibble_to_cdb <- function(tbl, version) {
+  new("CompadreDB", data = tibble::as_tibble(tbl), version = version)
+}
+
+# Build a CompadreMat by averaging matching slots across rows.
+compadre_mat_mean <- function(mats) {
+  mats <- as.list(mats)
+  if (length(mats) == 0) {
+    stop("mats must contain at least one CompadreMat", call. = FALSE)
+  }
+  if (length(mats) == 1) {
+    return(mats[[1]])
+  }
+
+  out <- mats[[1]]
+  out@matU <- mat_mean(lapply(mats, matU))
+  out@matF <- mat_mean(lapply(mats, matF))
+  out@matC <- mat_mean(lapply(mats, matC))
+  out@matA <- out@matU + out@matF + out@matC
+  out
+}
+
+# Build one population-level matrix per group from the best available composite.
+population_matrices_from_available <- function(db,
+                                               preferred = c("Mean", "Individual"),
+                                               group_cols = "MatrixPopulation") {
+  db_tbl <- tibble::as_tibble(db)
+
+  if ("MatrixPopulation" %in% names(db_tbl)) {
+    pop_vals <- unique(db_tbl$MatrixPopulation)
+    has_specific <- any(!grepl(";", pop_vals, fixed = TRUE)) &&
+      any(grepl(";", pop_vals, fixed = TRUE))
+    if (has_specific) {
+      db_tbl <- db_tbl %>% dplyr::filter(!grepl(";", MatrixPopulation, fixed = TRUE))
+    }
+
+    has_pooled_label <- "Pooled" %in% pop_vals && any(pop_vals != "Pooled")
+    if (has_pooled_label) {
+      db_tbl <- db_tbl %>% dplyr::filter(MatrixPopulation != "Pooled")
+    }
+  }
+
+  split_groups <- split(
+    db_tbl,
+    interaction(db_tbl[, group_cols, drop = FALSE], drop = TRUE, lex.order = TRUE)
+  )
+
+  purrr::map_dfr(split_groups, function(df_group) {
+    use <- NULL
+
+    for (comp in preferred) {
+      cand <- df_group[df_group$MatrixComposite == comp, , drop = FALSE]
+      if (nrow(cand) > 0) {
+        use <- cand
+        break
+      }
+    }
+
+    if (is.null(use)) {
+      return(df_group[0, , drop = FALSE])
+    }
+
+    out <- use[1, , drop = FALSE]
+    start_year <- suppressWarnings(as.integer(use$MatrixStartYear))
+    end_year <- suppressWarnings(as.integer(use$MatrixEndYear))
+
+    out$MatrixComposite <- preferred[[1]]
+    out$MatrixStartYear <- if (all(is.na(start_year))) out$MatrixStartYear[[1]] else min(start_year, na.rm = TRUE)
+    out$MatrixEndYear <- if (all(is.na(end_year))) out$MatrixEndYear[[1]] else max(end_year, na.rm = TRUE)
+    out$mat <- list(compadre_mat_mean(use$mat))
+    out
+  })
 }
 
 
@@ -87,6 +166,9 @@ rdata_load2 <- function(path) {
   env <- new.env()
   x <- load(path, env)[1]
   out <- env[[x]]
+  if ("MatrixID" %in% names(out)) {
+    out$MatrixID <- as.character(out$MatrixID)
+  }
   out$Altitude <- NULL
   out$MatrixStartYear <- NULL
   out$MatrixEndYear <- NULL
@@ -293,6 +375,10 @@ sim_stage_F <- function(x, vital_ind, n) {
 sim_U <- function(matU, posU, N) {
   if ("list" %in% class(matU)) matU <- matU[[1]]
   if ("list" %in% class(N)) N <- unlist(N)
+  N <- as.numeric(N)
+  if (length(N) == 0) N <- rep(NA_real_, ncol(matU))
+  if (length(N) < ncol(matU)) N <- c(N, rep(NA_real_, ncol(matU) - length(N)))
+  if (length(N) > ncol(matU)) N <- N[seq_len(ncol(matU))]
 
   simU <- matrix(0, nrow = nrow(matU), ncol = ncol(matU))
 
@@ -313,6 +399,10 @@ sim_U <- function(matU, posU, N) {
 sim_F <- function(matF, posF, N) {
   if ("list" %in% class(matF)) matF <- matF[[1]]
   if ("list" %in% class(N)) N <- unlist(N)
+  N <- as.numeric(N)
+  if (length(N) == 0) N <- rep(NA_real_, ncol(matF))
+  if (length(N) < ncol(matF)) N <- c(N, rep(NA_real_, ncol(matF) - length(N)))
+  if (length(N) > ncol(matF)) N <- N[seq_len(ncol(matF))]
 
   simF <- matrix(0, nrow = nrow(matF), ncol = ncol(matF))
 
@@ -532,7 +622,21 @@ sum2 <- function(x) {
 
 # Pool transition count vectors across replicate samples.
 pool_counts <- function(nl) {
+  if (is.null(nl) || length(nl) == 0) {
+    return(NA_real_)
+  }
+
+  keep <- vapply(nl, function(x) !is.null(x) && length(x) > 0, logical(1))
+  nl <- nl[keep]
+  if (length(nl) == 0) {
+    return(NA_real_)
+  }
+
   X <- do.call(rbind, nl)
+  if (is.null(dim(X))) {
+    return(as.numeric(X))
+  }
+
   return(apply(X, 2, sum2))
 }
 
