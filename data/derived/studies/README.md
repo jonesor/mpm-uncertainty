@@ -1,6 +1,6 @@
 data/derived/studies/
 ---------------------
-Derived study-level inputs and simulation objects used in case studies.
+Derived study-level inputs and simulation objects used in analyses.
 
 Contents
 --------

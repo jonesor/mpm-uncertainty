@@ -9,8 +9,11 @@ Demographic databases such as COMPADRE and COMADRE have transformed comparative 
 
 Using 695 matrix population models from 31 studies, we show that the consequences of ignoring sampling uncertainty are strongly trait-dependent. For highly integrated metrics such as population growth rate, sampling uncertainty accounts for a negligible fraction of observed variation, and inference is largely unaffected. For mortality-trajectory traits — particularly the shape of the mortality distribution — sampling uncertainty accounts for the majority of apparent among-population variation, and point estimates are often systematically displaced from their sampling distributions by boundary survival estimates. Counterintuitively, incorporating sampling uncertainty into our comparative analysis produced narrower, better-calibrated posteriors, not wider ones, because boundary estimates had artificially inflated the spread of the point estimates.
 
-We translate these findings into a practical diagnostic framework — including heuristic thresholds for flagging fragile analyses — and provide a reproducible workflow that researchers can apply to their own compiled-database analyses. We also identify improved reporting practices for primary MPM studies that would make uncertainty reconstruction routine rather than exceptional.
+We translate these findings into a practical diagnostic framework — including heuristic thresholds for flagging fragile analyses — and provide a reproducible workflow that researchers can apply to their own compiled-database analyses. We also identify improved reporting practices for primary MPM studies that would make uncertainty reconstruction easier.
+
 We believe this work is well-suited to Methods in Ecology and Evolution: it addresses a pervasive methodological gap, delivers actionable guidance for a large and active user community, and includes fully reproducible data and code.
+
+A preprint version of the manuscript is available at https://doi.org/10.32942/X21H37, however, I have taken steps to anonymise the manuscript for review here.
 
 This manuscript is original, is not under consideration elsewhere, and all authors have approved the submission.
 

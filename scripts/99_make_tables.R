@@ -130,7 +130,7 @@ if (file.exists(s1_2_path)) {
 }
 
 
-# Table S1-3 placeholder ----
+# Table S1-3 fallback ----
 s1_3_path <- "data/derived/analysis_cache/fig1_mean_mpm_param_summary.csv"
 if (file.exists(s1_3_path)) {
   table_s1_3 <- readr::read_csv(s1_3_path, show_col_types = FALSE) %>%
@@ -150,11 +150,11 @@ if (file.exists(s1_3_path)) {
     file.path(table_dir, "Table_S1-3_mean_mpm_derived.docx")
   )
 } else {
-  placeholder <- tibble::tibble(
-    Note = "Source data not yet generated: data/derived/analysis_cache/fig1_mean_mpm_param_summary.csv"
+  fallback_note <- tibble::tibble(
+    Note = "Source data unavailable: data/derived/analysis_cache/fig1_mean_mpm_param_summary.csv"
   )
   write_table_docx(
-    placeholder,
+    fallback_note,
     "Table S1-3. Point estimates and draws from the sampling distribution for derived parameters from a mean MPM.",
     file.path(table_dir, "Table_S1-3_mean_mpm_derived.docx")
   )

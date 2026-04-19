@@ -202,7 +202,7 @@ Owen R. Jones*^1,2^, Emily G. Simmonds^2^
 
 2. Using a subset of studies from the COMPADRE Plant Matrix Database for which transition-specific sample sizes could be obtained, we reconstructed sampling distributions for transition rates and derived demographic parameters, and conducted three related analyses: a comparative analysis, a within-species time-series analysis, and a multi-site extension of the climate-demography analysis, each fit with and without explicit sampling uncertainty.
 
-3. The effects of sampling uncertainty were strongly trait-dependent. It had little influence on integrated demographic metrics such as population growth rate, but accounted for a substantial fraction of the total variation in traits related to mortality trajectories, particularly the shape of the mortality distribution. In these cases, point estimates were often systematically displaced from their underlying sampling distributions due to boundary estimates of stage-specific survival (i.e. survival probabilities near 0 or 1), which are common in published matrices. By contrast, inference in a within-species analysis of weather effects on recruitment was largely unaffected.
+3. The effects of sampling uncertainty were strongly trait-dependent. It had little influence on integrated demographic metrics such as population growth rate, but accounted for a substantial fraction of the total variation in traits related to mortality trajectories, particularly the shape of the mortality distribution. In these cases, point estimates were often systematically displaced from their underlying sampling distributions due to boundary estimates of stage-specific survival (i.e. survival probabilities near 0 or 1), which are common in published matrices. By contrast, inference in a within-species analysis of weather effects on vital rates was largely unaffected.
 
 4. Together, these analyses show that ignoring sampling uncertainty does not universally compromise inference from published projection matrices, but can yield fragile or biased conclusions for certain demographic traits. We identify structural features of MPMs and analyses that may indicate heightened sensitivity to sampling uncertainty, and discuss implications for researchers using compiled demographic databases.
 
@@ -387,7 +387,7 @@ y_{ij} \sim \text{Normal}(\alpha_j + \beta x_{ij}, \sigma^2),
 (\#eq:reg-me-yobs)
 \end{equation}
 
-We fit the models described above using RStan (Stan Development Team 2025; Carpenter et al. 2017), with priors and settings as described in Supplementary Methods section S1.4.
+For these models, we used priors and settings as described in Supplementary Methods section S1.4.
 
 In supplementary analyses, we estimated the variance components of life expectancy, shape, and other life history traits using a sampling-to-other variance ratio: the proportion of total observed variation in a demographic parameter attributable to transition-rate sampling uncertainty relative to variation from all other sources (principally biological variation among populations and species). For each parameter we partitioned total variance into a sampling component, estimated as the mean of the within-MPM sampling variances derived from the bootstrap distributions, and a residual component representing the remainder. A ratio greater than 1 indicates that sampling uncertainty exceeds biological variation; a ratio less than 1 indicates that biological variation dominates. Full details are given in Supplementary Methods section S1.5 and Supplementary Table S3.
 
@@ -450,7 +450,7 @@ K_{i,j} = \eta^2 \exp\!\left(-0.5\,\rho^2(j-i)^2\right)
 \end{equation}
 
 
-where the response variable \(Y_t\) is the number of seedlings in year \(t\), and \(N_{t-1}\) is the sample size of reproductive adults in year \(t-1\). The model is otherwise similar to the point estimates model, except that we use year-specific intercepts (\(\alpha_t\)) to incorporate the Poisson offset (\(N_{t-1}\)), rather than a single model intercept as before. We fit the above-described models again using RStan, with priors and settings as described in Supplementary Methods section S1.4.
+where the response variable \(Y_t\) is the number of seedlings in year \(t\), and \(N_{t-1}\) is the sample size of reproductive adults in year \(t-1\). The model is otherwise similar to the point estimates model, except that we use year-specific intercepts (\(\alpha_t\)) to incorporate the Poisson offset (\(N_{t-1}\)), rather than a single model intercept as before. We fit the above-described models again, with priors and settings as described in Supplementary Methods section S1.4.
 
 
 
@@ -479,7 +479,7 @@ Counterintuitively, there was less posterior uncertainty in β in the sampling-u
 
 ## Analysis 2: The impact of weather on demographic traits
 
-Despite the relatively small sample sizes underlying some recruitment estimates (the three smallest sample sizes of reproductive individuals were 8, 12, and 13, respectively), results from the point-estimate model and the sampling-uncertainty model were virtually identical (Fig. \@ref(fig:fig-main-4)). Both models identified temperature deviations in monthly lags 7-9 (February-April, prior to the start of the transition interval in July) as having a positive effect on recruitment. If we simplify our model and consider only the relationship between recruitment and mean spring temperature deviations (see Supplementary Methods section S1.6 and Supplementary Table S5), we again find that the point-estimate model is similar to the model incorporating sampling uncertainty (Fig. \@ref(fig:fig-main-4)). The estimate of the temperature coefficient \(\beta\) was `r fmt_pct(spring_beta_diff, 1)` higher, and the 95% interval width for that estimate was `r fmt_pct(spring_ciw_diff, 1)` higher, in the model incorporating sampling uncertainty compared with the point-estimate model. A difference of this magnitude is unlikely to qualitatively change any inferences drawn from a model. In the stage-specific survival panel (Fig. \@ref(fig:fig-main-4)C), temperature coefficients were estimable for stages 2 and 3; for stage 1 we show a descriptive open-circle marker at mean survival across years, and for stage 4 (all years at 100% survival) we show a descriptive open-circle marker at survival = 1, both without interval bars.
+Despite the relatively small sample sizes underlying some recruitment estimates (the three smallest sample sizes of reproductive individuals were 8, 12, and 13, respectively), results from the point-estimate model and the sampling-uncertainty model were virtually identical (Fig. \@ref(fig:fig-main-4)). Both models identified temperature deviations in monthly lags 7-9 (February-April, prior to the start of the transition interval in July) as having a positive effect on recruitment. If we simplify our model and consider only the relationship between recruitment and mean spring temperature deviations (see Supplementary Methods section S1.6 and Supplementary Table S5), we again find that the point-estimate model is similar to the model incorporating sampling uncertainty (Fig. \@ref(fig:fig-main-4)). The estimate of the temperature coefficient \(\beta\) was `r fmt_pct(spring_beta_diff, 1)` higher, and the 95% interval width for that estimate was `r fmt_pct(spring_ciw_diff, 1)` higher, in the model incorporating sampling uncertainty compared with the point-estimate model. A difference of this magnitude is unlikely to qualitatively change any inferences drawn from a model. In the stage-specific survival panel (Fig. \@ref(fig:fig-main-4)C), temperature coefficients were estimable for stages 2 and 3; for stage 1 we show a descriptive open-circle marker at mean survival across years, and for stage 4 (all years at 100% survival) we show a descriptive open-circle marker at survival = 1, both without interval bars. This is analogous to the pattern in Figure \@ref(fig:fig-main-3): once sampling variation in the annual survival estimates is modelled explicitly, part of the apparent between-year spread is reallocated from biological signal to measurement noise, which can yield more precise coefficient estimates.
 
 ## Analysis 3: Multi-site extension of climate-demography models
 
@@ -517,7 +517,7 @@ It is important to emphasise that our analysis of sampling uncertainty is distin
 
 ## Data limitations and reporting considerations
 
-Incorporating transition-rate sampling uncertainty into analyses of published MPMs remains challenging, primarily because the data required to reconstruct sampling distributions are rarely reported. Of the 91 source publications we initially targeted, only a small subset provided sufficient information to model uncertainty in survival or reproductive transitions. Improved reporting of transition-specific sample sizes or standard errors, particularly on the scale of the linear predictor, would greatly enhance future researchers’ ability to assess robustness and propagate uncertainty where necessary (see Supplementary Methods section S1.7 for detailed recommendations). At the same time, the absence of a single, universally “correct” approach to modelling transition rates should not deter progress. Even partial information can be sufficient to identify cases where inference is likely to be robust or fragile, and recognising the limits of inference is often as important as refining point estimates. Viewed in this light, accounting for sampling uncertainty is not simply a technical exercise but a means of understanding when demographic inference from compiled databases can be trusted and when it should be treated with caution.
+Incorporating transition-rate sampling uncertainty into analyses of published MPMs remains challenging, primarily because the data required to reconstruct sampling distributions are rarely reported. Of the 86 source publications we initially targeted, only a small subset provided sufficient information to model uncertainty in survival or reproductive transitions. Improved reporting of transition-specific sample sizes or standard errors, particularly on the scale of the linear predictor, would greatly enhance future researchers’ ability to assess robustness and propagate uncertainty where necessary (see Supplementary Methods section S1.7 for detailed recommendations). At the same time, the absence of a single, universally “correct” approach to modelling transition rates should not deter progress. Even partial information can be sufficient to identify cases where inference is likely to be robust or fragile, and recognising the limits of inference is often as important as refining point estimates. Viewed in this light, accounting for sampling uncertainty is not simply a technical exercise but a means of understanding when demographic inference from compiled databases can be trusted and when it should be treated with caution.
 
 ## Conclusions
 
@@ -534,7 +534,7 @@ We are indebted to the COMPADRE data digitisation team and management committee 
 
 # Author contributions
 
-ORJ conceived and designed the study, curated data from the COMPADRE database and data provided by authors of papers selected as case studies, conducted the analysis, and wrote the first draft of the manuscript. EGS contributed to conceptualization and interpretation of results, and reviewed and edited the manuscript. Both authors approved the final version for submission.
+ORJ conceived and designed the study, curated data from the COMPADRE database and data provided by authors of papers selected for the analyses, conducted the analysis, and wrote the first draft of the manuscript. EGS contributed to conceptualization and interpretation of results, and reviewed and edited the manuscript. Both authors approved the final version for submission.
 
 # Conflict of interest
 
@@ -542,7 +542,7 @@ The authors declare no conflict of interest.
 
 # Data availability
 
-Data and code required to reproduce our analyses are archived on Zenodo [DOI to be inserted].
+Data and code required to reproduce our analyses are archived on Zenodo: https://doi.org/10.5281/zenodo.19474729.
 
 # Supplementary Materials
 

@@ -2,20 +2,28 @@
 #
 # This script creates a timestamped snapshot in
 # docs/manuscript/zenodo/staging/ that includes code, data, models,
-# generated outputs, manuscript files, and a manifest.
+# generated outputs, and a manifest. It can also create an anonymised
+# review bundle that excludes manuscript-facing files.
 #
 # RStudio usage:
 #   source('scripts/prepare_zenodo_bundle.R')
 #   prepare_zenodo_bundle(skip_render = FALSE)
+#   prepare_zenodo_bundle(skip_render = FALSE, bundle_type = "anonymized_review")
 #
 # CLI usage:
 #   Rscript --vanilla scripts/prepare_zenodo_bundle.R
 #   Rscript --vanilla scripts/prepare_zenodo_bundle.R --skip-render
 
-prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE) {
+prepare_zenodo_bundle <- function(
+  skip_render = FALSE,
+  clean_old_staging = TRUE,
+  bundle_type = c("standard", "anonymized_review")
+) {
   if (!requireNamespace("here", quietly = TRUE)) {
     stop("Package 'here' is required.")
   }
+
+  bundle_type <- match.arg(bundle_type)
 
   # Make behaviour predictable in RStudio even if the working directory changed.
   setwd(here::here())
@@ -32,7 +40,7 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
   if (clean_old_staging) {
     old_bundles <- fs::dir_ls(
       staging_root,
-      regexp = "mpm-uncertainty_zenodo_",
+      regexp = "mpm-uncertainty_(zenodo|review)_",
       type = "directory"
     )
     if (length(old_bundles) > 0) {
@@ -41,12 +49,17 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
   }
 
   bundle_timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
-  bundle_name <- paste0("mpm-uncertainty_zenodo_", bundle_timestamp)
+  bundle_prefix <- if (bundle_type == "standard") {
+    "mpm-uncertainty_zenodo_"
+  } else {
+    "mpm-uncertainty_anonymised_review_"
+  }
+  bundle_name <- paste0(bundle_prefix, bundle_timestamp)
   bundle_dir <- fs::path(staging_root, bundle_name)
 
   fs::dir_create(bundle_dir, recurse = TRUE)
 
-  if (!skip_render) {
+  if (!skip_render && bundle_type == "standard") {
     source("docs/manuscript/render_manuscripts.R")
   }
 
@@ -125,16 +138,20 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
     "figures/Figure_6_analysis3_climate_effects_multisite.png",
     "figures/Figure_S1_boundary_estimate_diagnostic.png",
     "figures/Figure_S2_boundary_survivorship_illustration.png",
-    "docs/manuscript/manuscript_main.Rmd",
-    "docs/manuscript/sampling_uncertainty_mpm_main.docx",
-    "docs/manuscript/manuscript_supplement.Rmd",
-    "docs/manuscript/sampling_uncertainty_mpm_supplement.docx",
-    "docs/manuscript/render_manuscripts.R",
-    "docs/manuscript/styles",
-    "docs/tables",
     "data/metadata/sources.md",
     ".lintr"
   )
+
+  if (bundle_type == "standard") {
+    copy_paths <- c(
+      copy_paths,
+      "docs/manuscript/manuscript_main.Rmd",
+      "docs/manuscript/manuscript_supplement.Rmd",
+      "docs/manuscript/render_manuscripts.R",
+      "docs/manuscript/styles",
+      "docs/tables"
+    )
+  }
 
   script_paths <- c(
     "scripts/00_check_setup.R",
@@ -179,7 +196,11 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
   purrr::walk(copy_paths, copy_item)
 
   run_script <- c(
-    "# Reproduce analyses and manuscripts from this Zenodo bundle ----",
+    if (bundle_type == "standard") {
+      "# Reproduce analyses and manuscripts from this Zenodo bundle ----"
+    } else {
+      "# Reproduce analyses from this anonymised review bundle ----"
+    },
     "source('scripts/00_check_setup.R')",
     "source('scripts/S01_compadre_correct.R')",
     "source('scripts/S02_target_studies.R')",
@@ -195,20 +216,25 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
     "# source('scripts/S11_case_study_2_prism.R')",
     "source('scripts/S12_case_study_2.R')",
     "source('scripts/S13_supplement.R')",
-    "source('scripts/99_make_tables.R')",
-    "rmarkdown::render(",
-    "  'docs/manuscript/manuscript_main.Rmd',",
-    "  output_format = 'bookdown::word_document2',",
-    "  output_file = 'sampling_uncertainty_mpm_main.docx',",
-    "  quiet = TRUE",
-    ")",
-    "rmarkdown::render(",
-    "  'docs/manuscript/manuscript_supplement.Rmd',",
-    "  output_format = 'bookdown::word_document2',",
-    "  output_file = 'sampling_uncertainty_mpm_supplement.docx',",
-    "  quiet = TRUE",
-    ")"
+    "source('scripts/99_make_tables.R')"
   )
+  if (bundle_type == "standard") {
+    run_script <- c(
+      run_script,
+      "rmarkdown::render(",
+      "  'docs/manuscript/manuscript_main.Rmd',",
+      "  output_format = 'bookdown::word_document2',",
+      "  output_file = 'sampling_uncertainty_mpm_main.docx',",
+      "  quiet = TRUE",
+      ")",
+      "rmarkdown::render(",
+      "  'docs/manuscript/manuscript_supplement.Rmd',",
+      "  output_format = 'bookdown::word_document2',",
+      "  output_file = 'sampling_uncertainty_mpm_supplement.docx',",
+      "  quiet = TRUE",
+      ")"
+    )
+  }
   readr::write_lines(run_script, fs::path(bundle_dir, "RUN_REPRODUCTION.R"))
 
   all_files <- fs::dir_ls(bundle_dir, recurse = TRUE, type = "file")
@@ -230,7 +256,11 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
   readr::write_csv(manifest, fs::path(bundle_dir, "MANIFEST.csv"))
 
   manifest_md <- c(
-    "# Zenodo bundle manifest",
+    if (bundle_type == "standard") {
+      "# Zenodo bundle manifest"
+    } else {
+      "# Anonymised review bundle manifest"
+    },
     "",
     paste0("- Bundle: `", bundle_name, "`"),
     paste0("- Created (UTC): ", format(Sys.time(), tz = "UTC", usetz = TRUE)),
@@ -274,5 +304,10 @@ prepare_zenodo_bundle <- function(skip_render = FALSE, clean_old_staging = TRUE)
 if (sys.nframe() == 0) {
   args <- commandArgs(trailingOnly = TRUE)
   skip_render <- "--skip-render" %in% args
-  prepare_zenodo_bundle(skip_render = skip_render)
+  bundle_type <- if ("--anonymized-review" %in% args) {
+    "anonymized_review"
+  } else {
+    "standard"
+  }
+  prepare_zenodo_bundle(skip_render = skip_render, bundle_type = bundle_type)
 }

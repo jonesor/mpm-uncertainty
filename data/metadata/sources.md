@@ -22,7 +22,7 @@ PRISM climate data
 - Source: PRISM Climate Group, Oregon State University (monthly tmean and ppt rasters)
 - Download helper: `scripts/S11_case_study_2_prism.R` via `setup_prism()` in `code/setup.R` for analysis 2
 - Derived outputs: `data/derived/climate/species_clim_prism.csv`
-- Processing stack: uses `sf` + `terra` (replacing legacy `rgdal`/`raster`/`sp`).
+- Processing stack: uses `sf` + `terra`.
 
 Study-level inputs
 ------------------

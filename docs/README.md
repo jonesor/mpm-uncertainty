@@ -6,7 +6,7 @@ Suggested contents
 ------------------
 - `manuscript/manuscript_main.Rmd`  Main R Markdown manuscript file for the new paper version.
 - `manuscript/manuscript_supplement.Rmd`  Supplementary materials R Markdown file.
-- `manuscript/`  Active manuscript files, styles, and archived legacy DOCX drafts.
+- `manuscript/`  Active manuscript files, styles, render scripts, and submission materials.
 - `tables/`  Supporting table input files used by manuscript rendering.
 - Methodological notes or derivations.
 - Decisions about data cleaning or model choices.

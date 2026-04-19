@@ -28,9 +28,8 @@ Folder guide
 - `data/metadata/`      Data dictionaries and provenance notes.
 - `figures/`            Generated figures for the paper.
 - `docs/`               Notes, methods, and documentation.
-- `docs/manuscript/`    Main manuscript and supplement Rmd files plus archived DOCX drafts.
+- `docs/manuscript/`    Main manuscript and supplement Rmd files, render scripts, and submission materials.
 
 Notes
 -----
 - Some external data sources require download (e.g., PRISM rasters). Use the `prism` R package workflow in `scripts/S11_case_study_2_prism.R` which stores files under `data/raw/prism/` (ignored by git). See `data/metadata/`.
-- The project uses R and Stan; package versions are not yet pinned.

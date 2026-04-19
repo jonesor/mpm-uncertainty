@@ -357,11 +357,13 @@ Stan models and priors are defined in `models/*.stan`. For the two main analyses
 
 - Analysis 1 models use weakly informative normal priors for location/slope terms and normal priors for scale terms (see `models/regress_hier.stan` and `models/regress_hier_error.stan`).
 - Analysis 2 uses two models with Gaussian-process regression forms and normal priors on GP hyperparameters and coefficients (see `models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`).
+- Analysis 3 uses the same Gaussian-process recruitment model pair as analysis 2 (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`) together with a simpler spring-temperature regression pair using weakly informative normal priors on regression coefficients and scale terms (`models/regress.stan` and `models/regress_log_err.stan`).
 
 Fitting settings used in scripts:
 
 - Analysis 1 (`scripts/S07_case_study_1_analysis.R`): `chains = 2`, `iter = 4000`, `warmup = 2000-3000`, `seed = 5654`.
 - Analysis 2 (`scripts/S12_case_study_2.R`): `iter = 5000` for key models, `seed = 5654`, with additional control settings for GP fits.
+- Analysis 3 (`scripts/S14_case_study_3_astragalus.R`): `iter = 5000`, `seed = 5654`, using the same GP control settings as analysis 2 for recruitment models and matched regression settings for the simplified spring-temperature models.
 
 ## S1.5 Variance-component summary (sampling-to-other ratio)
 
@@ -383,7 +385,7 @@ Ratios above 1 indicate that sampling uncertainty exceeds residual biological va
 
 In addition to the monthly-lagged GP model, we fit a simplified spring summary model with mean spring temperature deviation as the predictor, under both point-estimate and uncertainty-aware formulations. The contrasts reported in the manuscript use posterior medians and 95% interval widths from these paired models.
 
-For the stage-specific survival panel in analysis 2 (Fig. 5C), we derived annual stage-specific survival as the column sums of the \(U\) matrix for each year and stage, then compared two logit-scale models per stage: (i) an SSD-weighted quasibinomial point-estimate model, \(\texttt{surv} \sim \texttt{tmp}\), where weights are the stable stage distribution from each annual \(U\) matrix; and (ii) a binomial count model, \(\texttt{cbind}(n_{\text{surv}}, n_{\text{fail}}) \sim \texttt{tmp}\), where \(n_{\text{surv}}\) and \(n_{\text{fail}}\) are survived and non-survived counts implied by stage sample size and \(U\)-column survival probability.
+For the stage-specific survival panel in analysis 2 (Fig. 5C), we derived annual stage-specific survival as the column sums of the \(U\) matrix for each year and stage, then compared two logit-scale models per stage: (i) a stable-stage distribution (SSD)-weighted quasibinomial point-estimate model, \(\texttt{surv} \sim \texttt{tmp}\), where weights are the stable stage distribution from each annual \(U\) matrix; and (ii) a binomial count model, \(\texttt{cbind}(n_{\text{surv}}, n_{\text{fail}}) \sim \texttt{tmp}\), where \(n_{\text{surv}}\) and \(n_{\text{fail}}\) are survived and non-survived counts implied by stage sample size and \(U\)-column survival probability.
 
 ## S1.7 Reporting recommendations for future MPM studies
 
@@ -398,7 +400,7 @@ These items are usually sufficient for parametric uncertainty reconstruction in 
 
 ## S1.8 Study and species identities in analysis 1
 
-Analysis 1 used 68 population-level entries representing 25 species. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
+Analysis 1 used a subset of the full compiled dataset: 68 population-level entries representing 25 species. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
 
 ## S1.9 Multi-site extension for analysis 3 (*Astragalus scaphoides*)
 
@@ -406,7 +408,7 @@ To evaluate whether inference robustness in analysis 2 generalised across popula
 
 For stage-specific survival in analysis 3, we used the same matched pair as in analysis 2: an SSD-weighted quasibinomial point-estimate model (\(\texttt{surv} \sim \texttt{tmp}\), weights from the stable stage distribution of each annual \(U\) matrix) and a binomial count model (\(\texttt{cbind}(n_{\text{surv}}, n_{\text{fail}}) \sim \texttt{tmp}\)). This keeps the linear predictor and response scale aligned across formulations, differing only in whether survival is treated as a plug-in proportion or as counts with explicit sampling uncertainty.
 
-For sensitivity analyses intended to mimic database-only use (no access to true stage sample sizes), we re-fit stage-specific point-estimate models under two alternatives: (i) no weighting and (ii) stable-stage-distribution (SSD) weighting derived from each annual \(U\) matrix.
+For sensitivity analyses intended to mimic database-only use (no access to true stage sample sizes), we re-fit stage-specific point-estimate models under two alternatives: (i) no weighting and (ii) SSD weighting derived from each annual \(U\) matrix.
 
 # Supplementary Results
 
