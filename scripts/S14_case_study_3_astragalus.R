@@ -243,8 +243,8 @@ analyze_site <- function(SpeciesAuthor, MatrixPopulation, ellis_spp, ellis_pop) 
 
   lev <- c("Model of point estimates", "Model with sampling uncertainty")
   model_cols <- c(
-    "Model of point estimates" = cols$light,
-    "Model with sampling uncertainty" = cols$dark
+    "Model of point estimates" = cols$point,
+    "Model with sampling uncertainty" = cols$sampling
   )
   model_alpha <- c(
     "Model of point estimates" = 1.0,

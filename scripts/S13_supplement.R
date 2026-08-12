@@ -276,8 +276,8 @@ tt <- theme_mpm() +
   )
 
 p1 <- ggplot(sigma_sim, aes(sigma)) +
-  geom_density(fill = cols$accent, color = NA, alpha = 0.5) +
-  geom_vline(data = sigma_point, aes(xintercept = sigma), linetype = 2, color = cols$mid) +
+  geom_density(fill = cols$sampling_fill, color = NA, alpha = 0.5) +
+  geom_vline(data = sigma_point, aes(xintercept = sigma), linetype = 2, color = cols$point) +
   scale_x_continuous(limits = c(0, 1), breaks = c(0, 1)) +
   coord_cartesian(ylim = c(0, 20)) +
   facet_wrap(~stage, nrow = 1) +
@@ -288,8 +288,8 @@ p1 <- ggplot(sigma_sim, aes(sigma)) +
   tt
 
 p2 <- ggplot(life_sim, aes(L)) +
-  geom_density(fill = cols$accent, color = NA, alpha = 0.5) +
-  geom_vline(data = life_point, aes(xintercept = L_pt), linetype = 2, color = cols$mid) +
+  geom_density(fill = cols$sampling_fill, color = NA, alpha = 0.5) +
+  geom_vline(data = life_point, aes(xintercept = L_pt), linetype = 2, color = cols$point) +
   scale_x_continuous(limits = c(0, 148)) +
   labs(
     x = "Mature life expectancy (years)",
@@ -345,8 +345,8 @@ scanga_traj_sim <- scanga_t %>%
   ungroup()
 
 p3 <- ggplot(scanga_traj_sim, aes(x, lx)) +
-  geom_line(aes(group = rep), color = cols$accent, alpha = 0.025) +
-  geom_line(data = scanga_traj_pt, linetype = 2, color = cols$mid) +
+  geom_line(aes(group = rep), color = cols$sampling, alpha = 0.025) +
+  geom_line(data = scanga_traj_pt, linetype = 2, color = cols$point) +
   scale_y_continuous(breaks = seq(0, 1, 0.2)) +
   labs(
     x = "Age from reproductive maturity (years)",

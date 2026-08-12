@@ -237,7 +237,12 @@ mpm_colors <- function(option = "viridis") {
     fill = pal[2],
     mid = pal[3],
     accent = pal[4],
-    dark = pal[5]
+    dark = pal[5],
+    point = pal[1],
+    point_fill = pal[2],
+    sampling = pal[4],
+    sampling_fill = pal[4],
+    sampling_dark = pal[5]
   )
 }
 

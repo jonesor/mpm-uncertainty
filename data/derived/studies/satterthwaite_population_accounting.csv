@@ -1,0 +1,7 @@
+MatrixPopulation,old_n_mats,old_year_min,old_year_max,latest_n_mats,latest_year_min,latest_year_max,missing_count_rows,excluded_in_latest,exclusion_reason
+After burn,NA,NA,NA,8,1990,1995,8,TRUE,No matching stage-count rows in data/derived/studies/satterthwaite_n.csv
+Burn year,NA,NA,NA,7,1990,1997,7,TRUE,No matching stage-count rows in data/derived/studies/satterthwaite_n.csv
+Burned,NA,NA,NA,1,1991,1991,1,TRUE,No matching stage-count rows in data/derived/studies/satterthwaite_n.csv
+Unburned,NA,NA,NA,14,1991,1997,0,FALSE,NA
+Unburned; Optimistic fecundity,NA,NA,NA,1,1990,1990,1,TRUE,No matching stage-count rows in data/derived/studies/satterthwaite_n.csv
+Unburned; Pessimistic fecundity,NA,NA,NA,1,1990,1990,1,TRUE,No matching stage-count rows in data/derived/studies/satterthwaite_n.csv

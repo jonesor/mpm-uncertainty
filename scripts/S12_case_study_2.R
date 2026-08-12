@@ -3,7 +3,7 @@
 # libraries ----
 source("code/setup.R")
 setup_packages(c(
-  "tidyverse", "cowplot", "Rcompadre", "Rage", "popbio",
+  "tidyverse", "Rcompadre", "Rage", "popbio",
   "gridExtra", "rstan", "loo", "patchwork"
 ))
 setup_rstan()
@@ -163,8 +163,8 @@ var_beta_err / var_beta_reg # var(beta_err) is ~12% higher
 
 lev <- c("Point estimates", "Sampling uncertainty")
 model_cols <- c(
-  "Point estimates" = cols$light,
-  "Sampling uncertainty" = cols$dark
+  "Point estimates" = cols$point,
+  "Sampling uncertainty" = cols$sampling
 )
 model_alpha <- c(
   "Point estimates" = 1.0,

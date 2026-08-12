@@ -46,9 +46,9 @@ p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
   geom_vline(xintercept = 0, color = "grey70", alpha = 0.6, linewidth = 0.2, linetype = 2) +
   geom_density_ridges(aes(x = S),
     rel_min_height = 1e-2,
-    scale = 3, fill = cols$accent, alpha = 0.4, color = NA, linewidth = 0
+    scale = 3, fill = cols$sampling_fill, alpha = 0.4, color = NA, linewidth = 0
   ) +
-  geom_point(data = pt_shape_out, aes(x = S_pt), size = 0.9, shape = 16, color = cols$mid) +
+  geom_point(data = pt_shape_out, aes(x = S_pt), size = 0.9, shape = 16, color = cols$point) +
   annotate("text", x = Inf, y = 2.6, label = "A", vjust = 1.5, size = 5, fontface = "bold") +
   coord_flip(xlim = c(-0.3, 0.2)) +
   labs(
@@ -60,9 +60,9 @@ p1 <- ggplot(sd_shape_out, aes(y = id_S)) +
 p2 <- ggplot(sd_shape_out, aes(y = id_L)) +
   geom_density_ridges(aes(x = L),
     rel_min_height = 1e-2,
-    scale = 3, fill = cols$accent, alpha = 0.4, color = NA, linewidth = 0
+    scale = 3, fill = cols$sampling_fill, alpha = 0.4, color = NA, linewidth = 0
   ) +
-  geom_point(data = pt_shape_out, aes(x = L_pt), size = 0.9, shape = 16, color = cols$mid) +
+  geom_point(data = pt_shape_out, aes(x = L_pt), size = 0.9, shape = 16, color = cols$point) +
   annotate("text", x = Inf, y = 2.6, label = "B", vjust = 1.5, size = 5, fontface = "bold") +
   scale_x_log10(limits = c(1.2, 1500)) +
   coord_flip() +
@@ -403,33 +403,47 @@ p1 <- ggplot(pred_full) +
   geom_point(
     data = dplyr::filter(pt_ref, model == lev[1]),
     aes(x = l0_pt, y = shape_pt),
-    shape = 16, size = 1.3, color = cols$mid
+    shape = 16, size = 1.3, color = cols$point
   ) +
   # Faint overlay of point estimates in the uncertainty panel for comparison.
   geom_point(
     data = dplyr::filter(pt_ref, model == lev[2]),
     aes(x = l0_pt, y = shape_pt),
-    shape = 16, size = 1.1, color = cols$mid, alpha = 0.25
+    shape = 16, size = 1.1, color = cols$point, alpha = 0.25
   ) +
   # Cross centers (plus symbols) and intervals for sampling-uncertainty model.
   geom_point(
     data = dplyr::filter(bars_full, model == lev[2]),
     aes(x = l0_med, y = shape_med),
-    shape = 3, size = 1.3, stroke = 0.4, color = cols$mid
+    shape = 3, size = 1.3, stroke = 0.4, color = cols$sampling
   ) +
   geom_linerange(
     data = dplyr::filter(bars_full, model == lev[2]),
     aes(x = l0_med, ymin = shape_low, ymax = shape_upp),
-    linewidth = 0.3, alpha = 0.6, color = cols$mid
+    linewidth = 0.3, alpha = 0.6, color = cols$sampling
   ) +
   geom_errorbarh(
     data = dplyr::filter(bars_full, model == lev[2]),
     aes(y = shape_med, xmin = l0_low, xmax = l0_upp),
-    linewidth = 0.3, alpha = 0.6, color = cols$mid
+    linewidth = 0.3, alpha = 0.6, color = cols$sampling
   ) +
-  geom_line(aes(x = pred_x, y = pred_med), col = cols$mid) +
-  geom_ribbon(aes(x = pred_x, ymin = pred_low, ymax = pred_upp), fill = cols$accent, alpha = 0.2) +
+  geom_line(
+    aes(x = pred_x, y = pred_med, color = model),
+    linewidth = 0.8
+  ) +
+  geom_ribbon(
+    aes(x = pred_x, ymin = pred_low, ymax = pred_upp, fill = model),
+    alpha = 0.2
+  ) +
   scale_x_log10() +
+  scale_color_manual(values = c(
+    "Model using point estimates" = cols$point,
+    "Model with sampling uncertainty" = cols$sampling
+  )) +
+  scale_fill_manual(values = c(
+    "Model using point estimates" = cols$point,
+    "Model with sampling uncertainty" = cols$sampling
+  )) +
   coord_cartesian(ylim = c(-0.3, 0.2)) +
   facet_wrap(~model, ncol = 1) +
   labs(
@@ -440,9 +454,13 @@ p1 <- ggplot(pred_full) +
   theme(panel.border = element_blank())
 
 p2 <- ggplot(df_beta, aes(x = beta)) +
-  geom_vline(xintercept = 0, linetype = 2, alpha = 1, color = cols$mid) +
-  geom_density(fill = cols$accent, alpha = 0.4, linewidth = 0) +
+  geom_vline(xintercept = 0, linetype = 2, alpha = 1, color = "grey65") +
+  geom_density(aes(fill = model), alpha = 0.4, linewidth = 0) +
   coord_cartesian(xlim = c(-0.07, 0.07)) +
+  scale_fill_manual(values = c(
+    "Model using point estimates" = cols$point,
+    "Model with sampling uncertainty" = cols$sampling
+  )) +
   facet_wrap(~model, ncol = 1) +
   labs(x = expression(paste("Slope coefficient (", italic(beta), ")")), y = "Posterior density") +
   tt +

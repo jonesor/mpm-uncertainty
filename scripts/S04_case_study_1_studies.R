@@ -101,6 +101,188 @@ mdata <- paste(dataf$Authors, dataf$YearPublication, dataf$Journal, dataf$DOI_IS
 write(mdata, file = "data/derived/studies/_data_sources.csv", append = TRUE)
 
 
+# Summarize boundary survival estimates and small stage sample sizes ----
+sd_files <- Sys.glob("data/derived/analysis_cache/sd_*.RData")
+
+all_sd <- map_dfr(sd_files, function(path) {
+  out <- rdata_load2(path)
+  as_tibble(out) %>%
+    mutate(source_file = basename(path))
+})
+
+population_base <- all_sd %>%
+  mutate(
+    MatrixDimension = suppressWarnings(as.integer(MatrixDimension)),
+    surv = map(mat, ~ colSums(Rcompadre::matU(.x))),
+    stage_n = map(N, as.numeric)
+  ) %>%
+  transmute(
+    source_file,
+    Authors,
+    YearPublication,
+    SpeciesAccepted,
+    MatrixPopulation,
+    OrganismType,
+    MatrixDimension,
+    surv,
+    stage_n
+  )
+
+stage_diag <- population_base %>%
+  mutate(stage_tbl = map2(surv, stage_n, function(s, n) {
+    if (length(n) == 0 || length(n) != length(s)) {
+      n <- rep(NA_real_, length(s))
+    }
+
+    tibble(
+      stage_index = seq_along(s),
+      survival = as.numeric(s),
+      n_stage = as.numeric(n)
+    )
+  })) %>%
+  select(-surv, -stage_n) %>%
+  unnest(stage_tbl) %>%
+  mutate(
+    boundary_zero = survival == 0,
+    boundary_one = survival == 1,
+    boundary_any = boundary_zero | boundary_one,
+    small_n20 = n_stage < 20,
+    small_n50 = n_stage < 50
+  )
+
+population_diag <- stage_diag %>%
+  group_by(
+    Authors,
+    YearPublication,
+    SpeciesAccepted,
+    MatrixPopulation,
+    OrganismType,
+    MatrixDimension
+  ) %>%
+  summarize(
+    n_stages = dplyr::n(),
+    n_stages_with_N = sum(!is.na(n_stage)),
+    any_boundary = any(boundary_any, na.rm = TRUE),
+    any_boundary_one = any(boundary_one, na.rm = TRUE),
+    prop_boundary = mean(boundary_any, na.rm = TRUE),
+    prop_boundary_one = mean(boundary_one, na.rm = TRUE),
+    any_small_n20 = any(small_n20, na.rm = TRUE),
+    any_small_n50 = any(small_n50, na.rm = TRUE),
+    prop_small_n20 = mean(small_n20, na.rm = TRUE),
+    prop_small_n50 = mean(small_n50, na.rm = TRUE),
+    min_stage_n = suppressWarnings(min(n_stage, na.rm = TRUE)),
+    median_stage_n = median(n_stage, na.rm = TRUE),
+    mean_stage_n = mean(n_stage, na.rm = TRUE),
+    mean_survival = mean(survival, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    across(
+      c(min_stage_n, median_stage_n, mean_stage_n),
+      ~ ifelse(is.infinite(.x), NA_real_, .x)
+    ),
+    dim_group = if_else(MatrixDimension <= 5, "3-5", "6+")
+  )
+
+population_with_counts <- population_diag %>%
+  filter(n_stages_with_N > 0)
+
+by_life_form <- population_with_counts %>%
+  group_by(OrganismType) %>%
+  summarize(
+    group_type = "Life form",
+    n_populations = dplyr::n(),
+    pct_any_boundary = mean(any_boundary) * 100,
+    pct_any_boundary_one = mean(any_boundary_one) * 100,
+    pct_any_small_n20 = mean(any_small_n20) * 100,
+    pct_any_small_n50 = mean(any_small_n50) * 100,
+    mean_prop_boundary = mean(prop_boundary),
+    mean_prop_small_n20 = mean(prop_small_n20),
+    mean_min_stage_n = mean(min_stage_n, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  rename(group_value = OrganismType)
+
+by_dimension_group <- population_with_counts %>%
+  group_by(dim_group) %>%
+  summarize(
+    group_type = "Matrix dimension",
+    n_populations = dplyr::n(),
+    pct_any_boundary = mean(any_boundary) * 100,
+    pct_any_boundary_one = mean(any_boundary_one) * 100,
+    pct_any_small_n20 = mean(any_small_n20) * 100,
+    pct_any_small_n50 = mean(any_small_n50) * 100,
+    mean_prop_boundary = mean(prop_boundary),
+    mean_prop_small_n20 = mean(prop_small_n20),
+    mean_min_stage_n = mean(min_stage_n, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  rename(group_value = dim_group)
+
+by_dimension <- population_with_counts %>%
+  group_by(MatrixDimension) %>%
+  summarize(
+    n_populations = dplyr::n(),
+    pct_any_boundary = mean(any_boundary) * 100,
+    pct_any_boundary_one = mean(any_boundary_one) * 100,
+    pct_any_small_n20 = mean(any_small_n20) * 100,
+    pct_any_small_n50 = mean(any_small_n50) * 100,
+    mean_prop_boundary = mean(prop_boundary),
+    mean_prop_small_n20 = mean(prop_small_n20),
+    mean_min_stage_n = mean(min_stage_n, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  arrange(MatrixDimension)
+
+overall <- tibble(
+  n_populations_all = nrow(population_diag),
+  n_populations_with_counts = nrow(population_with_counts),
+  n_stage_estimates = nrow(stage_diag),
+  pct_pop_with_any_boundary = mean(population_with_counts$any_boundary) * 100,
+  pct_pop_with_any_boundary_one = mean(population_with_counts$any_boundary_one) * 100,
+  pct_pop_with_any_small_n20 = mean(population_with_counts$any_small_n20) * 100,
+  pct_pop_with_any_small_n50 = mean(population_with_counts$any_small_n50) * 100,
+  corr_prop_boundary_prop_small_n20 = cor(
+    population_with_counts$prop_boundary,
+    population_with_counts$prop_small_n20
+  ),
+  corr_matrix_dimension_prop_boundary = cor(
+    population_with_counts$MatrixDimension,
+    population_with_counts$prop_boundary
+  ),
+  corr_matrix_dimension_prop_small_n20 = cor(
+    population_with_counts$MatrixDimension,
+    population_with_counts$prop_small_n20
+  )
+)
+
+group_summary <- bind_rows(
+  by_life_form,
+  by_dimension_group
+)
+
+write_csv(
+  stage_diag,
+  "data/derived/analysis_cache/boundary_smallN_stage_summary.csv"
+)
+write_csv(
+  population_diag,
+  "data/derived/analysis_cache/boundary_smallN_population_summary.csv"
+)
+write_csv(
+  group_summary,
+  "data/derived/analysis_cache/boundary_smallN_group_summary.csv"
+)
+write_csv(
+  by_dimension,
+  "data/derived/analysis_cache/boundary_smallN_by_dimension.csv"
+)
+write_csv(
+  overall,
+  "data/derived/analysis_cache/boundary_smallN_overall.csv"
+)
+
+
 npool <- kiviniemi %>%
   as_tibble() %>%
   group_by(MatrixPopulation) %>%
@@ -113,8 +295,7 @@ kiviniemi_out <- compadre %>%
   filter(MatrixPopulation %in% c("A", "B")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(kiviniemi_out, file = "data/derived/analysis_cache/sd_kiviniemi.RData")
 
@@ -243,8 +424,7 @@ satterthwaite_out <- compadre %>%
   filter(MatrixPopulation %in% npool$MatrixPopulation) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(satterthwaite_out, file = "data/derived/analysis_cache/sd_satterthwaite.RData")
 
@@ -290,8 +470,7 @@ andrello_out <- compadre %>%
   population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(andrello_out, file = "data/derived/analysis_cache/sd_andrello.RData")
 
@@ -346,8 +525,7 @@ lisc_out <- compadre %>%
   filter(!grepl(";", MatrixPopulation)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(lisc_out, file = "data/derived/analysis_cache/sd_lisc.RData")
 
@@ -407,8 +585,7 @@ cipi_out <- compadre %>%
   filter(!grepl(";", MatrixPopulation)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(cipi_out, file = "data/derived/analysis_cache/sd_cipi.RData")
 
@@ -461,8 +638,7 @@ scanga_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(scanga_out, file = "data/derived/analysis_cache/sd_scanga.RData")
 
@@ -510,8 +686,7 @@ lazaro_out <- compadre %>%
   population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(lazaro_out, file = "data/derived/analysis_cache/sd_lazaro.RData")
 
@@ -559,8 +734,7 @@ arroyo_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(arroyo_out, file = "data/derived/analysis_cache/sd_arroyo.RData")
 
@@ -623,8 +797,7 @@ plank_out <- compadre %>%
   filter(!grepl("fecundity", MatrixPopulation, ignore.case = TRUE)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(plank_out, file = "data/derived/analysis_cache/sd_plank.RData")
 
@@ -674,8 +847,7 @@ jolls_out <- compadre %>%
   mutate(MatrixPopulation = ifelse(MatrixStartYear <= 2000, "1995", "2005")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(jolls_out, file = "data/derived/analysis_cache/sd_jolls.RData")
 
@@ -724,8 +896,7 @@ torres_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(torres_out, file = "data/derived/analysis_cache/sd_torres.RData")
 
@@ -778,8 +949,7 @@ andrieu_out <- compadre %>%
   population_matrices_from_available(preferred = c("Pooled", "Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(andrieu_out, file = "data/derived/analysis_cache/sd_andrieu.RData")
 
@@ -828,8 +998,7 @@ eriksson_out <- compadre %>%
   slice(-grep(";", MatrixPopulation)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(eriksson_out, file = "data/derived/analysis_cache/sd_eriksson.RData")
 
@@ -886,8 +1055,7 @@ assc_out <- compadre %>%
   population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(assc_out, file = "data/derived/analysis_cache/sd_assc.RData")
 
@@ -942,8 +1110,7 @@ lemke_out <- compadre %>%
   filter(Observation == "Pooled by habitat and year") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(lemke_out, file = "data/derived/analysis_cache/sd_lemke.RData")
 
@@ -1034,8 +1201,7 @@ toledo_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(toledo_out, file = "data/derived/analysis_cache/sd_toledo.RData")
 
@@ -1085,8 +1251,7 @@ crone_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(crone_out, file = "data/derived/analysis_cache/sd_crone.RData")
 
@@ -1137,8 +1302,7 @@ dostalek_out <- compadre %>%
   population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(dostalek_out, file = "data/derived/analysis_cache/sd_dostalek.RData")
 
@@ -1186,8 +1350,7 @@ evju_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(evju_out, file = "data/derived/analysis_cache/sd_evju.RData")
 
@@ -1235,8 +1398,7 @@ flores_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(flores_out, file = "data/derived/analysis_cache/sd_flores.RData")
 
@@ -1277,8 +1439,7 @@ shryock_out <- compadre %>%
   population_matrices_from_available(preferred = c("Mean", "Individual")) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(shryock_out, file = "data/derived/analysis_cache/sd_shryock.RData")
 
@@ -1323,8 +1484,7 @@ csergo_out <- compadre %>%
   filter(!grepl(";", MatrixPopulation)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(csergo_out, file = "data/derived/analysis_cache/sd_csergo.RData")
 
@@ -1372,8 +1532,7 @@ raghu_out <- compadre %>%
   filter(!grepl(";", MatrixPopulation)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(raghu_out, file = "data/derived/analysis_cache/sd_raghu.RData")
 
@@ -1422,8 +1581,7 @@ martin_out <- compadre %>%
   filter(!grepl(";", MatrixPopulation)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(martin_out, file = "data/derived/analysis_cache/sd_martin.RData")
 
@@ -1473,8 +1631,7 @@ law_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(law_out, file = "data/derived/analysis_cache/sd_law.RData")
 
@@ -1523,8 +1680,7 @@ jacq_out <- compadre %>%
   filter(!grepl(";", MatrixPopulation)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(jacq_out, file = "data/derived/analysis_cache/sd_jacq.RData")
 
@@ -1571,8 +1727,7 @@ portela_out <- compadre %>%
   filter(MatrixComposite == "Mean", MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(portela_out, file = "data/derived/analysis_cache/sd_portela.RData")
 
@@ -1615,8 +1770,7 @@ lopez_out <- compadre %>%
   filter(MatrixComposite == "Mean") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(lopez_out, file = "data/derived/analysis_cache/sd_lopez.RData")
 
@@ -1660,8 +1814,7 @@ auestad_out <- compadre %>%
   filter(MatrixTreatment == "Unmanipulated") %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(auestad_out, file = "data/derived/analysis_cache/sd_auestad.RData")
 
@@ -1708,8 +1861,7 @@ dias_out <- compadre %>%
   filter(!grepl(";", MatrixPopulation)) %>%
   left_join(npool) %>%
   mutate(simU = pmap(list(matU(mat), N), ~ sim_U_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) %>%
-  select(-N)
+  mutate(simF = pmap(list(matF(mat), N), ~ sim_F_wrapper(..1, N = ..2, nsim = 1000))) 
 
 save(dias_out, file = "data/derived/analysis_cache/sd_dias.RData")
 

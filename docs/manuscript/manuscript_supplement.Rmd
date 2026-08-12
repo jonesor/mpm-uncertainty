@@ -39,6 +39,7 @@ if (isTRUE(params$refresh_outputs)) {
   source(here::here("scripts", "S12_case_study_2.R"))
   source(here::here("scripts", "S13_supplement.R"))
   source(here::here("scripts", "S14_case_study_3_astragalus.R"))
+  source(here::here("scripts", "S15_case_study_1_qsd_threshold_sensitivity.R"))
 }
 
 fig1_summary <- readr::read_csv(
@@ -79,6 +80,34 @@ case3_stage_weight <- readr::read_csv(
 )
 studies_sources <- readr::read_csv(
   here::here("docs", "tables", "studies_additional_sources.csv"),
+  show_col_types = FALSE
+)
+study_selection_summary_num <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "study_selection_comparison_summary_numeric.csv"),
+  show_col_types = FALSE
+)
+study_selection_summary_life <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "study_selection_comparison_summary_life_form.csv"),
+  show_col_types = FALSE
+)
+included_not_in_screen <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "study_selection_included_not_in_current_screen.csv"),
+  show_col_types = FALSE
+)
+boundary_smallN_overall <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "boundary_smallN_overall.csv"),
+  show_col_types = FALSE
+)
+boundary_smallN_group <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "boundary_smallN_group_summary.csv"),
+  show_col_types = FALSE
+)
+case1_disp_models <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case1_displacement_boundary_models.csv"),
+  show_col_types = FALSE
+)
+case1_qsd_sens <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case1_qsd_threshold_sensitivity_summary.csv"),
   show_col_types = FALSE
 )
 
@@ -267,6 +296,173 @@ table_case3_spring <- case3_spring |>
   ) |>
   dplyr::select(Site, Model, Median, `Lower 95%`, `Upper 95%`)
 
+fmt_mean_sd <- function(x, s, digits = 2) {
+  paste0(formatC(x, digits = digits, format = "f"), " ± ",
+         formatC(s, digits = digits, format = "f"))
+}
+
+fmt_n_prop <- function(n, p, digits = 1) {
+  paste0(n, " (", formatC(100 * p, digits = digits, format = "f"), "%)")
+}
+
+life_levels <- c(
+  "Herbaceous perennial",
+  "Succulent",
+  "Shrub",
+  "Tree",
+  "Palm"
+)
+
+life_tbl <- tibble::tibble(dominant_life_form = life_levels) |>
+  dplyr::left_join(
+    study_selection_summary_life |>
+      dplyr::filter(selection_group == "Included") |>
+      dplyr::select(dominant_life_form, n_studies, prop_studies) |>
+      dplyr::rename(included_n = n_studies, included_prop = prop_studies),
+    by = "dominant_life_form"
+  ) |>
+  dplyr::left_join(
+    study_selection_summary_life |>
+      dplyr::filter(selection_group == "Excluded") |>
+      dplyr::select(dominant_life_form, n_studies, prop_studies) |>
+      dplyr::rename(excluded_n = n_studies, excluded_prop = prop_studies),
+    by = "dominant_life_form"
+  ) |>
+  dplyr::mutate(
+    included_n = dplyr::coalesce(included_n, 0),
+    included_prop = dplyr::coalesce(included_prop, 0),
+    excluded_n = dplyr::coalesce(excluded_n, 0),
+    excluded_prop = dplyr::coalesce(excluded_prop, 0)
+  )
+
+included_num <- study_selection_summary_num |> dplyr::filter(selection_group == "Included")
+excluded_num <- study_selection_summary_num |> dplyr::filter(selection_group == "Excluded")
+
+table_study_selection <- tibble::tibble(
+  Characteristic = c(
+    "Studies, n",
+    "Mean matrix dimension",
+    "Mean stage-specific survival",
+    "Proportion of survival estimates equal to 0",
+    "Proportion of survival estimates equal to 1",
+    "Proportion of survival estimates at the boundary (0 or 1)",
+    paste("Dominant life form:", life_tbl$dominant_life_form)
+  ),
+  Included = c(
+    as.character(included_num$n_studies),
+    fmt_mean_sd(included_num$mean_matrix_dimension_mean, included_num$mean_matrix_dimension_sd),
+    fmt_mean_sd(included_num$mean_stage_survival_mean, included_num$mean_stage_survival_sd),
+    fmt_mean_sd(included_num$prop_boundary_zero_mean, included_num$prop_boundary_zero_sd),
+    fmt_mean_sd(included_num$prop_boundary_one_mean, included_num$prop_boundary_one_sd),
+    fmt_mean_sd(included_num$prop_boundary_any_mean, included_num$prop_boundary_any_sd),
+    mapply(fmt_n_prop, life_tbl$included_n, life_tbl$included_prop)
+  ),
+  Excluded = c(
+    as.character(excluded_num$n_studies),
+    fmt_mean_sd(excluded_num$mean_matrix_dimension_mean, excluded_num$mean_matrix_dimension_sd),
+    fmt_mean_sd(excluded_num$mean_stage_survival_mean, excluded_num$mean_stage_survival_sd),
+    fmt_mean_sd(excluded_num$prop_boundary_zero_mean, excluded_num$prop_boundary_zero_sd),
+    fmt_mean_sd(excluded_num$prop_boundary_one_mean, excluded_num$prop_boundary_one_sd),
+    fmt_mean_sd(excluded_num$prop_boundary_any_mean, excluded_num$prop_boundary_any_sd),
+    mapply(fmt_n_prop, life_tbl$excluded_n, life_tbl$excluded_prop)
+  )
+)
+
+table_boundary_smallN <- boundary_smallN_group |>
+  dplyr::mutate(
+    group_type = factor(group_type, levels = c("Life form", "Matrix dimension")),
+    group_value = dplyr::case_when(
+      group_type == "Matrix dimension" & group_value == "3-5" ~ "3-5 stages",
+      group_type == "Matrix dimension" & group_value == "6+" ~ "6+ stages",
+      TRUE ~ group_value
+    )
+  ) |>
+  dplyr::arrange(group_type, group_value) |>
+  dplyr::transmute(
+    Group = group_type,
+    Category = group_value,
+    `Population entries, n` = n_populations,
+    `Any boundary survival estimate (%)` = round(pct_any_boundary, 1),
+    `Any stage with N < 20 (%)` = round(pct_any_small_n20, 1),
+    `Any stage with N < 50 (%)` = round(pct_any_small_n50, 1),
+    `Mean minimum stage N` = round(mean_min_stage_n, 1)
+  )
+
+table_case1_disp_models <- case1_disp_models |>
+  dplyr::mutate(
+    Response = dplyr::case_when(
+      response == "abs_disp_S" ~ "Shape displacement |point - median|",
+      response == "abs_disp_log_L" ~ "Life expectancy displacement |log10(point) - log10(median)|",
+      TRUE ~ response
+    ),
+    Predictor = dplyr::case_when(
+      predictor == "n_boundary_stages" ~ "Number of boundary survival stages",
+      predictor == "prop_individuals_boundary" ~ "Proportion of individuals in boundary-survival stages",
+      TRUE ~ predictor
+    ),
+    Slope = sprintf("%.3f", slope),
+    `95% CI` = sprintf("[%.3f, %.3f]", conf_low, conf_upp),
+    `P value` = format.pval(p_value, digits = 2, eps = 1e-4),
+    `R²` = sprintf("%.3f", r_squared)
+  ) |>
+  dplyr::transmute(
+    Response,
+    Predictor,
+    `Population entries, n` = n,
+    Slope,
+    `95% CI`,
+    `P value`,
+    `R²`
+  )
+
+table_case1_qsd_sens <- case1_qsd_sens |>
+  dplyr::transmute(
+    Comparison = comparison,
+    `Population entries, n` = n,
+    `Correlation of point estimates` = sprintf("%.3f", cor_shape_pt),
+    `Median |ΔS| (point estimate)` = sprintf("%.3f", median_abs_diff_pt),
+    `95th percentile |ΔS| (point estimate)` = sprintf("%.3f", p95_abs_diff_pt),
+    `Max |ΔS| (point estimate)` = sprintf("%.3f", max_abs_diff_pt),
+    `Median |ΔS| (sampling median)` = sprintf("%.3f", median_abs_diff_med),
+    `Sign changes in S` = n_sign_change_pt,
+    `Median Δq` = median_delta_q,
+    `Range of Δq` = range_delta_q
+  )
+
+shape_nb_slope <- table_case1_disp_models$Slope[1]
+shape_nb_ci <- table_case1_disp_models$`95% CI`[1]
+shape_pb_slope <- table_case1_disp_models$Slope[2]
+shape_pb_ci <- table_case1_disp_models$`95% CI`[2]
+l0_nb_slope <- table_case1_disp_models$Slope[3]
+l0_nb_ci <- table_case1_disp_models$`95% CI`[3]
+l0_pb_slope <- table_case1_disp_models$Slope[4]
+l0_pb_ci <- table_case1_disp_models$`95% CI`[4]
+disp_r2_min <- min(case1_disp_models$r_squared)
+disp_r2_max <- max(case1_disp_models$r_squared)
+
+boundary_lookup <- function(category, column) {
+  out <- boundary_smallN_group |>
+    dplyr::mutate(
+      group_value = dplyr::case_when(
+        group_type == "Matrix dimension" & group_value == "3-5" ~ "3-5 stages",
+        group_type == "Matrix dimension" & group_value == "6+" ~ "6+ stages",
+        TRUE ~ group_value
+      )
+    ) |>
+    dplyr::filter(group_value == category) |>
+    dplyr::pull({{ column }})
+  out[[1]]
+}
+
+herb_boundary_pct <- boundary_lookup("Herbaceous perennial", pct_any_boundary)
+herb_small20_pct <- boundary_lookup("Herbaceous perennial", pct_any_small_n20)
+succ_boundary_pct <- boundary_lookup("Succulent", pct_any_boundary)
+succ_small20_pct <- boundary_lookup("Succulent", pct_any_small_n20)
+dim35_boundary_pct <- boundary_lookup("3-5 stages", pct_any_boundary)
+dim35_small20_pct <- boundary_lookup("3-5 stages", pct_any_small_n20)
+dim6p_boundary_pct <- boundary_lookup("6+ stages", pct_any_boundary)
+dim6p_small20_pct <- boundary_lookup("6+ stages", pct_any_small_n20)
+
 table_case2_stage_weight <- case2_stage_weight |>
   dplyr::mutate(stage_label = paste0("Stage ", stage)) |>
   dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) |>
@@ -398,17 +594,33 @@ To support uncertainty propagation in secondary analyses, primary studies should
 
 These items are usually sufficient for parametric uncertainty reconstruction in compiled databases.
 
-## S1.8 Study and species identities in analysis 1
+## S1.8 Included versus excluded studies in the current target-study screen
+
+To assess whether the studies retained for uncertainty analysis differed systematically from those screened but not retained, we compared the 23 post-2010 studies in the final dataset that still fall within the current reproducible COMPADRE screen against the remaining 69 screened studies. For each study, we summarized mean matrix dimension, mean stage-specific survival (the average of \(U\)-column survival probabilities across matrices), and the proportions of stage-specific survival estimates equal to 0, equal to 1, or at either boundary. Dominant life form was defined as the modal `OrganismType` among a study's matrices. Three additional post-2010 studies in the final dataset do not fall within the current screen under `r compadre_version_label` (`r paste(sprintf('*%s*', included_not_in_screen$SpeciesAccepted), collapse = ', ')`), and five further studies were pre-2010 additions; these eight studies were excluded from this screen-based comparison.
+
+## S1.9 Study and species identities in analysis 1
 
 Analysis 1 used a subset of the full compiled dataset: 68 population-level entries representing 25 species. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
 
-## S1.9 Multi-site extension for analysis 3 (*Astragalus scaphoides*)
+## S1.10 Multi-site extension for analysis 3 (*Astragalus scaphoides*)
 
 To evaluate whether inference robustness in analysis 2 generalised across populations, we repeated the same paired modelling framework for all available *Astragalus scaphoides* sites with sufficient annual coverage. For each site, we fit (i) a point-estimate model and (ii) a sampling-uncertainty model for recruitment-temperature relationships, using both the monthly-lag Gaussian-process specification and the simplified spring-temperature specification. We then compared posterior medians and 95% intervals between model formulations within site. This design isolates the contribution of uncertainty propagation while preserving site-specific ecological context.
 
 For stage-specific survival in analysis 3, we used the same matched pair as in analysis 2: an SSD-weighted quasibinomial point-estimate model (\(\texttt{surv} \sim \texttt{tmp}\), weights from the stable stage distribution of each annual \(U\) matrix) and a binomial count model (\(\texttt{cbind}(n_{\text{surv}}, n_{\text{fail}}) \sim \texttt{tmp}\)). This keeps the linear predictor and response scale aligned across formulations, differing only in whether survival is treated as a plug-in proportion or as counts with explicit sampling uncertainty.
 
 For sensitivity analyses intended to mimic database-only use (no access to true stage sample sizes), we re-fit stage-specific point-estimate models under two alternatives: (i) no weighting and (ii) SSD weighting derived from each annual \(U\) matrix.
+
+## S1.11 Boundary survival estimates and small stage-specific sample sizes in analysis 1
+
+To assess whether the conditions most likely to distort point estimates were concentrated in particular parts of the analysis 1 dataset, we summarized the 68 population-level entries with recovered stage counts by COMPADRE `OrganismType` (used here as the available life-form grouping) and by broad matrix-dimension class (3-5 versus 6+ stages). For each population-level matrix, we recorded whether any stage-specific survival estimate lay exactly on the boundary (0 or 1), whether any stage had \(N < 20\) or \(N < 50\), and the minimum stage-specific sample size. These summaries are descriptive and intended to identify where potentially fragile point estimates are concentrated in the analysed subset.
+
+## S1.12 Displacement magnitude versus boundary survival structure
+
+To quantify the mechanism behind point-estimate displacement in analysis 1, we compared each population-level point estimate to the median of its sampling distribution for mature life expectancy and shape. We defined displacement magnitude as the absolute difference between the point estimate and the sampling-distribution median; for life expectancy, this was calculated on the \(\log_{10}\) scale to reflect multiplicative discrepancies. We then related displacement magnitude to two predictors derived from the same population-level matrix: (i) the number of stage-specific survival estimates at the boundary (0 or 1), and (ii) the proportion of observed individuals belonging to boundary-survival stages, calculated from the recovered stage-specific sample sizes. We summarized these relationships with simple linear regressions and visualized them with scatter plots and fitted lines.
+
+## S1.13 Sensitivity to the quasi-stable-distribution truncation threshold
+
+To assess whether the shape metric was sensitive to the truncation rule used to avoid artefactual mortality plateaus, we repeated the analysis 1 shape calculation using quasi-stable-distribution convergence thresholds of 0.5% and 5%, alongside the 1% threshold used in the main analysis. For each population-level MPM that remained estimable under all three thresholds, we recalculated the point estimate of shape and the bootstrap sampling-distribution summary using the threshold-specific truncation age \(q\). We then compared the resulting shape estimates to the 1% baseline using pairwise correlations, absolute differences, sign changes around zero, and shifts in \(q\).
 
 # Supplementary Results
 
@@ -417,6 +629,20 @@ For sensitivity analyses intended to mimic database-only use (no access to true 
 Across estimable stages in analysis 2, switching from no weighting to SSD weighting changed temperature-coefficient medians by at most `r round(max(case2_stage_cmp$abs_beta_diff, na.rm = TRUE), 3)` on the logit scale, with interval widths changing by `r round(min(case2_stage_cmp$width_ssd - case2_stage_cmp$width_no, na.rm = TRUE), 3)` to `r round(max(case2_stage_cmp$width_ssd - case2_stage_cmp$width_no, na.rm = TRUE), 3)` (Table S9).
 
 Across estimable site-stage combinations in analysis 3, the corresponding maximum absolute median shift was `r round(max(case3_stage_cmp$abs_beta_diff, na.rm = TRUE), 3)`, and interval-width differences ranged from `r round(min(case3_stage_cmp$width_ssd - case3_stage_cmp$width_no, na.rm = TRUE), 3)` to `r round(max(case3_stage_cmp$width_ssd - case3_stage_cmp$width_no, na.rm = TRUE), 3)` (Table S10). These sensitivity checks show how weighting assumptions alter point-estimate uncertainty when true stage sample sizes are unavailable.
+
+## S2.2 Where do boundary estimates and small stage counts occur?
+
+Among the `r boundary_smallN_overall$n_populations_with_counts` analysis 1 population-level entries with recovered stage counts, `r round(boundary_smallN_overall$pct_pop_with_any_boundary, 1)`% contained at least one boundary survival estimate and `r round(boundary_smallN_overall$pct_pop_with_any_small_n20, 1)`% contained at least one stage estimated from fewer than 20 individuals. These conditions tended to co-occur: the population-level proportion of boundary survival estimates was positively correlated with the proportion of stages having \(N < 20\) (\(r = `r round(boundary_smallN_overall$corr_prop_boundary_prop_small_n20, 2)`\)).
+
+By life form, herbaceous perennials made up most of the analysed subset and showed the highest frequency among the well-represented categories, with `r herb_boundary_pct`% of entries containing at least one boundary survival estimate and `r herb_small20_pct`% containing at least one stage with \(N < 20\). Succulents showed lower corresponding values (`r succ_boundary_pct`% and `r succ_small20_pct`%, respectively). Woody life forms were too sparsely represented in the final subset for strong conclusions. By matrix dimension, both features were more common in 6+-stage matrices than in 3-5-stage matrices (`r dim6p_boundary_pct`% versus `r dim35_boundary_pct`% for any boundary estimate; `r dim6p_small20_pct`% versus `r dim35_small20_pct`% for any stage with \(N < 20\); Table S12).
+
+## S2.3 Does displacement increase with boundary survival structure?
+
+Displacement magnitude increased with both measures of boundary-survival structure (Figure S3; Table S13). For shape, the absolute difference between the point estimate and the sampling-distribution median increased with the number of boundary survival stages (slope = `r shape_nb_slope`, 95% CI `r shape_nb_ci`) and with the proportion of individuals in boundary-survival stages (slope = `r shape_pb_slope`, 95% CI `r shape_pb_ci`). For mature life expectancy, the same pattern was evident on the \(\log_{10}\) scale (number of boundary stages: slope = `r l0_nb_slope`, 95% CI `r l0_nb_ci`; proportion of individuals in boundary-survival stages: slope = `r l0_pb_slope`, 95% CI `r l0_pb_ci`). The fitted models explained a modest but non-trivial share of the among-matrix variation in displacement magnitude (\(R^2 = `r sprintf('%.3f', disp_r2_min)`-`r sprintf('%.3f', disp_r2_max)`\)). These results support the proposed mechanism: matrices with more boundary-survival structure tend to show larger mismatches between point estimates and the centres of their sampling distributions.
+
+## S2.4 How sensitive are shape estimates to the truncation threshold?
+
+In the `r case1_qsd_sens$n[1]` population-level entries for which shape was estimable under all three thresholds, the shape metric was highly stable to the quasi-stable-distribution truncation rule (Table S14; Figure S4). Relative to the 1% threshold used in the main analysis, the 0.5% threshold changed point estimates by a median absolute amount of `r sprintf('%.3f', case1_qsd_sens$median_abs_diff_pt[case1_qsd_sens$comparison == "0.5% vs 1%"])` and sampling-distribution medians by `r sprintf('%.3f', case1_qsd_sens$median_abs_diff_med[case1_qsd_sens$comparison == "0.5% vs 1%"])`. The more permissive 5% threshold produced somewhat larger but still modest shifts (median absolute changes `r sprintf('%.3f', case1_qsd_sens$median_abs_diff_pt[case1_qsd_sens$comparison == "5% vs 1%"])` and `r sprintf('%.3f', case1_qsd_sens$median_abs_diff_med[case1_qsd_sens$comparison == "5% vs 1%"])`, respectively), with only `r case1_qsd_sens$n_sign_change_pt[case1_qsd_sens$comparison == "5% vs 1%"]` point estimates changing sign relative to the 1% baseline. Those sign changes occurred only for populations whose baseline shape estimates were already very close to zero. Overall, this sensitivity check indicates that the main qualitative results are not driven by the specific 1% truncation threshold.
 
 # Supplementary Tables
 
@@ -530,6 +756,42 @@ ft
 
 \newpage
 
+Table S11. Comparison of screened target studies that were included versus excluded under the current reproducible COMPADRE-based screen. Numeric entries are study-level means ± SD; life-form entries are numbers of studies with percentages in parentheses. This comparison shows only modest differences between the retained and excluded screened sets.
+
+```{r table-study-selection}
+ft <- make_flextable(table_study_selection)
+ft
+```
+
+\newpage
+
+Table S12. Distribution of boundary survival estimates and small stage-specific sample sizes across analysis 1 population-level MPM entries, grouped by the COMPADRE life-form categories available for these studies and by broad matrix-dimension class. Percentages give the share of population entries with at least one boundary survival estimate or at least one stage with sample size below the stated threshold. Woody life-form categories are included for completeness but are sparsely represented in this subset.
+
+```{r table-boundary-smalln}
+ft <- make_flextable(table_boundary_smallN)
+ft
+```
+
+\newpage
+
+Table S13. Linear models relating displacement magnitude in analysis 1 to boundary-survival predictors. Displacement is defined as the absolute difference between the point estimate and the median of the sampling distribution; life expectancy displacement is modelled on the log10 scale. Positive slopes indicate greater point-estimate displacement in matrices with more boundary survival structure.
+
+```{r table-case1-displacement-models}
+ft <- make_flextable(table_case1_disp_models)
+ft
+```
+
+\newpage
+
+Table S14. Sensitivity of analysis 1 shape estimates to the quasi-stable-distribution truncation threshold used when calculating the shape metric. Comparisons are against the 1% threshold used in the main analysis, showing that the substantive shape results are stable to plausible threshold choices.
+
+```{r table-case1-qsd-threshold}
+ft <- make_flextable(table_case1_qsd_sens)
+ft
+```
+
+\newpage
+
 # Supplementary Figures
 
 
@@ -541,6 +803,18 @@ knitr::include_graphics(here::here("figures", "Figure_S1_boundary_estimate_diagn
 
 ```{r fig-boundary-2, fig.cap="Illustration of survivorship trajectories under boundary survival transitions. Age/time is shown in years. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
 knitr::include_graphics(here::here("figures", "Figure_S2_boundary_survivorship_illustration.png"))
+```
+
+\newpage
+
+```{r fig-boundary-3, fig.cap="Displacement magnitude in analysis 1 increases with boundary-survival structure. Each point is a population-level matrix. Panels compare the absolute difference between the point estimate and the sampling-distribution median against the number of boundary survival stages and the proportion of sampled individuals in those boundary stages, showing that matrices with more boundary-survival structure tend to have larger point-estimate displacement."}
+knitr::include_graphics(here::here("figures", "Figure_S3_displacement_boundary_diagnostics.png"))
+```
+
+\newpage
+
+```{r fig-boundary-4, fig.cap="Sensitivity of analysis 1 point estimates of mortality-trajectory shape to the quasi-stable-distribution truncation threshold. Point estimates calculated with 0.5% and 5% thresholds are plotted against the 1% threshold used in the main analysis, showing that most values lie close to the 1:1 line and that threshold choice makes little difference except for a small number of near-zero cases."}
+knitr::include_graphics(here::here("figures", "Figure_S4_shape_threshold_sensitivity.png"))
 ```
 
 \newpage

@@ -193,106 +193,30 @@ df_other <- sd_other %>%
 
 
 # Variance components analysis ----
-stan_varcomp <- stan_model("models/varcomp.stan")
+bootstrap_ratio <- function(point, sampling_mean, n_boot = 2000) {
+  idx <- seq_along(point)
+  ratio_pt <- stats::var(point, na.rm = TRUE) / stats::var(sampling_mean, na.rm = TRUE)
+  ratio_boot <- replicate(n_boot, {
+    samp <- sample(idx, length(idx), replace = TRUE)
+    stats::var(point[samp], na.rm = TRUE) / stats::var(sampling_mean[samp], na.rm = TRUE)
+  })
 
-
-
-dat_stan <- list(
-  N = nrow(df_shape),
-  y_mean = df_shape$log_L_mean,
-  y_se = df_shape$log_L_se,
-  y_pt = log10(df_shape$L_pt)
-)
-
-dat_stan <- list(
-  N = nrow(df_shape),
-  y_mean = df_shape$S_mean,
-  y_se = df_shape$S_se,
-  y_pt = df_shape$S_pt
-)
-
-dat_stan <- list(
-  N = nrow(df_other),
-  y_mean = df_other$loglam_mean,
-  y_se = df_other$loglam_se,
-  y_pt = df_other$loglam_pt
-)
-
-dat_stan <- list(
-  N = nrow(df_other),
-  y_mean = df_other$damp_mean,
-  y_se = df_other$damp_se,
-  y_pt = df_other$damp_pt
-)
-
-dat_stan <- list(
-  N = nrow(df_other),
-  y_mean = df_other$gen_mean,
-  y_se = df_other$gen_se,
-  y_pt = df_other$gen_pt
-)
-
-dat_stan <- list(
-  N = nrow(df_other),
-  y_mean = df_other$pmature_mean,
-  y_se = df_other$pmature_se,
-  y_pt = df_other$pmature_pt
-)
-
-dat_stan$y_se <- pmax(dat_stan$y_se, 1e-6)
-
-theta_x <- if (dat_stan$N == nrow(df_other)) {
-  df_other$SpeciesAuthor
-} else {
-  df_shape$SpeciesAuthor
+  tibble(
+    ratio = ratio_pt,
+    low95 = stats::quantile(ratio_boot, 0.025, na.rm = TRUE),
+    upp95 = stats::quantile(ratio_boot, 0.975, na.rm = TRUE)
+  )
 }
 
-# fit stan model
-stan_fit_varcomp <- sampling(
-  stan_varcomp,
-  data = dat_stan,
-  warmup = 3000,
-  iter = 4000,
-  thin = 2,
-  chains = 2,
-  control = list(adapt_delta = 0.95, stepsize = 0.05, max_treedepth = 12),
-  seed = seed
-)
-
-pvar_w <- rstan_extract(stan_fit_varcomp, "pvar_w")
-quantile(pvar_w, c(0.025, 0.500, 0.975))
-
-
-
-
-df_theta <- posterior_vec(stan_fit_varcomp, x = theta_x, "theta") %>%
-  mutate(x = fct_reorder(x, med))
-
-p_theta <- ggplot(df_theta, aes(x = x)) +
-  geom_point(aes(y = med)) +
-  geom_errorbar(aes(ymin = low95, ymax = upp95)) +
-  coord_flip()
-
-if (!dir.exists("figures")) dir.create("figures", recursive = TRUE)
-ggsave("figures/Analysis1_variance_components_summary.png", p_theta, height = 4.5, width = 5.5, units = "in", dpi = 300)
-
-
-var_a_pt <- var(dat_stan$y_pt)
-var_a <- rstan_extract(stan_fit_varcomp, "var_a")
-quantile(var_a_pt / var_a, c(0.025, 0.500, 0.975))
-
-
-var_ratio <- tibble(
-  parameter = c("shape", "life_expectancy", "loglam", "damp", "gen", "pmature"),
-  ratio = c(
-    var(df_shape$S_pt) / var(df_shape$S_mean),
-    var(log10(df_shape$L_pt)) / var(df_shape$log_L_mean),
-    var(df_other$loglam_pt) / var(df_other$loglam_mean),
-    var(df_other$damp_pt) / var(df_other$damp_mean),
-    var(df_other$gen_pt) / var(df_other$gen_mean),
-    var(df_other$pmature_pt) / var(df_other$pmature_mean)
-  )
-)
+var_ratio <- bind_rows(
+  bootstrap_ratio(df_shape$S_pt, df_shape$S_mean) %>% mutate(parameter = "shape"),
+  bootstrap_ratio(log10(df_shape$L_pt), df_shape$log_L_mean) %>% mutate(parameter = "life_expectancy"),
+  bootstrap_ratio(df_other$loglam_pt, df_other$loglam_mean) %>% mutate(parameter = "loglam"),
+  bootstrap_ratio(df_other$damp_pt, df_other$damp_mean) %>% mutate(parameter = "damp"),
+  bootstrap_ratio(df_other$gen_pt, df_other$gen_mean) %>% mutate(parameter = "gen"),
+  bootstrap_ratio(df_other$pmature_pt, df_other$pmature_mean) %>% mutate(parameter = "pmature")
+) %>%
+  select(parameter, ratio, low95, upp95)
 
 if (!dir.exists("data/derived/analysis_cache")) {
   dir.create("data/derived/analysis_cache",
@@ -300,6 +224,11 @@ if (!dir.exists("data/derived/analysis_cache")) {
   )
 }
 write_csv(
-  var_ratio %>% mutate(ratio = round(ratio, 2)),
+  var_ratio %>%
+    mutate(
+      ratio = round(ratio, 2),
+      low95 = round(low95, 2),
+      upp95 = round(upp95, 2)
+    ),
   "data/derived/analysis_cache/case1_variance_ratios.csv"
 )

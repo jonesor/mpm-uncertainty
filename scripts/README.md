@@ -1,6 +1,6 @@
 scripts/
 --------
-Analysis scripts to reproduce results. Run in numeric order (`S01` ... `S14`) after `00_check_setup.R`.
+Analysis scripts to reproduce results. Run in numeric order (`S01` ... `S15`) after `00_check_setup.R`.
 
 Run order
 ---------
@@ -19,6 +19,7 @@ Run order
 - `S12_*`              Analysis 2.
 - `S13_*`              Supplementary figures and summaries.
 - `S14_*`              Analysis 3 (Astragalus, all COMPADRE sites) climate-recruitment analysis.
+- `S15_*`              Analysis 1 sensitivity to the quasi-stable truncation threshold for shape.
 - `99_make_tables.R`   Export publication tables as DOCX.
 
 Traceability map (manuscript claims -> code -> outputs)
@@ -35,6 +36,7 @@ Traceability map (manuscript claims -> code -> outputs)
 | Supplementary Table S1-2 | `S03_*`, `99_make_tables.R` | `fig1_derived_param_summary.csv`; `docs/tables/Table_S1-2_single_mpm_derived.docx` |
 | Supplementary Table S1-3 | `S13_*`, `99_make_tables.R` | `fig1_mean_mpm_param_summary.csv`; `docs/tables/Table_S1-3_mean_mpm_derived.docx` |
 | Supplementary boundary figures | `S13_*` | `figures/Figure_S1_boundary_estimate_diagnostic.png`, `figures/Figure_S2_boundary_survivorship_illustration.png` |
+| Supplementary truncation-threshold sensitivity | `S15_*`, `99_make_tables.R` | `figures/Figure_S4_shape_threshold_sensitivity.png`; `data/derived/analysis_cache/case1_qsd_threshold_sensitivity_summary.csv`; `docs/tables/Table_S14_qsd_threshold_sensitivity.docx` |
 | Supplementary species-level diagnostics | `S08_*` | `figures/Analysis1_species_shape_life_expectancy_distributions.png`, `figures/Analysis1_species_other_parameter_distributions.png`, `figures/Analysis1_species_shape_life_expectancy_regression.png`, `figures/Analysis1_species_shape_life_expectancy_scatter.png`, `figures/Analysis1_species_hazard_trajectories.png` |
 
 Output locations
