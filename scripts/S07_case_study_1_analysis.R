@@ -395,6 +395,7 @@ tt <- theme_mpm() +
   theme(
     text = element_text(size = 11.5),
     axis.ticks = element_line(linewidth = 0.4),
+    legend.position = "none",
     plot.margin = margin(2, 2, 2, 2)
   )
 
