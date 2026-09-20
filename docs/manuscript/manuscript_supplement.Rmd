@@ -600,7 +600,7 @@ To assess whether the studies retained for uncertainty analysis differed systema
 
 ## S1.9 Study and species identities in analysis 1
 
-Analysis 1 used a subset of the full compiled dataset: 68 population-level entries representing 25 species. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
+The analysis 1 life expectancy-shape models used 68 population-level matrix entries representing 25 species. This is a different subset from the boundary/small-sample audit in section S1.11. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
 
 ## S1.10 Multisite robustness extension of analysis 2 (*Astragalus scaphoides*)
 
@@ -612,7 +612,7 @@ For sensitivity analyses intended to mimic database-only use (no access to true 
 
 ## S1.11 Boundary survival estimates and small stage-specific sample sizes in analysis 1
 
-To assess whether the conditions most likely to distort point estimates were concentrated in particular parts of the analysis 1 dataset, we summarized the 68 population-level entries with recovered stage counts by COMPADRE `OrganismType` (used here as the available life-form grouping) and by broad matrix-dimension class (3-5 versus 6+ stages). For each population-level matrix, we recorded whether any stage-specific survival estimate lay exactly on the boundary (0 or 1), whether any stage had \(N < 20\) or \(N < 50\), and the minimum stage-specific sample size. These summaries are descriptive and intended to identify where potentially fragile point estimates are concentrated in the analysed subset.
+To assess whether the conditions most likely to distort point estimates were concentrated in particular parts of the analysis 1 dataset, we summarized a separate set of 68 population-level entries from 28 species with recovered stage counts by COMPADRE `OrganismType` (used here as the available life-form grouping) and by broad matrix-dimension class (3-5 versus 6+ stages). For each population-level matrix, we recorded whether any stage-specific survival estimate lay exactly on the boundary (0 or 1), whether any stage had \(N < 20\) or \(N < 50\), and the minimum stage-specific sample size. This audit used unscaled \(U\) matrices, with exactly 100% survival in 22/68 entries, rather than the rescaled matrices and model subset described in the main Discussion. These summaries are descriptive and intended to identify where potentially fragile point estimates are concentrated in the analysed subset.
 
 ## S1.12 Displacement magnitude versus boundary survival structure
 
