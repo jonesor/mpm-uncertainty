@@ -553,13 +553,13 @@ Stan models and priors are defined in `models/*.stan`. For the two main analyses
 
 - Analysis 1 models use weakly informative normal priors for location/slope terms and normal priors for scale terms (see `models/regress_hier.stan` and `models/regress_hier_error.stan`).
 - Analysis 2 uses two models with Gaussian-process regression forms and normal priors on GP hyperparameters and coefficients (see `models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`).
-- Analysis 3 uses the same Gaussian-process recruitment model pair as analysis 2 (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`) together with a simpler spring-temperature regression pair using weakly informative normal priors on regression coefficients and scale terms (`models/regress.stan` and `models/regress_log_err.stan`).
+- The multisite *Astragalus scaphoides* robustness analysis uses the same Gaussian-process recruitment model pair as analysis 2 (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`) together with a simpler spring-temperature regression pair using weakly informative normal priors on regression coefficients and scale terms (`models/regress.stan` and `models/regress_log_err.stan`).
 
 Fitting settings used in scripts:
 
 - Analysis 1 (`scripts/S07_case_study_1_analysis.R`): `chains = 2`, `iter = 4000`, `warmup = 2000-3000`, `seed = 5654`.
 - Analysis 2 (`scripts/S12_case_study_2.R`): `iter = 5000` for key models, `seed = 5654`, with additional control settings for GP fits.
-- Analysis 3 (`scripts/S14_case_study_3_astragalus.R`): `iter = 5000`, `seed = 5654`, using the same GP control settings as analysis 2 for recruitment models and matched regression settings for the simplified spring-temperature models.
+- Multisite *Astragalus scaphoides* robustness analysis (`scripts/S14_case_study_3_astragalus.R`): `iter = 5000`, `seed = 5654`, using the same GP control settings as analysis 2 for recruitment models and matched regression settings for the simplified spring-temperature models.
 
 ## S1.5 Variance-component summary (sampling-to-other ratio)
 
@@ -602,11 +602,11 @@ To assess whether the studies retained for uncertainty analysis differed systema
 
 Analysis 1 used a subset of the full compiled dataset: 68 population-level entries representing 25 species. Study-level and species-level identities (including COMPADRE `SpeciesAuthor` labels) are provided in Table S6.
 
-## S1.10 Multi-site extension for analysis 3 (*Astragalus scaphoides*)
+## S1.10 Multisite robustness extension of analysis 2 (*Astragalus scaphoides*)
 
-To evaluate whether inference robustness in analysis 2 generalised across populations, we repeated the same paired modelling framework for all available *Astragalus scaphoides* sites with sufficient annual coverage. For each site, we fit (i) a point-estimate model and (ii) a sampling-uncertainty model for recruitment-temperature relationships, using both the monthly-lag Gaussian-process specification and the simplified spring-temperature specification. We then compared posterior medians and 95% intervals between model formulations within site. This design isolates the contribution of uncertainty propagation while preserving site-specific ecological context.
+To evaluate whether the analysis 2 conclusions generalised across populations, we repeated the same paired modelling framework for all available *Astragalus scaphoides* sites with sufficient annual coverage as a supplementary robustness analysis. For each site, we fit (i) a point-estimate model and (ii) a sampling-uncertainty model for recruitment-temperature relationships, using both the monthly-lag Gaussian-process specification and the simplified spring-temperature specification. We then compared posterior medians and 95% intervals between model formulations within site. This design isolates the contribution of uncertainty propagation while preserving site-specific ecological context.
 
-For stage-specific survival in analysis 3, we used the same matched pair as in analysis 2: an SSD-weighted quasibinomial point-estimate model (\(\texttt{surv} \sim \texttt{tmp}\), weights from the stable stage distribution of each annual \(U\) matrix) and a binomial count model (\(\texttt{cbind}(n_{\text{surv}}, n_{\text{fail}}) \sim \texttt{tmp}\)). This keeps the linear predictor and response scale aligned across formulations, differing only in whether survival is treated as a plug-in proportion or as counts with explicit sampling uncertainty.
+For stage-specific survival in this supplementary robustness analysis, we used the same matched pair as in analysis 2: an SSD-weighted quasibinomial point-estimate model (\(\texttt{surv} \sim \texttt{tmp}\), weights from the stable stage distribution of each annual \(U\) matrix) and a binomial count model (\(\texttt{cbind}(n_{\text{surv}}, n_{\text{fail}}) \sim \texttt{tmp}\)). This keeps the linear predictor and response scale aligned across formulations, differing only in whether survival is treated as a plug-in proportion or as counts with explicit sampling uncertainty.
 
 For sensitivity analyses intended to mimic database-only use (no access to true stage sample sizes), we re-fit stage-specific point-estimate models under two alternatives: (i) no weighting and (ii) SSD weighting derived from each annual \(U\) matrix.
 
@@ -628,13 +628,15 @@ To assess whether the shape metric was sensitive to the truncation rule used to 
 
 Across estimable stages in analysis 2, switching from no weighting to SSD weighting changed temperature-coefficient medians by at most `r round(max(case2_stage_cmp$abs_beta_diff, na.rm = TRUE), 3)` on the logit scale, with interval widths changing by `r round(min(case2_stage_cmp$width_ssd - case2_stage_cmp$width_no, na.rm = TRUE), 3)` to `r round(max(case2_stage_cmp$width_ssd - case2_stage_cmp$width_no, na.rm = TRUE), 3)` (Table S9).
 
-Across estimable site-stage combinations in analysis 3, the corresponding maximum absolute median shift was `r round(max(case3_stage_cmp$abs_beta_diff, na.rm = TRUE), 3)`, and interval-width differences ranged from `r round(min(case3_stage_cmp$width_ssd - case3_stage_cmp$width_no, na.rm = TRUE), 3)` to `r round(max(case3_stage_cmp$width_ssd - case3_stage_cmp$width_no, na.rm = TRUE), 3)` (Table S10). These sensitivity checks show how weighting assumptions alter point-estimate uncertainty when true stage sample sizes are unavailable.
+Across estimable site-stage combinations in the *Astragalus* robustness analysis, the corresponding maximum absolute median shift was `r round(max(case3_stage_cmp$abs_beta_diff, na.rm = TRUE), 3)`, and interval-width differences ranged from `r round(min(case3_stage_cmp$width_ssd - case3_stage_cmp$width_no, na.rm = TRUE), 3)` to `r round(max(case3_stage_cmp$width_ssd - case3_stage_cmp$width_no, na.rm = TRUE), 3)` (Table S10). These sensitivity checks show how weighting assumptions alter point-estimate uncertainty when true stage sample sizes are unavailable.
 
 ## S2.2 Where do boundary estimates and small stage counts occur?
 
 Among the `r boundary_smallN_overall$n_populations_with_counts` analysis 1 population-level entries with recovered stage counts, `r round(boundary_smallN_overall$pct_pop_with_any_boundary, 1)`% contained at least one boundary survival estimate and `r round(boundary_smallN_overall$pct_pop_with_any_small_n20, 1)`% contained at least one stage estimated from fewer than 20 individuals. These conditions tended to co-occur: the population-level proportion of boundary survival estimates was positively correlated with the proportion of stages having \(N < 20\) (\(r = `r round(boundary_smallN_overall$corr_prop_boundary_prop_small_n20, 2)`\)).
 
 By life form, herbaceous perennials made up most of the analysed subset and showed the highest frequency among the well-represented categories, with `r herb_boundary_pct`% of entries containing at least one boundary survival estimate and `r herb_small20_pct`% containing at least one stage with \(N < 20\). Succulents showed lower corresponding values (`r succ_boundary_pct`% and `r succ_small20_pct`%, respectively). Woody life forms were too sparsely represented in the final subset for strong conclusions. By matrix dimension, both features were more common in 6+-stage matrices than in 3-5-stage matrices (`r dim6p_boundary_pct`% versus `r dim35_boundary_pct`% for any boundary estimate; `r dim6p_small20_pct`% versus `r dim35_small20_pct`% for any stage with \(N < 20\); Table S12).
+
+Boundary survival estimates arise in part from finite sampling of coarsely defined, discrete stage classes, so they are expected to become less frequent as stages are more finely or continuously resolved. In integral projection models, for example, each kernel value borrows information from neighbouring sizes, making exact survival estimates of 0 or 1 far less likely than in low-dimension matrices; the boundary effects documented here (Figures S1 and S2) are therefore partly a consequence of stage discretisation rather than a fixed property of the populations.
 
 ## S2.3 Does displacement increase with boundary survival structure?
 
@@ -643,6 +645,19 @@ Displacement magnitude increased with both measures of boundary-survival structu
 ## S2.4 How sensitive are shape estimates to the truncation threshold?
 
 In the `r case1_qsd_sens$n[1]` population-level entries for which shape was estimable under all three thresholds, the shape metric was highly stable to the quasi-stable-distribution truncation rule (Table S14; Figure S4). Relative to the 1% threshold used in the main analysis, the 0.5% threshold changed point estimates by a median absolute amount of `r sprintf('%.3f', case1_qsd_sens$median_abs_diff_pt[case1_qsd_sens$comparison == "0.5% vs 1%"])` and sampling-distribution medians by `r sprintf('%.3f', case1_qsd_sens$median_abs_diff_med[case1_qsd_sens$comparison == "0.5% vs 1%"])`. The more permissive 5% threshold produced somewhat larger but still modest shifts (median absolute changes `r sprintf('%.3f', case1_qsd_sens$median_abs_diff_pt[case1_qsd_sens$comparison == "5% vs 1%"])` and `r sprintf('%.3f', case1_qsd_sens$median_abs_diff_med[case1_qsd_sens$comparison == "5% vs 1%"])`, respectively), with only `r case1_qsd_sens$n_sign_change_pt[case1_qsd_sens$comparison == "5% vs 1%"]` point estimates changing sign relative to the 1% baseline. Those sign changes occurred only for populations whose baseline shape estimates were already very close to zero. Overall, this sensitivity check indicates that the main qualitative results are not driven by the specific 1% truncation threshold.
+
+
+## S2.5 Multisite robustness analysis in *Astragalus scaphoides*
+
+Applying the analysis 2 framework to three *Astragalus scaphoides* populations yielded the same overall pattern: point-estimate and sampling-uncertainty models were closely aligned within site, while differences among sites were more pronounced than differences between model formulations (Figure S5). Across sites, we had `r case3_years_total_min`-`r case3_years_total_max` years of annual demographic records, with `r case3_years_fit_min`-`r case3_years_fit_max` years retained for model fitting after filtering (`r case3_years_excl_min`-`r case3_years_excl_max` years excluded; Table S7).
+
+For spring-temperature models, posterior medians differed only slightly between formulations (maximum absolute within-site difference: `r fmt_dec(case3_beta_diff_max, 3)` on the linear predictor scale), and 95% interval widths changed by only `r fmt_dec(case3_ciw_diff_pct_min, 1)`% to `r fmt_dec(case3_ciw_diff_pct_max, 1)`% across sites (Table S8). Monthly-lag coefficient profiles were likewise highly concordant between formulations, with within-site correlations of posterior medians ranging from `r fmt_dec(case3_cor_min, 3)` to `r fmt_dec(case3_cor_max, 3)` and a maximum lag-specific median difference of `r fmt_dec(case3_max_abs_diff, 3)` (Figure S5). These results support the main-text conclusion from analysis 2 that climate-effect inference can be robust to transition-rate sampling uncertainty in this empirical setting.
+
+Figure S5. Multisite robustness analysis for *Astragalus scaphoides*. Panels A (Haynes Creek), B (McDevitt Creek), and C (Sheep Corral Gulch) each show monthly-lag temperature coefficients, recruitment-temperature fits, and stage-specific survival-temperature coefficients for point-estimate (purple) and uncertainty-aware (green) formulations. Recruitment is seedlings per reproductive plant, and stage-specific survival coefficients are on the logit scale (β). Across sites, the two formulations remain closely aligned, showing that among-site ecological differences are larger than differences induced by uncertainty propagation.
+
+```{r fig-s5-case3}
+knitr::include_graphics(here::here("figures", "Figure_6_analysis3_climate_effects_multisite.png"))
+```
 
 # Supplementary Tables
 
@@ -710,7 +725,7 @@ ft
 
 \newpage
 
-Table S7. Analysis 3 site coverage and spring-temperature effect summaries for *Astragalus scaphoides*. Point-estimate and sampling-uncertainty models give similar spring-temperature coefficients within each site, showing that between-site heterogeneity is larger than within-site method differences.
+Table S7. Multisite robustness-analysis site coverage and spring-temperature effect summaries for *Astragalus scaphoides*. Point-estimate and sampling-uncertainty models give similar spring-temperature coefficients within each site, showing that between-site heterogeneity is larger than within-site method differences.
 
 ```{r table-case3-site}
 ft <- make_flextable(table_case3_site)
@@ -729,7 +744,7 @@ ft
 
 \newpage
 
-Table S8. Analysis 3 posterior summary for the spring-temperature coefficient by site and model formulation. Across all sites, 95% intervals overlap zero under both formulations, showing similar uncertainty conclusions with and without explicit sampling-uncertainty propagation.
+Table S8. Multisite robustness-analysis posterior summary for the spring-temperature coefficient by site and model formulation. Across all sites, 95% intervals overlap zero under both formulations, showing similar uncertainty conclusions with and without explicit sampling-uncertainty propagation.
 
 ```{r table-case3-spring}
 ft <- make_flextable(table_case3_spring)
@@ -747,7 +762,7 @@ ft
 
 \newpage
 
-Table S10. Analysis 3 stage-specific survival-temperature coefficients under two point-estimate weighting scenarios across sites. The comparison shows how coefficient estimates and interval widths change when no stage sample-size information is used and SSD weights are substituted.
+Table S10. Multisite robustness-analysis stage-specific survival-temperature coefficients under two point-estimate weighting scenarios across sites. The comparison shows how coefficient estimates and interval widths change when no stage sample-size information is used and SSD weights are substituted.
 
 ```{r table-case3-stage-weight}
 ft <- make_flextable(table_case3_stage_weight)

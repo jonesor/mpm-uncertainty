@@ -41,7 +41,7 @@ figure_map <- c(
   "figures/Figure_3_analysis1_point_vs_sampling_distributions.png" = "docs/manuscript/Figure_3_analysis1_point_vs_sampling_distributions.png",
   "figures/Figure_4_analysis1_life_expectancy_shape_relationship.png" = "docs/manuscript/Figure_4_analysis1_life_expectancy_shape_relationship.png",
   "figures/Figure_5_analysis2_climate_effects_recruitment.png" = "docs/manuscript/Figure_5_analysis2_climate_effects_recruitment.png",
-  "figures/Figure_6_analysis3_climate_effects_multisite.png" = "docs/manuscript/Figure_6_analysis3_climate_effects_multisite.png",
+  "figures/Figure_6_analysis3_simulation_performance.png" = "docs/manuscript/Figure_6_analysis3_simulation_performance.png",
   "figures/Figure_S1_boundary_estimate_diagnostic.png" = "docs/manuscript/Figure_S1_boundary_estimate_diagnostic.png",
   "figures/Figure_S2_boundary_survivorship_illustration.png" = "docs/manuscript/Figure_S2_boundary_survivorship_illustration.png"
 )
@@ -183,7 +183,7 @@ main_figs <- c(
   "docs/manuscript/Figure_3_analysis1_point_vs_sampling_distributions.png",
   "docs/manuscript/Figure_4_analysis1_life_expectancy_shape_relationship.png",
   "docs/manuscript/Figure_5_analysis2_climate_effects_recruitment.png",
-  "docs/manuscript/Figure_6_analysis3_climate_effects_multisite.png"
+  "docs/manuscript/Figure_6_analysis3_simulation_performance.png"
 )
 for (fig in main_figs) {
   if (file.exists(fig)) file.copy(fig, file.path(submission_dir, basename(fig)), overwrite = TRUE)
