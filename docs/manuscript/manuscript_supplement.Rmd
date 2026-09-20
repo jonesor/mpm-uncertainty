@@ -653,11 +653,6 @@ Applying the analysis 2 framework to three *Astragalus scaphoides* populations y
 
 For spring-temperature models, posterior medians differed only slightly between formulations (maximum absolute within-site difference: `r fmt_dec(case3_beta_diff_max, 3)` on the linear predictor scale), and 95% interval widths changed by only `r fmt_dec(case3_ciw_diff_pct_min, 1)`% to `r fmt_dec(case3_ciw_diff_pct_max, 1)`% across sites (Table S8). Monthly-lag coefficient profiles were likewise highly concordant between formulations, with within-site correlations of posterior medians ranging from `r fmt_dec(case3_cor_min, 3)` to `r fmt_dec(case3_cor_max, 3)` and a maximum lag-specific median difference of `r fmt_dec(case3_max_abs_diff, 3)` (Figure S5). These results support the main-text conclusion from analysis 2 that climate-effect inference can be robust to transition-rate sampling uncertainty in this empirical setting.
 
-Figure S5. Multisite robustness analysis for *Astragalus scaphoides*. Panels A (Haynes Creek), B (McDevitt Creek), and C (Sheep Corral Gulch) each show monthly-lag temperature coefficients, recruitment-temperature fits, and stage-specific survival-temperature coefficients for point-estimate (purple) and uncertainty-aware (green) formulations. Recruitment is seedlings per reproductive plant, and stage-specific survival coefficients are on the logit scale (β). Across sites, the two formulations remain closely aligned, showing that among-site ecological differences are larger than differences induced by uncertainty propagation.
-
-```{r fig-s5-case3}
-knitr::include_graphics(here::here("figures", "Figure_6_analysis3_climate_effects_multisite.png"))
-```
 
 # Supplementary Tables
 
@@ -810,26 +805,42 @@ ft
 # Supplementary Figures
 
 
-```{r fig-boundary-1, fig.cap="Boundary-estimate diagnostic. Purple lines indicate point-estimate-derived quantities and green densities indicate uncertainty-aware summaries from sampling distributions. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility."}
+Figure S1. Boundary-estimate diagnostic. Purple lines indicate point-estimate-derived quantities and green densities indicate uncertainty-aware summaries from sampling distributions. When stage-specific survival estimates are near 0 or 1, derived-parameter sampling distributions can be displaced relative to point estimates, indicating potential inferential fragility.
+
+```{r fig-boundary-1}
 knitr::include_graphics(here::here("figures", "Figure_S1_boundary_estimate_diagnostic.png"))
 ```
 
 \newpage
 
-```{r fig-boundary-2, fig.cap="Illustration of survivorship trajectories under boundary survival transitions. Age/time is shown in years. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries."}
+Figure S2. Illustration of survivorship trajectories under boundary survival transitions. Age/time is shown in years. These cases can induce artefactual trajectory shapes and help explain mismatches between point estimates and uncertainty-aware summaries.
+
+```{r fig-boundary-2}
 knitr::include_graphics(here::here("figures", "Figure_S2_boundary_survivorship_illustration.png"))
 ```
 
 \newpage
 
-```{r fig-boundary-3, fig.cap="Displacement magnitude in analysis 1 increases with boundary-survival structure. Each point is a population-level matrix. Panels compare the absolute difference between the point estimate and the sampling-distribution median against the number of boundary survival stages and the proportion of sampled individuals in those boundary stages, showing that matrices with more boundary-survival structure tend to have larger point-estimate displacement."}
+Figure S3. Displacement magnitude in analysis 1 increases with boundary-survival structure. Each point is a population-level matrix. Panels compare the absolute difference between the point estimate and the sampling-distribution median against the number of boundary survival stages and the proportion of sampled individuals in those boundary stages, showing that matrices with more boundary-survival structure tend to have larger point-estimate displacement.
+
+```{r fig-boundary-3}
 knitr::include_graphics(here::here("figures", "Figure_S3_displacement_boundary_diagnostics.png"))
 ```
 
 \newpage
 
-```{r fig-boundary-4, fig.cap="Sensitivity of analysis 1 point estimates of mortality-trajectory shape to the quasi-stable-distribution truncation threshold. Point estimates calculated with 0.5% and 5% thresholds are plotted against the 1% threshold used in the main analysis, showing that most values lie close to the 1:1 line and that threshold choice makes little difference except for a small number of near-zero cases."}
+Figure S4. Sensitivity of analysis 1 point estimates of mortality-trajectory shape to the quasi-stable-distribution truncation threshold. Point estimates calculated with 0.5% and 5% thresholds are plotted against the 1% threshold used in the main analysis, showing that most values lie close to the 1:1 line and that threshold choice makes little difference except for a small number of near-zero cases.
+
+```{r fig-boundary-4}
 knitr::include_graphics(here::here("figures", "Figure_S4_shape_threshold_sensitivity.png"))
+```
+
+\newpage
+
+Figure S5. Multisite robustness analysis for *Astragalus scaphoides*. Columns show Haynes Creek (A, D, G), McDevitt Creek (B, E, H), and Sheep Corral Gulch (C, F, I). Rows show monthly-lag temperature coefficients (A-C), recruitment-temperature fits (D-F), and stage-specific survival-temperature coefficients (G-I) for point-estimate (purple) and uncertainty-aware (green) formulations. Recruitment is seedlings per reproductive plant, and stage-specific survival coefficients are on the logit scale (β). Across sites, the two formulations remain closely aligned, showing that among-site ecological differences are larger than differences induced by uncertainty propagation.
+
+```{r fig-s5-case3}
+knitr::include_graphics(here::here("figures", "Figure_6_analysis3_climate_effects_multisite.png"))
 ```
 
 \newpage
