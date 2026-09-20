@@ -408,7 +408,7 @@ $$
 $$
 
 $$
-9 \sim \text{Poisson}\!\left(\exp(F_{14} + \log 47)\right).
+9 \sim \text{Poisson}\!\left(47 F_{14}\right).
 $$
 
 To create a sampling distribution for the focal MPM, we take 2,000 independent draws from the sampling distributions implied above (see Supplementary Methods section S1.1 for a full workflow description). At each iteration, we arrange the drawn transition rates into the form of our MPM and then use that MPM draw to calculate our derived parameter(s) of interest. After 2,000 iterations, we therefore have 2,000 independent draws from the sampling distribution of each transition rate and derived parameter.
