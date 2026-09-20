@@ -473,57 +473,55 @@ We focus on a 12-year MPM time-series for *Silene spaldingii* (Lesica and Crone 
 We examined the effect of monthly temperature deviations, derived from PRISM monthly temperature rasters extracted at the study population coordinates (Daly et al. 2008; PRISM Group, Oregon State University 2026; Supplementary Methods section S1.6), on annual recruitment using a similar approach to Teller et al. (2016), in which we model separate slope coefficients for a series of \(K\) monthly lags (i.e., going back in time from the end of a given transition interval) in a way that allows smoothing of coefficients across nearby lags. The smoothing model we use here is a Gaussian process with an exponential covariance function, as in Eq. \@ref(eq:gprc-lik),
 
 \begin{equation}
-\log(y_t) \sim \text{Normal}\!\left(\alpha + \sum_k b_k x_{tk}, \sigma^2\right)
+\log(y_t) \sim \text{Normal}\!\left(\alpha + \sum_k b_k x_{tk}, \sigma^2\right),
 (\#eq:gprc-lik)
 \end{equation}
 
 with the monthly-coefficient prior and covariance structure given in Eqs. \@ref(eq:gprc-mvn) and \@ref(eq:gprc-cov),
 
 \begin{equation}
-b \sim \text{MVN}(\mu_b, \mathbf{K})
+b \sim \text{MVN}(\mu_b, \mathbf{K}),
 (\#eq:gprc-mvn)
 \end{equation}
 
 and
 
 \begin{equation}
-K_{i,j} = \eta^2 \exp\!\left(-0.5\,\rho^2(j-i)^2\right)
+K_{i,j} = \eta^2 \exp\!\left(-0.5\,\rho^2(j-i)^2\right),
 (\#eq:gprc-cov)
 \end{equation}
 
-respectively.
-
-where \(y_t\) is annual recruitment in year \(t\), and \(x_{tk}\) is the temperature deviation for year \(t\) at monthly lag \(k\). Model parameters include the intercept (\(\alpha\)), residual variance (\(\sigma^2\)), vector of monthly temperature coefficients (\(b\)), mean of the distribution of \(b\) (\(\mu_b\)), covariance matrix (\(\mathbf{K}\)), maximum covariance for the \(b\) distribution (\(\eta^2\)), and the rate of decay in covariance with time (\(\rho^2\)).
+respectively, where \(y_t\) is annual recruitment in year \(t\), and \(x_{tk}\) is the temperature deviation for year \(t\) at monthly lag \(k\). Model parameters include the intercept (\(\alpha\)), residual variance (\(\sigma^2\)), vector of monthly temperature coefficients (\(b\)), mean of the distribution of \(b\) (\(\mu_b\)), covariance matrix (\(\mathbf{K}\)), maximum covariance for the \(b\) distribution (\(\eta^2\)), and the rate of decay in covariance with time (\(\rho^2\)).
 
 In the model above, \(y_t\) represents a point estimate of annual recruitment derived from the relevant MPM. Recall that these values were initially calculated as the number of seedlings in year \(t\) divided by the number of reproductive adults in year \(t-1\). To propagate sampling uncertainty, we model the raw seedling counts directly with a Poisson likelihood (Eq. \@ref(eq:poisson-lik)) and include \(\log(N_{t-1})\) as an offset via the year-specific intercept model in Eq. \@ref(eq:poisson-alpha), so expected counts scale with the number of reproductive plants sampled. Note that the two formulations also differ in model structure: the point-estimate model uses a Gaussian likelihood on log per-capita recruitment, whereas the uncertainty-aware model uses a Poisson likelihood on raw counts with a log-offset. Observed differences between formulations therefore reflect both structural change and uncertainty propagation, though in practice the two are virtually identical. Accordingly, we model seedling counts as
 
 \begin{equation}
-Y_t \sim \text{Poisson}\!\left(\exp\!\left(\alpha_t + \sum_k b_k x_{tk}\right)\right)
+Y_t \sim \text{Poisson}\!\left(\exp\!\left(\alpha_t + \sum_k b_k x_{tk}\right)\right),
 (\#eq:poisson-lik)
 \end{equation}
 
 and year-specific intercepts as
 
 \begin{equation}
-\alpha_t \sim \text{Normal}\!\left(\mu_{\alpha} + \log(N_{t-1}), \sigma_{\alpha}^2\right)
+\alpha_t \sim \text{Normal}\!\left(\mu_{\alpha} + \log(N_{t-1}), \sigma_{\alpha}^2\right).
 (\#eq:poisson-alpha)
 \end{equation}
 
 This implies that uncertainty in per-capita recruitment declines with sample size: if \(\hat{r}_t = Y_t/N_{t-1}\), then \(\mathrm{Var}(\hat{r}_t)\) scales as \(1/N_{t-1}\) for fixed underlying recruitment intensity.
 
-with the same coefficient prior and covariance structure (Eqs. \@ref(eq:poisson-mvn) and \@ref(eq:poisson-cov)):
-
+We used the same coefficient prior and covariance structure (Eqs. \@ref(eq:poisson-mvn) and \@ref(eq:poisson-cov)):
 
 \begin{equation}
-b \sim \text{MVN}(\mu_b, \mathbf{K})
+b \sim \text{MVN}(\mu_b, \mathbf{K}),
 (\#eq:poisson-mvn)
 \end{equation}
 
+and
+
 \begin{equation}
-K_{i,j} = \eta^2 \exp\!\left(-0.5\,\rho^2(j-i)^2\right)
+K_{i,j} = \eta^2 \exp\!\left(-0.5\,\rho^2(j-i)^2\right),
 (\#eq:poisson-cov)
 \end{equation}
-
 
 where the response variable \(Y_t\) is the number of seedlings in year \(t\), and \(N_{t-1}\) is the sample size of reproductive adults in year \(t-1\). The model is otherwise similar to the point estimates model, except that we use year-specific intercepts (\(\alpha_t\)) to incorporate the Poisson offset (\(N_{t-1}\)), rather than a single model intercept as before. We fit the above-described models again, with priors and settings as described in Supplementary Methods section S1.4.
 
