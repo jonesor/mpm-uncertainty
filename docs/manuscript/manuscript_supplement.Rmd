@@ -766,7 +766,7 @@ ft
 
 \newpage
 
-Table S11. Comparison of screened target studies that were included versus excluded under the current reproducible COMPADRE-based screen. Numeric entries are study-level means ± SD; life-form entries are numbers of studies with percentages in parentheses. This comparison shows only modest differences between the retained and excluded screened sets.
+Table S11. Comparison of screened target studies that were included versus excluded under the current reproducible COMPADRE-based screen. Numeric entries are study-level means ± SD; life-form entries are numbers of studies with percentages in parentheses. Included studies have a higher mean proportion of boundary survival estimates, especially estimates of exactly 1.
 
 ```{r table-study-selection}
 ft <- make_flextable(table_study_selection)
