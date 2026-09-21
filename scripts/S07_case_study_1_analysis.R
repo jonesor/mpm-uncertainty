@@ -235,7 +235,7 @@ ggsave("figures/Analysis1_pace_shape_scatter.png", p_pace_shape, height = 4, wid
 # model relationship between l0 and shape, assuming no sampling uncertainty ----
 
 # compile stan models
-stan_regress_hier <- stan_model("models/regress2.stan")
+stan_regress_hier <- stan_model("models/regress_hier.stan")
 stan_regress_hier_error <- stan_model("models/regress_hier_error.stan")
 
 # arrange data for stan

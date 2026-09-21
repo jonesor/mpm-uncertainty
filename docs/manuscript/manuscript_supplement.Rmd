@@ -24,6 +24,7 @@ knitr::opts_chunk$set(
 ```{r prepare-analysis}
 source(here::here("code", "setup.R"))
 compadre_version_label <- get_compadre_version_label(corrected = FALSE)
+fmt_dec <- function(x, digits = 2) formatC(x, format = "f", digits = digits)
 if (isTRUE(params$refresh_outputs)) {
   source(here::here("scripts", "S01_compadre_correct.R"))
   source(here::here("scripts", "S02_target_studies.R"))
@@ -70,6 +71,10 @@ case3_spring <- readr::read_csv(
   here::here("data", "derived", "analysis_cache", "case3_astragalus_spring_beta_summary.csv"),
   show_col_types = FALSE
 )
+case3_gprc <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case3_astragalus_gprc_beta_summary.csv"),
+  show_col_types = FALSE
+)
 case2_stage_weight <- readr::read_csv(
   here::here("data", "derived", "analysis_cache", "case2_stage_survival_weight_sensitivity.csv"),
   show_col_types = FALSE
@@ -110,6 +115,47 @@ case1_qsd_sens <- readr::read_csv(
   here::here("data", "derived", "analysis_cache", "case1_qsd_threshold_sensitivity_summary.csv"),
   show_col_types = FALSE
 )
+
+case3_years_total_min <- min(case3_site$years_total, na.rm = TRUE)
+case3_years_total_max <- max(case3_site$years_total, na.rm = TRUE)
+case3_years_fit_min <- min(case3_site$years_fit, na.rm = TRUE)
+case3_years_fit_max <- max(case3_site$years_fit, na.rm = TRUE)
+case3_years_excl_min <- min(case3_site$years_excluded, na.rm = TRUE)
+case3_years_excl_max <- max(case3_site$years_excluded, na.rm = TRUE)
+
+case3_spring_cmp <- case3_spring |>
+  dplyr::mutate(model_simple = dplyr::if_else(
+    grepl("sampling uncertainty", model, ignore.case = TRUE),
+    "sampling", "point"
+  )) |>
+  dplyr::select(site_slug, model_simple, med, low95, upp95) |>
+  tidyr::pivot_wider(names_from = model_simple, values_from = c(med, low95, upp95)) |>
+  dplyr::mutate(
+    ciw_point = upp95_point - low95_point,
+    ciw_sampling = upp95_sampling - low95_sampling,
+    beta_diff = med_sampling - med_point,
+    ciw_diff_pct = 100 * (ciw_sampling - ciw_point) / ciw_point
+  )
+case3_beta_diff_max <- max(abs(case3_spring_cmp$beta_diff), na.rm = TRUE)
+case3_ciw_diff_pct_min <- min(case3_spring_cmp$ciw_diff_pct, na.rm = TRUE)
+case3_ciw_diff_pct_max <- max(case3_spring_cmp$ciw_diff_pct, na.rm = TRUE)
+
+case3_gprc_cmp <- case3_gprc |>
+  dplyr::mutate(model_simple = dplyr::if_else(
+    grepl("sampling uncertainty", model, ignore.case = TRUE),
+    "sampling", "point"
+  )) |>
+  dplyr::select(site_slug, lag, model_simple, beta_med) |>
+  tidyr::pivot_wider(names_from = model_simple, values_from = beta_med) |>
+  dplyr::group_by(site_slug) |>
+  dplyr::summarize(
+    cor_beta = cor(point, sampling),
+    max_abs_diff = max(abs(sampling - point)),
+    .groups = "drop"
+  )
+case3_cor_min <- min(case3_gprc_cmp$cor_beta, na.rm = TRUE)
+case3_cor_max <- max(case3_gprc_cmp$cor_beta, na.rm = TRUE)
+case3_max_abs_diff <- max(case3_gprc_cmp$max_abs_diff, na.rm = TRUE)
 
 make_flextable <- function(df) {
   ft <- flextable::flextable(df)
@@ -553,7 +599,7 @@ Analysis 1 used one population-level MPM per population. Where a pooled populati
 
 Stan models and priors are defined in `models/*.stan`. For the three main analyses:
 
-- Analysis 1 models use normal priors for location/slope terms and half-normal priors for positive scale terms (see `models/regress2.stan` and `models/regress_hier_error.stan`).
+- Analysis 1 models use normal priors for location/slope terms and half-normal priors for positive scale terms (see `models/regress_hier.stan` and `models/regress_hier_error.stan`).
 - Analysis 2 uses Gaussian-process recruitment models with normal priors on GP hyperparameters and coefficients (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`), plus spring-temperature models (`models/regress.stan` and `models/regress_log_err.stan`).
 - Analysis 3 fits its model with year-specific process variation using `models/poisson_climate_latent.stan`: the intercept and climate coefficient have \(\text{Normal}(0,2)\) and \(\text{Normal}(0,1)\) priors, respectively; the process standard deviation has an \(\text{Exponential}(1)\) prior, and the standardised year effects have \(\text{Normal}(0,1)\) priors. Its Gaussian and Poisson point-estimate models use `stats::glm()` and have no Bayesian priors.
 - The multisite *Astragalus scaphoides* robustness analysis uses the same Gaussian-process recruitment model pair as analysis 2 (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`) together with a simpler spring-temperature regression pair using weakly informative normal priors on regression coefficients and scale terms (`models/regress.stan` and `models/regress_log_err.stan`).
@@ -565,21 +611,21 @@ Fitting settings used in scripts:
 - Analysis 3 (`scripts/S16_analysis_3_simulation.R`): `chains = 4`, `iter = 3000`, `warmup = 1500`, and a separate reproducible seed for each simulated time series.
 - Multisite *Astragalus scaphoides* robustness analysis (`scripts/S14_case_study_3_astragalus.R`): `iter = 5000`, `seed = 5654`, using the same GP control settings as analysis 2 for recruitment models and matched regression settings for the simplified spring-temperature models.
 
-## S1.5 Variance-component summary (sampling-to-other ratio)
+## S1.5 Comparison of point-estimate and posterior-mean variance
 
-For each parameter, the total observed variance was partitioned into:
+For each parameter, we compared variance across population-level MPM entries using:
 
-- sampling component: mean within-MPM sampling variance from posterior draws;
-- residual component: remaining variance among populations/species.
+- the value derived from each matrix point estimate, \(\hat\theta_p\);
+- the mean of its reconstructed posterior distribution, \(\bar\theta_p\).
 
-The reported summary is Eq. \@ref(eq:var-ratio):
+For population-level entries \(p\), the reported ratio is Eq. \@ref(eq:var-ratio):
 
 \begin{equation}
-\text{ratio} = \frac{v_{\text{sampling}}}{v_{\text{residual}}}
+\text{ratio} = \frac{\operatorname{Var}_p(\hat\theta_p)}{\operatorname{Var}_p(\bar\theta_p)}.
 (\#eq:var-ratio)
 \end{equation}
 
-Ratios above 1 indicate that sampling uncertainty exceeds residual biological variation for that parameter.
+Ratios above 1 indicate that point estimates are more dispersed than posterior means. We obtained 95% intervals by resampling population-level entries with replacement 2,000 times, keeping each point estimate paired with its posterior mean. This descriptive ratio does not partition sampling and biological variance.
 
 ## S1.6 Simplified spring-temperature model (analysis 2)
 

@@ -192,13 +192,13 @@ df_other <- sd_other %>%
   mutate(pmature_pt = logit(pmature_pt))
 
 
-# Variance components analysis ----
-bootstrap_ratio <- function(point, sampling_mean, n_boot = 2000) {
+# Compare across-entry variance of point estimates and posterior means ----
+bootstrap_ratio <- function(point, posterior_mean, n_boot = 2000) {
   idx <- seq_along(point)
-  ratio_pt <- stats::var(point, na.rm = TRUE) / stats::var(sampling_mean, na.rm = TRUE)
+  ratio_pt <- stats::var(point, na.rm = TRUE) / stats::var(posterior_mean, na.rm = TRUE)
   ratio_boot <- replicate(n_boot, {
     samp <- sample(idx, length(idx), replace = TRUE)
-    stats::var(point[samp], na.rm = TRUE) / stats::var(sampling_mean[samp], na.rm = TRUE)
+    stats::var(point[samp], na.rm = TRUE) / stats::var(posterior_mean[samp], na.rm = TRUE)
   })
 
   tibble(

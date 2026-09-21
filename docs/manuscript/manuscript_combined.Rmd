@@ -231,9 +231,10 @@ table_case1_var <- case1_var |>
   ) |>
   dplyr::rename(
     Parameter = parameter,
-    `Sampling:other variance ratio` = ratio,
+    `Variance ratio` = ratio,
     `95% interval` = interval
-  )
+  ) |>
+  dplyr::select(Parameter, `Variance ratio`, `95% interval`)
 
 make_flextable <- function(df) {
   ft <- flextable::flextable(df)
@@ -265,13 +266,13 @@ Owen R. Jones*^1,2^, Emily G. Simmonds^2^
 
 1. The collation of thousands of population projection matrices in the COM(P)ADRE Matrix Databases has enabled large-scale comparative analyses in ecology, evolution, and demography. A persistent challenge is that transition rates are estimated from finite samples, yet the resulting sampling uncertainty is rarely reported and typically ignored in downstream analyses. Although sampling uncertainty is well recognised, it remains unclear when it affects demographic inference.
 
-2. Using a subset of studies from the COMPADRE Plant Matrix Database for which transition-specific sample sizes could be obtained, we reconstructed sampling distributions for transition rates and derived demographic parameters, and conducted three related analyses with and without explicit sampling uncertainty: (i) a multi-species comparative analysis of life expectancy-shape relationships, (ii) a single-species time-series analysis of climate-demography effects, and (iii) a simulation study with known truth, each fit with and without explicit sampling uncertainty.
+2. Using a subset of studies from the COMPADRE Plant Matrix Database for which transition-specific sample sizes could be obtained, we reconstructed sampling distributions for transition rates and derived demographic parameters, and conducted three related analyses: (i) a multi-species comparative analysis of life expectancy-shape relationships, (ii) a single-species time-series analysis of climate-demography effects, and (iii) a simulation study with known truth that compares how models account for count sampling and year-to-year variation.
 
-3. The effects of sampling uncertainty were strongly trait-dependent. Sampling uncertainty had little influence on integrated demographic metrics such as population growth rate, but accounted for a substantial fraction of the total variation in traits related to mortality trajectories, particularly the shape of the mortality distribution. In these cases, point estimates were often systematically displaced from their underlying sampling distributions due to boundary estimates of stage-specific survival (i.e. survival probabilities near 0 or 1), which are common in published matrices. By contrast, inference in a within-species analysis of weather effects on vital rates was largely unaffected, whereas the simulation study showed that point-estimate count models can become overconfident even when bias remains low.
+3. The effects of sampling uncertainty were strongly trait-dependent. Point estimates and posterior means had similar dispersion for integrated demographic metrics such as population growth rate, but point estimates were substantially more dispersed for traits related to mortality trajectories, particularly the shape of the mortality distribution. In these cases, point estimates were often systematically displaced from their underlying sampling distributions due to boundary estimates of stage-specific survival (i.e. survival probabilities near 0 or 1), which are common in published matrices. By contrast, inference in a within-species analysis of weather effects on vital rates was largely unaffected, whereas the simulation study showed that point-estimate count models can become overconfident even when bias remains low.
 
-4. Together, these analyses show that ignoring sampling uncertainty does not universally compromise inference from published projection matrices, but can yield fragile or biased conclusions for certain demographic traits and overconfident interval estimates in count-based models. We identify structural features of MPMs and analyses that may indicate heightened sensitivity to sampling uncertainty, and discuss implications for researchers using compiled demographic databases.
+4. Together, these analyses show that ignoring sampling uncertainty does not universally compromise inference from published projection matrices, but can yield fragile or biased conclusions for certain demographic traits; the simulation also shows that omitting year-to-year variation can produce overconfident interval estimates in count-based models. We identify structural features of MPMs and analyses that may indicate heightened sensitivity to sampling uncertainty, and discuss implications for researchers using compiled demographic databases.
 
-Keywords: age-from-stage methods; parametric bootstrapping; estimation bias; parameter uncertainty; stage-structured models; sensitivity analysis; plant demography; life history traits
+Keywords: age-from-stage methods; conjugate priors; estimation bias; parameter uncertainty; stage-structured models; sensitivity analysis; plant demography; life history traits
 
 \newpage
 
@@ -301,7 +302,7 @@ The COMPADRE database includes MPMs and associated metadata from published studi
 
 ## Target studies
 
-We used an earlier version of COMPADRE to define a target-study screen based on the following criteria: studies published from 2010 onwards; species of common perennial growth forms (herbaceous, shrub, tree, palm, and succulent); wild populations not subjected to experimental treatments; and MPMs with three or more stage classes and a one-year projection interval. Re-running that screen with `r compadre_version_label` yields 92 post-2010 target studies. Of these, 23 are represented in the current final dataset used here; most exclusions reflected insufficient reporting of transition-specific sample sizes, and a small number used estimation methods incompatible with our bootstrapping approach (e.g. mark-recapture or multi-stage vital rate products). Three additional post-2010 studies in the final dataset (*Paeonia officinalis*, *Tillandsia butzii*, and *Lantana camara*) no longer satisfy the current metadata-based screen, and we also retained 5 pre-2010 studies that had previously been assembled on the basis of temporal replication (at least 4 annual matrices). The requirement of at least 4 annual matrices applied only to the 5 pre-2010 studies added to support the time-series analyses; it was not a selection criterion for the full 31-study dataset used across all analyses. Within the reproducible post-2010 screen, included and excluded studies were broadly similar in matrix dimension, dominant life form, and mean stage-specific survival, but included studies had a higher mean proportion of boundary survival estimates, especially estimates of exactly 1 (Table S11). This over-representation may favour detection of boundary-related sensitivity and limits generalisation to all screened studies. The 23 screen-overlapping studies yielded 374 MPMs for 84 populations of 24 species; the final dataset comprised 31 studies representing 695 MPMs for 132 populations of 30 species.
+We used an earlier version of COMPADRE to define a target-study screen based on the following criteria: studies published from 2010 onwards; species of common perennial growth forms (herbaceous, shrub, tree, palm, and succulent); wild populations not subjected to experimental treatments; and MPMs with three or more stage classes and a one-year projection interval. Re-running that screen with `r compadre_version_label` yields 92 post-2010 target studies. Of these, 23 are represented in the current final dataset used here; most exclusions reflected insufficient reporting of transition-specific sample sizes, and a small number used estimation methods incompatible with our uncertainty-reconstruction approach (e.g. mark-recapture or multi-stage vital rate products). Three additional post-2010 studies in the final dataset (*Paeonia officinalis*, *Tillandsia butzii*, and *Lantana camara*) no longer satisfy the current metadata-based screen, and we also retained 5 pre-2010 studies that had previously been assembled on the basis of temporal replication (at least 4 annual matrices). The requirement of at least 4 annual matrices applied only to the 5 pre-2010 studies added to support the time-series analyses; it was not a selection criterion for the full 31-study dataset used across all analyses. Within the reproducible post-2010 screen, included and excluded studies were broadly similar in matrix dimension, dominant life form, and mean stage-specific survival, but included studies had a higher mean proportion of boundary survival estimates, especially estimates of exactly 1 (Table S11). This over-representation may favour detection of boundary-related sensitivity and limits generalisation to all screened studies. The 23 screen-overlapping studies yielded 374 MPMs for 84 populations of 24 species; the final dataset comprised 31 studies representing 695 MPMs for 132 populations of 30 species.
 
 
 ## Typical construction of matrix population models
@@ -324,17 +325,15 @@ F_{sr,t} = \frac{\text{number in recruit stage } s \text{ in year } t}{\text{num
 
 The demographic interpretation of \(F\) depends on census timing and stage definitions (e.g. pre-breeding vs post-breeding formulations). Here, Eq. \@ref(eq:f-est) is a count-based estimator of the recruit transition across one projection interval and we use the published matrix entries as represented in COMPADRE rather than reparameterising each study to a single census convention.
 
-Alternatively, reproductive transitions may be split into multiple lower-level vital rates (e.g. numbers of flowers per plant, fruits per flower, and seeds per fruit, seed survival probability, and seed germination probability), which are typically estimated from separate samples, and then multiplied to derive the overall transition rate. In some studies, transition rates are estimated using more nuanced statistical models that partially pool estimates across stage classes, sites, and/or years, or incorporate additional variables external to the MPM.
-
-In such models, uncertainty may differ from the simple count-based setting considered here. Partial pooling in hierarchical vital-rate models, IPMs, or related formulations will often reduce the variance of weakly informed transition estimates, but may also induce stronger correlations across transitions; in those cases, uncertainty should ideally be propagated from the joint posterior of the fitted vital-rate model rather than by treating transition estimates as independent. Our reconstructions therefore approximate the uncertainty available to a secondary user of the published matrix and accompanying sample-size information, rather than the full joint uncertainty from the original fitted model.
+Alternatively, reproductive transitions may be decomposed into lower-level vital rates (e.g. flowers per plant, seeds per fruit, and germination probability) estimated from separate samples, or transition rates may be fitted with models that partially pool estimates across stage classes, sites, or years, as in hierarchical vital-rate models and integral projection models (IPMs). Uncertainty in such models can differ from the simple count-based setting considered here: partial pooling often reduces the variance of weakly informed estimates but can induce stronger correlations across transitions, so uncertainty should ideally be propagated from the joint posterior of the fitted model. Our reconstructions therefore approximate the uncertainty available to a secondary user of the published matrix and its sample-size information, rather than the full joint uncertainty from the original fitted model.
 
 ## Sampling distribution for a single MPM
 
-Techniques for estimating sampling uncertainty in transition rates and derived parameters are reviewed in Caswell (2001, Ch. 12). The method we use here is parametric bootstrapping, in which we generate a sampling distribution for each MPM by taking 2,000 independent random draws from the sampling distribution of each underlying transition rate. For example, if \(U_{ij}\) is a survival-related transition from stage \(j\) to \(i\), estimated from the observation that \(k\) out of the \(n\) individuals in stage \(j\) survived and transitioned to stage \(i\) (and the remaining \(n-k\) died), we can model the \(U_{ij}\) transition as a binomial sample with \(k\) successes in \(n\) trials. We could equivalently use a multinomial likelihood here (given observed counts \(x_m\) of each possible outcome \(m\)), which flexibly scales to instances with more than two possible outcomes (e.g. an individual from stage \(j\) might die, survive and remain in stage \(j\), or survive and grow to stage \(j+1\)). For reproductive transitions, we use a Poisson likelihood to model the number of recruits \(k\) produced by a given number of reproductive individuals \(n\). Use of a Poisson distribution for fecundity might under-capture overdispersion in species with highly variable fecundity. We distinguish structural zeros (biologically impossible transitions) from sampling zeros (possible but unobserved transitions): structural zeros are fixed at 0 in all bootstrap draws, whereas sampling zeros are modelled with the same likelihood-based uncertainty framework as non-zero transitions.
+Techniques for estimating sampling uncertainty in transition rates and derived parameters are reviewed in Caswell (2001, Ch. 12). We reconstruct uncertainty using direct draws from conjugate posterior distributions, rather than a parametric bootstrap: 2,000 draws per MPM for the illustrative example and 1,000 for analysis 1. Hereafter, “sampling distributions” refers to these reconstructed posterior uncertainty distributions. Survival-related transitions are drawn jointly within each origin-stage column using a Dirichlet prior with all concentration parameters equal to 1, including death; reproductive rates use independent flat priors on the non-negative rate scale (Supplementary Methods section S1.1). For example, if \(U_{ij}\) is a survival-related transition from stage \(j\) to \(i\), estimated from the observation that \(k\) out of the \(n\) individuals in stage \(j\) survived and transitioned to stage \(i\) (and the remaining \(n-k\) died), we can model the \(U_{ij}\) transition as a binomial sample with \(k\) successes in \(n\) trials. We could equivalently use a multinomial likelihood here (given observed counts \(x_m\) of each possible outcome \(m\)), which flexibly scales to instances with more than two possible outcomes (e.g. an individual from stage \(j\) might die, survive and remain in stage \(j\), or survive and grow to stage \(j+1\)). For reproductive transitions, we use a Poisson likelihood to model the number of recruits \(k\) produced by a given number of reproductive individuals \(n\). Use of a Poisson distribution for fecundity might under-capture overdispersion in species with highly variable fecundity.
 
 ## Analyses
 
-We chose parametric bootstrapping because the sampling distributions of survival and reproductive transitions follow well-characterised probability models (multinomial and Poisson, respectively) whose parameters can be directly estimated from the transition frequencies reported in source studies. This makes parametric bootstrapping more tractable than MCMC for our scale of analysis and more principled than the empirical bootstrap, which cannot generate variation when all individuals in a stage class experience the same outcome (e.g. all survive), a situation common in published matrices. When a stage-specific sample size was recovered as zero, we retained the published point-estimate transition column unchanged in all bootstrap draws rather than treating it as a structural zero. In such cases, the matrix remains usable in the same way it would be in a comparative database analysis, but no additional sampling variation is propagated for that unsupported column.
+This conjugate posterior approach avoids MCMC and, unlike a bootstrap of the reported point estimates, permits uncertainty in allowed outcomes that were not observed, including death when all sampled individuals survived, so it does not force every draw to reproduce boundary point estimates; the resulting uncertainty depends on the specified priors and allowed-transition structure. Zero-valued matrix entries are fixed at 0 unless included in the allowed-transition mask, so the implementation does not generally distinguish sampling zeros from structural zeros and may understate uncertainty in unobserved transitions. When a stage sample size is missing, the published transition column is retained unchanged; when it is explicitly zero, the corresponding column is returned as missing rather than treated as a structural zero. Such columns therefore contribute no reconstructed sampling variation, and zero-sample-size columns yield no usable posterior draws.
 
 ### Illustrative example
 
@@ -389,7 +388,7 @@ N_F =
 \end{bmatrix}.
 $$
 
-Here, columns index origin stage \(j\); rows 1-4 in \(N_U\) index destination stages, and the extra row \(d\) denotes death as the complementary non-survival outcome for that origin stage. In the implemented bootstrap, death is resampled jointly with the living transitions in each \(U\)-column, but only the living-stage components are written back into the simulated \(U\) matrix. The \(N_F\) matrix remains \(4 \times 4\) and contains only reproductive transitions. From these counts, the sampling distributions of the underlying transition rates are:
+Here, columns index origin stage \(j\); rows 1-4 in \(N_U\) index destination stages, and the extra row \(d\) denotes death as the complementary non-survival outcome for that origin stage. In the posterior sampling, death probability is drawn jointly with the living-transition probabilities in each \(U\)-column, but only the living-stage components are written back into the simulated \(U\) matrix. The \(N_F\) matrix remains \(4 \times 4\) and contains only reproductive transitions. The count likelihoods used to reconstruct transition-rate uncertainty are:
 
 $$
 (12, 2) \sim \text{Multinomial}(U_{21}, U_{d1}),
@@ -411,11 +410,11 @@ $$
 9 \sim \text{Poisson}\!\left(47 F_{14}\right).
 $$
 
-To create a sampling distribution for the focal MPM, we take 2,000 independent draws from the sampling distributions implied above (see Supplementary Methods section S1.1 for a full workflow description). At each iteration, we arrange the drawn transition rates into the form of our MPM and then use that MPM draw to calculate our derived parameter(s) of interest. After 2,000 iterations, we therefore have 2,000 independent draws from the sampling distribution of each transition rate and derived parameter.
+To create a sampling distribution for the focal MPM, we take 2,000 independent draws from the posterior distributions obtained using these likelihoods and the priors described above (see Supplementary Methods section S1.1 for a full workflow description). At each iteration, we arrange the drawn transition rates into the form of our MPM and then use that MPM draw to calculate our derived parameter(s) of interest. After 2,000 iterations, we therefore have 2,000 independent draws from the sampling distribution of each transition rate and derived parameter.
 
-The modest sample sizes underpinning this MPM (9-47 plants per stage class) result in relatively high sampling uncertainty in the transition rates (Fig. \@ref(fig:fig-main-1a)). For instance, the sample estimate for the vegetative-reproductive growth transition is 0.22 (2/9), but the upper bound of the 95% bootstrap interval suggests this transition rate could plausibly be as high as 0.45 in the population at large. Correspondingly, there is substantial sampling uncertainty in some derived parameters (Fig. \@ref(fig:fig-main-1b)). Based on the 95% bootstrap interval bounds, the equilibrium population growth rate could be as low as –17% per year or as high as +1% per year; life expectancy could be as low as 3.5 years or as high as 18.2 years; and the reproductive value of the vegetative stage class could be 22% lower than that of the seedling stage or 1460% higher.
+The modest sample sizes underpinning this MPM (9-47 plants per stage class) result in relatively high sampling uncertainty in the transition rates (Fig. \@ref(fig:fig-main-1a)). For instance, the sample estimate for the vegetative-reproductive growth transition is 0.22 (2/9), but the upper bound of the 95% credible interval suggests this transition rate could plausibly be as high as 0.45 in the population at large. Correspondingly, there is substantial sampling uncertainty in some derived parameters (Fig. \@ref(fig:fig-main-1b)). Based on the 95% credible interval bounds, the equilibrium population growth rate could be as low as –17% per year or as high as +1% per year; life expectancy could be as low as 3.5 years or as high as 18.2 years; and the reproductive value of the vegetative stage class could be 22% lower than that of the seedling stage or 1460% higher.
 
-We chose three analyses to illuminate contrasting contexts in which sampling uncertainty may be relevant. Analysis 1 is a comparative analysis across many species and populations, in which derived traits depend heavily on long-term survivorship inferred indirectly from stage-structured matrices, precisely the setting in which sampling uncertainty might compound. Analysis 2, by contrast, is a within-species time-series analysis in which the response variable is a directly observed count, the statistical model is closely tied to the raw data, and the question concerns an environmental driver rather than a demographic trait per se. Analysis 3 is a simulation study with known truth, designed to test whether the apparent robustness in Analysis 2 generalises: specifically, whether accounting for sampling uncertainty improves estimation bias and interval calibration across a factorial range of effect sizes and sample sizes. Together, the three analyses bracket a range of typical uses of published MPMs and allow us to ask whether the consequences of sampling uncertainty are consistent across contexts or depend on the nature of the analysis.
+We chose three analyses to illuminate contrasting contexts in which sampling uncertainty may be relevant. Analysis 1 is a comparative analysis across many species and populations, in which derived traits depend heavily on long-term survivorship inferred indirectly from stage-structured matrices, precisely the setting in which sampling uncertainty might compound. Analysis 2, by contrast, is a within-species time-series analysis in which the response variable is a directly observed count, the statistical model is closely tied to the raw data, and the question concerns an environmental driver rather than a demographic trait per se. Analysis 3 is a simulation study with known truth, designed to test whether count models remain well calibrated when year-to-year process variation is present across a factorial range of effect sizes and sample sizes. Together, the three analyses bracket a range of typical uses of published MPMs and examine how modelled sources of uncertainty affect inference in different contexts.
 
 ### Analysis 1: Comparative analysis of mortality trajectories
 
@@ -432,7 +431,7 @@ where \(l_x\) is the proportion of a cohort surviving from reproductive maturity
 
 We calculated life expectancy and shape at the population level, using one population-level MPM per population. For populations with temporal replication, we used a pooled population MPM if available (i.e. a matrix constructed by pooling individual-level demographic information across periods and/or populations); otherwise, we used a population mean MPM if available (i.e. an element-by-element arithmetic mean across annual matrices); if neither was available, we constructed a population-level matrix by taking the element-wise mean of the available annual `Individual` matrices in COMPADRE. When database records included both site-specific populations and aggregate population labels (e.g. combined multi-site entries), we retained the site-specific populations and excluded the aggregate rows to avoid double counting. To model sampling uncertainty for pooled or mean population-level MPMs, we pooled stage-specific sample sizes across years (see Supplementary Methods section S1.3). This approach ignores uncertainty arising from temporal variation in transition rates and therefore underestimates overall uncertainty in the pooled estimates. The degree of underestimation depends on how much transition rates vary across years relative to within-year sampling error; for species with high interannual variability, the bias could be substantial. Results should therefore be interpreted conservatively with respect to the influence of sampling uncertainty.
 
-Across the compiled analysis set, 5 population-level matrices (representing 5 populations) had no usable recovered stage-specific sample sizes at all and therefore could not contribute to uncertainty-propagation analyses that require reconstructed sampling distributions.
+Across the compiled analysis set, 5 population-level matrices (representing 5 populations) had no usable recovered stage-specific sample sizes. Where retained, their unsupported columns were held fixed rather than assigned reconstructed sampling uncertainty.
 
 Our uncertainty-propagation workflow used recovered stage-specific or transition-specific sample sizes; total estimated population size was not systematically available across the included studies and was not used in the analyses.
 
@@ -445,7 +444,7 @@ y_{ij} \sim \text{Normal}(\alpha_j + \beta x_{ij}, \sigma^2),
 
 where \(x_{ij}\) and \(y_{ij}\) represent point estimates of life expectancy and shape, respectively, for population \(i\) and species \(j\), \(\alpha_j\) represent species-specific intercepts, \(\beta\) is the slope of the relationship between \(S\) and \(L\), and \(\sigma^2\) is residual variance. Species-level intercept variation is modelled as \(\alpha_j \sim \text{Normal}(\mu_{\alpha}, \tau^2)\), where \(\tau^2\) is the among-species intercept variance (i.e., variance of random intercepts; distinct from residual variance \(\sigma^2\)). To incorporate sampling uncertainty, we used a measurement error model (based on McElreath 2020, sec. 14.1.2) where latent \(x_{ij}\) and \(y_{ij}\) are linked to sampling-distribution means (\(\bar{x}_{ij}\) and \(\bar{y}_{ij}\)) and variances (\(\sigma^2_{x,ij}\) and \(\sigma^2_{y,ij}\)) derived as described in the sampling-distribution section above, as in Eqs. \@ref(eq:reg-me-y), \@ref(eq:reg-me-x), and \@ref(eq:reg-me-yobs).
 
-The structural form of the model is unchanged when sampling uncertainty is incorporated; Eqs. \@ref(eq:reg-me-y)-\@ref(eq:reg-me-yobs) restate the outcome model and add explicit sub-models for the true latent values of \(x_{ij}\) and \(y_{ij}\), which are now treated as unknown quantities estimated from their bootstrap-derived sampling distributions rather than as fixed plug-in values:
+The structural form of the model is unchanged when sampling uncertainty is incorporated; Eqs. \@ref(eq:reg-me-y)-\@ref(eq:reg-me-yobs) restate the outcome model and add explicit sub-models for the true latent values of \(x_{ij}\) and \(y_{ij}\), which are now treated as unknown quantities estimated from their reconstructed posterior distributions rather than as fixed plug-in values:
 
 \begin{equation}
 y_{ij} \sim \text{Normal}(\alpha_j + \beta x_{ij}, \sigma^2),
@@ -464,7 +463,7 @@ y_{ij} \sim \text{Normal}(\alpha_j + \beta x_{ij}, \sigma^2),
 
 For these models, we used priors and settings as described in Supplementary Methods section S1.4.
 
-In supplementary analyses, we estimated the variance components of life expectancy, shape, and other life history traits using a sampling-to-other variance ratio: the proportion of total observed variation in a demographic parameter attributable to transition-rate sampling uncertainty relative to variation from all other sources (principally biological variation among populations and species). For each parameter we partitioned total variance into a sampling component, estimated as the mean of the within-MPM sampling variances derived from the bootstrap distributions, and a residual component representing the remainder. A ratio greater than 1 indicates that sampling uncertainty exceeds biological variation; a ratio less than 1 indicates that biological variation dominates. Full details are given in Supplementary Methods section S1.5 and Table \@ref(tab:table-case1-var).
+In supplementary analyses, we compared the variance across population-level MPM entries of each parameter derived from matrix point estimates with the variance of its reconstructed posterior means. A ratio greater than 1 indicates that point estimates are more dispersed than posterior means; it does not partition sampling and biological variance. We obtained 95% intervals by paired bootstrap resampling of entries (Supplementary Methods section S1.5; Table \@ref(tab:table-case1-var)).
 
 ### Analysis 2: The impact of weather on demographic traits
 
@@ -509,21 +508,7 @@ and year-specific intercepts as
 
 This implies that uncertainty in per-capita recruitment declines with sample size: if \(\hat{r}_t = Y_t/N_{t-1}\), then \(\mathrm{Var}(\hat{r}_t)\) scales as \(1/N_{t-1}\) for fixed underlying recruitment intensity.
 
-We used the same coefficient prior and covariance structure (Eqs. \@ref(eq:poisson-mvn) and \@ref(eq:poisson-cov)):
-
-\begin{equation}
-b \sim \text{MVN}(\mu_b, \mathbf{K}),
-(\#eq:poisson-mvn)
-\end{equation}
-
-and
-
-\begin{equation}
-K_{i,j} = \eta^2 \exp\!\left(-0.5\,\rho^2(j-i)^2\right),
-(\#eq:poisson-cov)
-\end{equation}
-
-where the response variable \(Y_t\) is the number of seedlings in year \(t\), and \(N_{t-1}\) is the sample size of reproductive adults in year \(t-1\). The model is otherwise similar to the point estimates model, except that we use year-specific intercepts (\(\alpha_t\)) to incorporate the Poisson offset (\(N_{t-1}\)), rather than a single model intercept as before. We fit the above-described models again, with priors and settings as described in Supplementary Methods section S1.4.
+We used the same coefficient prior and covariance structure as for the point-estimate model (Eqs. \@ref(eq:gprc-mvn) and \@ref(eq:gprc-cov)), where the response variable \(Y_t\) is the number of seedlings in year \(t\), and \(N_{t-1}\) is the sample size of reproductive adults in year \(t-1\). The model is otherwise similar to the point estimates model, except that we use year-specific intercepts (\(\alpha_t\)) to incorporate the Poisson offset (\(N_{t-1}\)), rather than a single model intercept as before. We fit the above-described models again, with priors and settings as described in Supplementary Methods section S1.4.
 
 
 
@@ -540,7 +525,9 @@ To evaluate the effect of sampling uncertainty under known truth, we simulated a
 
 where \(\beta_{\text{true}}\) was set to 0.1, 0.3, or 0.5, and \(z_t \sim \text{Normal}(0, 0.2^2)\) represented additional year-to-year biological variation not explained by climate. For each year we then simulated observed seedling counts from finite samples of reproductive individuals, using stage sample sizes of 10, 20, 50, or 100 per year. We analysed 200 replicate time series for each effect-size and sample-size combination.
 
-For each simulated dataset, we fit three models to estimate the climate effect on recruitment: (i) a Gaussian regression on annual point estimates of fecundity, (ii) a Poisson count model using observed seedling counts and an offset for the number of reproductive individuals, and (iii) a Poisson uncertainty-aware model that additionally included a latent year-specific process term analogous to \(z_t\). We then compared the models in terms of bias and 95% interval coverage (the proportion of replicate datasets in which the 95% interval contained the true effect \(\beta_{\text{true}}\); a well-calibrated model achieves coverage close to the nominal 0.95). This design isolates the effect of uncertainty propagation because the true climate effect is known, while still mimicking the sampling structure of finite field data. A supplementary multisite robustness analysis applying the analysis 2 framework to three *Astragalus scaphoides* populations is reported in Supplementary Methods section S1.10 and Supplementary Results section S2.5.
+For each simulated dataset, we fit three models to estimate the climate effect on recruitment: (i) a Gaussian regression with a log link on annual point estimates of fecundity, (ii) a Poisson count model using observed seedling counts and an offset for the number of reproductive individuals, and (iii) a Poisson uncertainty-aware model that additionally included a latent year-specific process term analogous to \(z_t\). All three models target the same log-scale climate effect; the Gaussian model uses untransformed rates as its response and assumes constant residual variance. Its 95% intervals use the coefficient estimate ± a Student-t critical value times its standard error, with residual degrees of freedom. We then compared the models in terms of bias and 95% interval coverage (the proportion of replicate datasets in which the 95% interval contained the true effect \(\beta_{\text{true}}\); a well-calibrated model achieves coverage close to the nominal 0.95). Both Poisson models account for finite-sample count variation; their comparison tests the effect of additionally modelling year-to-year process variation under known truth. A supplementary multisite robustness analysis applying the analysis 2 framework to three *Astragalus scaphoides* populations is reported in Supplementary Methods section S1.10 and Supplementary Results section S2.5.
+
+Priors and fitting settings for the simulation model are given in Supplementary Methods section S1.4.
 
 All analyses were run in R (`r as.character(getRversion())`) using RStan (`r as.character(utils::packageVersion("rstan"))`), with data handling and plotting in tidyverse packages.
 
@@ -549,11 +536,11 @@ All analyses were run in R (`r as.character(getRversion())`) using RStan (`r as.
 
 ## Analysis 1: Comparative analysis of mortality trajectories
 
-We first summarise the overall contribution of sampling uncertainty to observed trait variation using variance-component ratios (Table \@ref(tab:table-case1-var)), then ask whether this variation is large enough to alter inference in a specific comparative analysis. 
+We first compare the dispersion of point estimates and posterior means across population-level entries (Table \@ref(tab:table-case1-var)), then ask whether accounting for sampling uncertainty alters inference in a specific comparative analysis.
 
-For our parameters of interest, life expectancy and shape, the estimated sampling-to-other variance ratios across population-level MPM entries in analysis 1 were `r fmt_dec(case1_life_ratio, 2)` and `r fmt_dec(case1_shape_ratio, 2)`, respectively (Table \@ref(tab:table-case1-var)). Because sample sizes were pooled across years, these ratios are conservative estimates of the true sampling-to-biological variance ratio. Thus, part of the apparent among-population variation in mortality trajectories in comparative senescence analyses may reflect sampling noise and temporal variation, not only true underlying biological differences. Point estimates of life expectancy and shape often deviated from their respective sampling distributions (Fig. \@ref(fig:fig-main-2)). For shape, the most extreme positive and negative point estimates tended to have sampling distributions shifted much closer to zero, whereas for mature life expectancy, many point estimates were skewed upward from the median of the sampling distribution. The mismatches between point estimates and sampling distributions usually coincided with a boundary estimate of stage-specific survival (i.e. a point estimate approaching either 0% or 100%). Supplementary analyses suggest that these boundary estimates can skew a point estimate of life expectancy or shape away from the majority of its sampling distribution (see Supplementary Figure S1 and Supplementary Figure S2).
+For life expectancy and shape, across-entry variance of point estimates was `r fmt_dec(case1_life_ratio, 2)` and `r fmt_dec(case1_shape_ratio, 2)` times the variance of posterior means, respectively (Table \@ref(tab:table-case1-var)). These ratios describe dispersion, not the proportion of variance attributable to sampling uncertainty. Point estimates of life expectancy and shape often deviated from their respective sampling distributions (Fig. \@ref(fig:fig-main-2)). For shape, the most extreme positive and negative point estimates tended to have sampling distributions shifted much closer to zero, whereas for mature life expectancy, many point estimates were skewed upward from the median of the sampling distribution. The mismatches between point estimates and sampling distributions usually coincided with a boundary estimate of stage-specific survival (i.e. a point estimate approaching either 0% or 100%). Supplementary analyses suggest that these boundary estimates can skew a point estimate of life expectancy or shape away from the majority of its sampling distribution (see Supplementary Figure S1 and Supplementary Figure S2).
 
-Despite the mismatch between point estimates and sampling distributions, accounting for sampling uncertainty in our test of the relationship between life expectancy and shape did not impact the overall conclusion (Fig. \@ref(fig:fig-main-3); Supplementary Table S3). While the posterior distribution of the slope parameter β from the point-estimate model was centred slightly to the left of zero (P[β > 0] = `r fmt_dec(case1_beta_pt$p_beta_gt0, 3)`), the corresponding posterior from the sampling-uncertainty model was shifted somewhat to the right (P[β > 0] = `r fmt_dec(case1_beta_sd$p_beta_gt0, 3)`). This shift in the posterior between the two models led to a change in sign of the posterior median between the two scenarios. The shift in sign of the result is not trivial; however, given that the overall conclusion in both cases is that there is no strong effect, this remains robust.
+Despite the mismatch between point estimates and sampling distributions, accounting for sampling uncertainty in our test of the relationship between life expectancy and shape did not impact the overall conclusion (Fig. \@ref(fig:fig-main-3); Supplementary Table S3). While the posterior distribution of the slope parameter β from the point-estimate model was centred slightly to the left of zero (P[β > 0] = `r fmt_dec(case1_beta_pt$p_beta_gt0, 3)`), the corresponding posterior from the sampling-uncertainty model was shifted somewhat to the right (P[β > 0] = `r fmt_dec(case1_beta_sd$p_beta_gt0, 3)`). The posterior median of the slope therefore changed sign between the two models. This shift is not trivial, but because both posteriors span zero the overall conclusion, that there is no strong effect, is unchanged.
 
 Counterintuitively, there was less posterior uncertainty in β in the sampling-uncertainty model than in the point-estimate model. The shift of extreme shape estimates towards zero (Figure \@ref(fig:fig-main-3)A) may contribute to this narrowing, but posterior precision also depends on the model assumptions and treatment of uncertainty; reduced scatter alone does not establish the explanation.
 
@@ -563,11 +550,11 @@ Despite the relatively small sample sizes underlying some recruitment estimates 
 
 ## Analysis 3: Simulation study of climate effects on fecundity
 
-The simulation study showed that accounting for sampling uncertainty improved interval calibration without materially increasing average estimation error (Fig. \@ref(fig:fig-main-5)). Across the full factorial design, the uncertainty-aware Poisson model achieved near-nominal 95% interval coverage (`r fmt_dec(sim_unc_cov_overall, 3)`), whereas the simpler Poisson point-estimate model undercovered substantially (`r fmt_dec(sim_point_cov_overall, 3)`). The two Poisson formulations had very similar overall RMSE (`r fmt_dec(sim_unc_rmse_overall, 3)` versus `r fmt_dec(sim_point_rmse_overall, 3)`), indicating that the main benefit of explicit uncertainty propagation was improved interval calibration rather than reduced average error.
+The simulation study showed that accounting for year-to-year process variation improved interval calibration without materially increasing average estimation error (Fig. \@ref(fig:fig-main-5)). Across the full factorial design, the uncertainty-aware Poisson model achieved near-nominal 95% interval coverage (`r fmt_dec(sim_unc_cov_overall, 3)`), whereas the simpler Poisson point-estimate model undercovered substantially (`r fmt_dec(sim_point_cov_overall, 3)`). The two Poisson formulations had very similar overall RMSE (`r fmt_dec(sim_unc_rmse_overall, 3)` versus `r fmt_dec(sim_point_rmse_overall, 3)`), indicating that the main benefit of modelling this process variation was improved interval calibration rather than reduced average error.
 
 The undercoverage of the Poisson point-estimate model became more severe as sample size increased. Averaged across true effect sizes, its coverage declined from `r fmt_dec(sim_cov_n10_point, 3)` at sample size 10 to `r fmt_dec(sim_cov_n100_point, 3)` at sample size 100, whereas the uncertainty-aware model remained stable over the same range (`r fmt_dec(sim_cov_n10_unc, 3)` to `r fmt_dec(sim_cov_n100_unc, 3)`; Fig. \@ref(fig:fig-main-5)). This occurs because the point-estimate model treats increasing sample size as if it eliminated most uncertainty, even though the simulated truth still includes year-to-year biological variation not explained by climate. As a result, its intervals become too narrow. The residual variation being represented here is among-year process variation, a component distinct from the transition-rate sampling uncertainty examined in Analyses 1 and 2; the point-estimate model becomes overconfident precisely because it implicitly assumes this variation away as sample size grows.
 
-Bias patterns also differed among models. The Gaussian point-estimate model showed increasing positive bias as the true effect size increased, with mean bias reaching `r fmt_dec(sim_gaussian_bias_beta05, 3)` when \(\beta_{\text{true}} = 0.5\), whereas both Poisson models remained close to unbiased throughout the design (Fig. \@ref(fig:fig-main-5)). The uncertainty-aware model therefore combines the low bias of the count-based formulation with interval coverage close to the nominal 95% level. A supplementary multisite robustness analysis based on three *Astragalus scaphoides* populations showed the same qualitative conclusion as analysis 2: climate-effect inference was similar with and without explicit uncertainty propagation in that empirical setting (Supplementary Results section S2.5; Figure S5; Tables S7-S10).
+All three models showed little average bias (Fig. \@ref(fig:fig-main-5)). For the Gaussian log-link model, mean bias was `r fmt_dec(sim_gaussian_bias_beta05, 3)` when \(\beta_{\text{true}} = 0.5\), but its overall 95% interval coverage was `r fmt_dec(sim_gaussian$coverage, 3)`, below the nominal level. The uncertainty-aware model therefore combines the low bias of the count-based formulation with interval coverage close to the nominal 95% level. A supplementary multisite robustness analysis based on three *Astragalus scaphoides* populations showed the same qualitative conclusion as analysis 2: climate-effect inference was similar with and without explicit uncertainty propagation in that empirical setting (Supplementary Results section S2.5; Figure S5; Tables S7-S10).
 
 
 # Discussion
@@ -578,11 +565,11 @@ Sampling uncertainty in the transition rates underlying matrix population models
 
 We use “materially affects inference” to mean a difference large enough to change a qualitative conclusion, for instance, by shifting the direction of an estimated effect, moving a credible interval from largely overlapping to largely excluding zero, or substantially altering the rank order of populations. This is a judgment call rather than a formal threshold, and readers with different tolerances for uncertainty may draw the lines differently. This contrast illustrates that ignoring sampling uncertainty does not universally compromise inference from published projection matrices, but that its consequences depend on the traits being analysed and the structure of the underlying models.
 
-For several commonly used integrated demographic metrics, such as population growth rate (λ), generation time, and individual growth rate, sampling uncertainty accounted for only a small fraction of the total variation observed among populations. By contrast, traits related to mortality trajectories, particularly the shape of the mortality distribution, were far more sensitive: nearly half of the total variation in shape was attributable to sampling uncertainty. In these cases, much of the apparent variation among published MPMs is not distinguishable from statistical noise. This result helps explain why incorporating sampling uncertainty shifted inference in the senescence analysis but had little effect in the climate-recruitment analysis, where the response variable was more directly linked to observed counts and less dependent on long-term survivorship.
+Point estimates were far more dispersed relative to their posterior means for mortality-trajectory traits, particularly shape, than for integrated metrics such as population growth rate (λ) and generation time (Table \@ref(tab:table-case1-var)). This greater dispersion, together with the displacements shown in Figure \@ref(fig:fig-main-2), indicates that mortality-trajectory traits are more sensitive to sampling uncertainty than the directly observed recruitment response in the climate analysis.
 
 ## Why are some MPM-derived traits particularly sensitive to sampling uncertainty, and what are the practical implications?
 
-A plausible contributor to the sensitivity of mortality-trajectory traits is that life expectancy and shape are inferred via age-from-stage methods, which project a cohort forward through repeated matrix multiplication. Repeated projection can amplify transition-rate uncertainty into uncertainty in long-term survivorship. Integrated metrics such as population growth rate were less sensitive in our analyses, but are not inherently protected from sampling uncertainty.
+The sensitivity of mortality-trajectory traits has a clear mechanistic basis. Life expectancy and shape are inferred via age-from-stage methods, which project a cohort forward through repeated matrix multiplication, so errors in late-stage survival are not simply carried forward but compounded across projection steps, amplifying small transition-rate uncertainties into large uncertainties in long-term survivorship. Integrated metrics such as population growth rate are buffered against this, because they average over many transitions where errors tend to partially cancel, although they are not wholly immune to sampling uncertainty.
 
 Several structural features of published matrices may exacerbate this. In our analysis 1 life expectancy-shape set (68 population-level matrix entries from 25 species), 47% (32/68) contain only a single reproductive stage class, 69% (47/68) reach their quasi-stable distribution in less than one life expectancy, and 46% (31/68) contain at least one stage-specific survival estimate of 100% after rescaling any \(U\) columns whose sums exceeded 1 (allowing for floating-point rounding). These are not rare edge cases; they are common features in our dataset that may contribute to displacement of derived trait estimates from the centre of their sampling distributions.
 
@@ -591,7 +578,7 @@ Consistent with this explanation, within the analysis 1 dataset displacement mag
 
 ## Practical implications for users of compiled demographic databases
 
-These structural constraints have practical implications. Highly aggregated demographic metrics, such as population growth rate and generation time, were less sensitive in our dataset, but this does not establish that uncertainty modelling is unnecessary. Analyses of ageing, longevity, or mortality trajectories appeared more sensitive and warrant particular caution.
+These structural constraints have practical implications. Highly aggregated demographic metrics, such as population growth rate and generation time, were among the least sensitive in our dataset, so analyses focused on them will often be robust to sampling uncertainty, although this should be checked rather than assumed. Analyses of ageing, longevity, or mortality trajectories were more sensitive and warrant particular caution.
 
 Generalisability is also conditioned by taxonomic representation. Relative to the full current COMPADRE plant database, our final 31-study subset is enriched for herbaceous perennials (64.5% of studies in our subset versus 49.1% in COMPADRE overall) and succulents (16.1% versus 7.8%), while trees (6.5% versus 15.4%) and shrubs (3.2% versus 9.0%) are under-represented; annuals and several less common plant life forms are absent entirely. Our conclusions should therefore be interpreted most directly for perennial herb and succulent systems, and more cautiously for woody or otherwise under-represented life forms.
 
@@ -611,7 +598,7 @@ Incorporating transition-rate sampling uncertainty into analyses of published MP
 
 ## Conclusions
 
-Our analyses show that the consequences of transition-rate sampling uncertainty in published matrix population models are highly trait-dependent. For many commonly used integrated demographic metrics, such as population growth rate and generation time, sampling uncertainty accounted for only a small fraction of total variation, suggesting lower sensitivity for these traits in this dataset, rather than general robustness across published MPMs. By contrast, parameters related to mortality trajectories, including life expectancy and, especially, the shape of the mortality distribution, were substantially more sensitive to sampling uncertainty. In these cases, a large proportion of apparent variation among published matrices is indistinguishable from statistical noise, and point estimates can be systematically biased by boundary estimates of stage-specific survival.
+Our analyses show that the consequences of transition-rate sampling uncertainty in published matrix population models are highly trait-dependent. For integrated metrics such as population growth rate and generation time, point estimates were only modestly more dispersed than their posterior means, whereas for mortality-trajectory traits, including life expectancy and especially the shape of the mortality distribution, they were much more dispersed and more sensitive to sampling uncertainty. In these cases, point estimates can be displaced from the centres of their posterior distributions by boundary estimates of stage-specific survival.
 
 These results indicate that accounting for sampling uncertainty will not universally alter conclusions drawn from analyses of published MPMs, but that its importance depends critically on the demographic traits being analysed and on features of model structure and data availability. Although our study examined only a subset of MPM-derived parameters and a limited fraction of the matrices available in COMPADRE, it highlights specific conditions under which inference is likely to be fragile and provides practical guidance for assessing robustness in comparative and time-series analyses.
 
@@ -642,7 +629,7 @@ The supplementary materials include the following items:
 - **Supplementary Methods S1.2**: Age-from-stage derivation, truncation, and shape metric.
 - **Supplementary Methods S1.3**: Pooled and mean MPM handling.
 - **Supplementary Methods S1.4**: Bayesian model priors and fitting settings.
-- **Supplementary Methods S1.5**: Variance-component summary (sampling-to-other ratio).
+- **Supplementary Methods S1.5**: Comparison of point-estimate and posterior-mean variance.
 - **Supplementary Methods S1.6**: Simplified spring-temperature model (analysis 2).
 - **Supplementary Methods S1.7**: Reporting recommendations for future MPM studies.
 - **Supplementary Methods S1.8**: Included versus excluded studies in the current target-study screen.
@@ -759,7 +746,7 @@ Wrycza, T. F., Missov, T. I., and Baudisch, A. (2015) Quantifying the shape of a
 \newpage
 # Tables
 
-```{r table-case1-var, tab.cap="Sampling-to-other variance ratios for key demographic parameters in analysis 1, with 95% intervals from the variance-component model. Ratios greater than 1 indicate that variance attributable to transition-rate sampling uncertainty exceeds residual biological variance across population-level entries (including both among-population and among-species variation). This shows that the ratio is highest for shape, intermediate for life expectancy, and lowest for log population growth rate."}
+```{r table-case1-var, tab.cap="Across-entry variance ratios for key demographic parameters in analysis 1, with 95% intervals from paired bootstrap resampling of population-level entries. Each ratio is the variance of matrix point estimates divided by the variance of reconstructed posterior means across the same entries; values above 1 indicate greater dispersion of point estimates, not a fraction of variance attributable to sampling. The ratio is highest for shape, intermediate for life expectancy, and lowest for log population growth rate."}
 ft <- make_flextable(table_case1_var)
 ft
 ```
@@ -768,7 +755,7 @@ ft
 
 # Figures
 
-```{r fig-main-1a, fig.cap="Sampling distributions of transition rates for the focal single-MPM example (*Agrimonia eupatoria*, population B), showing transition rates as reported in COMPADRE (A), the underlying transition counts used for estimation (B), and bootstrap-based sampling distributions (C). In panel C, pale green densities show transition-rate sampling distributions, and teal dashed horizontal lines mark point estimates. Survival-related transitions are probabilities; the reproductive transition gives recruits per reproductive plant. Together, these panels show that several matrix elements are weakly estimated from finite samples."}
+```{r fig-main-1a, fig.cap="Sampling distributions of transition rates for the focal single-MPM example (*Agrimonia eupatoria*, population B), showing transition rates as reported in COMPADRE (A), the underlying transition counts used for estimation (B), and posterior uncertainty distributions (C). In panel C, pale green densities show transition-rate sampling distributions, and teal dashed horizontal lines mark point estimates. Survival-related transitions are probabilities; the reproductive transition gives recruits per reproductive plant. Together, these panels show that several matrix elements are weakly estimated from finite samples."}
 knitr::include_graphics(here::here("figures", "Figure_1_transition_rates_single_mpm.png"))
 ```
 
@@ -798,7 +785,7 @@ knitr::include_graphics(here::here("figures", "Figure_5_analysis2_climate_effect
 
 \newpage
 
-```{r fig-main-5, fig.cap="Simulation analysis of climate effects on fecundity, showing that accounting for sampling uncertainty improves interval performance while keeping bias low. The upper row shows bias, and the lower row shows 95% interval coverage, across four sample sizes and three true effect sizes (beta = 0.1, 0.3, and 0.5). The Gaussian point-estimate model (purple) becomes increasingly biased as the true effect grows. The Poisson point-estimate model (blue) is nearly unbiased but its intervals miss the true effect too often, especially at larger sample sizes. The uncertainty-aware Poisson model (green) keeps coverage close to the expected 95% level across the full design."}
+```{r fig-main-5, fig.cap="Simulation analysis of climate effects on fecundity, showing that modelling year-to-year process variation improves interval performance while keeping bias low. The upper row shows bias, and the lower row shows 95% interval coverage, across four sample sizes and three true effect sizes (beta = 0.1, 0.3, and 0.5). The Gaussian log-link point-estimate model (purple) has little average bias but undercovers, especially at stronger climate effects. The Poisson point-estimate model (blue) is nearly unbiased but its intervals miss the true effect too often, especially at larger sample sizes. The uncertainty-aware Poisson model (green) keeps coverage close to the expected 95% level across the full design."}
 knitr::include_graphics(here::here("figures", "Figure_6_analysis3_simulation_performance.png"))
 ```
 
@@ -818,6 +805,7 @@ knitr::opts_chunk$set(
 ```{r supp-prepare-analysis}
 source(here::here("code", "setup.R"))
 compadre_version_label <- get_compadre_version_label(corrected = FALSE)
+fmt_dec <- function(x, digits = 2) formatC(x, format = "f", digits = digits)
 if (isTRUE(params$refresh_outputs)) {
   source(here::here("scripts", "S01_compadre_correct.R"))
   source(here::here("scripts", "S02_target_studies.R"))
@@ -864,6 +852,10 @@ case3_spring <- readr::read_csv(
   here::here("data", "derived", "analysis_cache", "case3_astragalus_spring_beta_summary.csv"),
   show_col_types = FALSE
 )
+case3_gprc <- readr::read_csv(
+  here::here("data", "derived", "analysis_cache", "case3_astragalus_gprc_beta_summary.csv"),
+  show_col_types = FALSE
+)
 case2_stage_weight <- readr::read_csv(
   here::here("data", "derived", "analysis_cache", "case2_stage_survival_weight_sensitivity.csv"),
   show_col_types = FALSE
@@ -904,6 +896,47 @@ case1_qsd_sens <- readr::read_csv(
   here::here("data", "derived", "analysis_cache", "case1_qsd_threshold_sensitivity_summary.csv"),
   show_col_types = FALSE
 )
+
+case3_years_total_min <- min(case3_site$years_total, na.rm = TRUE)
+case3_years_total_max <- max(case3_site$years_total, na.rm = TRUE)
+case3_years_fit_min <- min(case3_site$years_fit, na.rm = TRUE)
+case3_years_fit_max <- max(case3_site$years_fit, na.rm = TRUE)
+case3_years_excl_min <- min(case3_site$years_excluded, na.rm = TRUE)
+case3_years_excl_max <- max(case3_site$years_excluded, na.rm = TRUE)
+
+case3_spring_cmp <- case3_spring |>
+  dplyr::mutate(model_simple = dplyr::if_else(
+    grepl("sampling uncertainty", model, ignore.case = TRUE),
+    "sampling", "point"
+  )) |>
+  dplyr::select(site_slug, model_simple, med, low95, upp95) |>
+  tidyr::pivot_wider(names_from = model_simple, values_from = c(med, low95, upp95)) |>
+  dplyr::mutate(
+    ciw_point = upp95_point - low95_point,
+    ciw_sampling = upp95_sampling - low95_sampling,
+    beta_diff = med_sampling - med_point,
+    ciw_diff_pct = 100 * (ciw_sampling - ciw_point) / ciw_point
+  )
+case3_beta_diff_max <- max(abs(case3_spring_cmp$beta_diff), na.rm = TRUE)
+case3_ciw_diff_pct_min <- min(case3_spring_cmp$ciw_diff_pct, na.rm = TRUE)
+case3_ciw_diff_pct_max <- max(case3_spring_cmp$ciw_diff_pct, na.rm = TRUE)
+
+case3_gprc_cmp <- case3_gprc |>
+  dplyr::mutate(model_simple = dplyr::if_else(
+    grepl("sampling uncertainty", model, ignore.case = TRUE),
+    "sampling", "point"
+  )) |>
+  dplyr::select(site_slug, lag, model_simple, beta_med) |>
+  tidyr::pivot_wider(names_from = model_simple, values_from = beta_med) |>
+  dplyr::group_by(site_slug) |>
+  dplyr::summarize(
+    cor_beta = cor(point, sampling),
+    max_abs_diff = max(abs(sampling - point)),
+    .groups = "drop"
+  )
+case3_cor_min <- min(case3_gprc_cmp$cor_beta, na.rm = TRUE)
+case3_cor_max <- max(case3_gprc_cmp$cor_beta, na.rm = TRUE)
+case3_max_abs_diff <- max(case3_gprc_cmp$max_abs_diff, na.rm = TRUE)
 
 make_flextable <- function(df) {
   ft <- flextable::flextable(df)
@@ -1329,9 +1362,11 @@ table_studies_sources <- studies_sources |>
 
 ## S1.1 Sampling-distribution workflow used for each MPM
 
-For each focal matrix population model (MPM), we reconstructed transition-level sampling distributions from reported transition counts (or equivalent sample-size information). We then generated 2,000 parametric bootstrap draws per MPM by sampling each transition from its likelihood (multinomial for survival/growth/retrogression transitions and Poisson for recruitment transitions), rebuilding the full MPM for each draw, and recalculating each derived demographic quantity from that draw. We treated structural zeros (biologically impossible transitions) as fixed zeros in all draws, and treated sampling zeros (possible but unobserved transitions) as uncertain parameters under the same likelihood models used for non-zero transitions. When a recovered stage-specific sample size was zero, we retained the published point-estimate transition column unchanged in all bootstrap draws rather than treating it as structurally fixed at zero; this preserves the published matrix while acknowledging that no additional sampling variance can be propagated for that column.
+We reconstructed transition-rate uncertainty by direct conjugate posterior sampling, using 2,000 draws per MPM for the illustrative example and 1,000 for analysis 1. For each origin-stage column of \(U\), allowed living transitions and death were drawn jointly from \(\mathrm{Dirichlet}(k_1+1,\ldots,k_m+1)\), corresponding to a multinomial likelihood and a \(\mathrm{Dirichlet}(1,\ldots,1)\) prior. Counts \(k_m\) were reconstructed as transition rates multiplied by stage sample size, after rescaling any \(U\) column whose sum exceeded 1. These reconstructed counts may be fractional for rounded or averaged matrix entries. Each allowed reproductive rate was drawn from \(\mathrm{Gamma}(1+k,\text{rate}=n)\), where \(k=nF_{ij}\), corresponding to a Poisson likelihood and an improper flat prior on the non-negative rate scale. These are posterior parameter draws, not bootstrap resamples of observations. We rebuilt each MPM and recalculated derived quantities for every draw.
 
-This produced a sampling distribution for each derived quantity used downstream (e.g. life expectancy, shape, log population growth rate). Point estimates in the manuscript correspond to values derived directly from the reported matrix entries; uncertainty-aware summaries correspond to moments of these bootstrap distributions.
+Allowed-transition masks default to positive entries in the focal matrix; where masks are constructed across matrices, an entry is allowed if positive in any contributing matrix. Other entries remain zero. Death is included even when its reconstructed count is zero, provided the column has an allowed living transition. This does not establish that excluded zero-valued transitions are biologically impossible. A missing sample size leaves its column unchanged; a sample size of zero produces a missing simulated column. Neither case supplies a posterior uncertainty estimate for that column. Figure 1C displays normalised marginal binomial or Poisson likelihood curves under flat priors over the plotted range; these are distinct from the joint Dirichlet draws used for derived quantities.
+
+Point estimates correspond to values derived directly from the reported matrix entries; uncertainty-aware summaries describe the reconstructed posterior distributions.
 
 ## S1.2 Age-from-stage derivation, truncation, and shape metric
 
@@ -1339,37 +1374,39 @@ Life expectancy and shape were derived from survivorship trajectories obtained u
 
 ## S1.3 Pooled and mean MPM handling
 
-Analysis 1 used one population-level MPM per population. Where a pooled population MPM was available, it was used; otherwise, a mean population MPM was used; if neither was available, a population-level matrix was constructed as the element-wise mean of the available annual individual MPMs. When COMPADRE included both site-specific population rows and aggregate rows that combined multiple populations, only the site-specific population rows were retained, so that each population contributed a single analysis unit. For uncertainty propagation in pooled or mean matrices, stage-specific sample sizes were pooled across years before bootstrap simulation. This captures within-year sampling variation but does not fully represent between-year process variation, so the resulting uncertainty should be interpreted conservatively.
+Analysis 1 used one population-level MPM per population. Where a pooled population MPM was available, it was used; otherwise, a mean population MPM was used; if neither was available, a population-level matrix was constructed as the element-wise mean of the available annual individual MPMs. When COMPADRE included both site-specific population rows and aggregate rows that combined multiple populations, only the site-specific population rows were retained, so that each population contributed a single analysis unit. For uncertainty propagation in pooled or mean matrices, stage-specific sample sizes were pooled across years before posterior sampling. This captures within-year sampling variation but does not fully represent between-year process variation, so the resulting uncertainty should be interpreted conservatively.
 
 ## S1.4 Bayesian model priors and fitting settings
 
-Stan models and priors are defined in `models/*.stan`. For the two main analyses:
+Stan models and priors are defined in `models/*.stan`. For the three main analyses:
 
-- Analysis 1 models use weakly informative normal priors for location/slope terms and normal priors for scale terms (see `models/regress_hier.stan` and `models/regress_hier_error.stan`).
-- Analysis 2 uses two models with Gaussian-process regression forms and normal priors on GP hyperparameters and coefficients (see `models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`).
+- Analysis 1 models use normal priors for location/slope terms and half-normal priors for positive scale terms (see `models/regress_hier.stan` and `models/regress_hier_error.stan`).
+- Analysis 2 uses Gaussian-process recruitment models with normal priors on GP hyperparameters and coefficients (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`), plus spring-temperature models (`models/regress.stan` and `models/regress_log_err.stan`).
+- Analysis 3 fits its model with year-specific process variation using `models/poisson_climate_latent.stan`: the intercept and climate coefficient have \(\text{Normal}(0,2)\) and \(\text{Normal}(0,1)\) priors, respectively; the process standard deviation has an \(\text{Exponential}(1)\) prior, and the standardised year effects have \(\text{Normal}(0,1)\) priors. Its Gaussian and Poisson point-estimate models use `stats::glm()` and have no Bayesian priors.
 - The multisite *Astragalus scaphoides* robustness analysis uses the same Gaussian-process recruitment model pair as analysis 2 (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`) together with a simpler spring-temperature regression pair using weakly informative normal priors on regression coefficients and scale terms (`models/regress.stan` and `models/regress_log_err.stan`).
 
 Fitting settings used in scripts:
 
 - Analysis 1 (`scripts/S07_case_study_1_analysis.R`): `chains = 2`, `iter = 4000`, `warmup = 2000-3000`, `seed = 5654`.
 - Analysis 2 (`scripts/S12_case_study_2.R`): `iter = 5000` for key models, `seed = 5654`, with additional control settings for GP fits.
+- Analysis 3 (`scripts/S16_analysis_3_simulation.R`): `chains = 4`, `iter = 3000`, `warmup = 1500`, and a separate reproducible seed for each simulated time series.
 - Multisite *Astragalus scaphoides* robustness analysis (`scripts/S14_case_study_3_astragalus.R`): `iter = 5000`, `seed = 5654`, using the same GP control settings as analysis 2 for recruitment models and matched regression settings for the simplified spring-temperature models.
 
-## S1.5 Variance-component summary (sampling-to-other ratio)
+## S1.5 Comparison of point-estimate and posterior-mean variance
 
-For each parameter, the total observed variance was partitioned into:
+For each parameter, we compared variance across population-level MPM entries using:
 
-- sampling component: mean within-MPM sampling variance from bootstrap draws;
-- residual component: remaining variance among populations/species.
+- the value derived from each matrix point estimate, \(\hat\theta_p\);
+- the mean of its reconstructed posterior distribution, \(\bar\theta_p\).
 
-The reported summary is Eq. \@ref(eq:var-ratio):
+For population-level entries \(p\), the reported ratio is Eq. \@ref(eq:var-ratio):
 
 \begin{equation}
-\text{ratio} = \frac{v_{\text{sampling}}}{v_{\text{residual}}}
+\text{ratio} = \frac{\operatorname{Var}_p(\hat\theta_p)}{\operatorname{Var}_p(\bar\theta_p)}.
 (\#eq:var-ratio)
 \end{equation}
 
-Ratios above 1 indicate that sampling uncertainty exceeds residual biological variation for that parameter.
+Ratios above 1 indicate that point estimates are more dispersed than posterior means. We obtained 95% intervals by resampling population-level entries with replacement 2,000 times, keeping each point estimate paired with its posterior mean. This descriptive ratio does not partition sampling and biological variance.
 
 ## S1.6 Simplified spring-temperature model (analysis 2)
 
@@ -1414,7 +1451,7 @@ To examine factors associated with point-estimate displacement in analysis 1, we
 
 ## S1.13 Sensitivity to the quasi-stable-distribution truncation threshold
 
-To assess whether the shape metric was sensitive to the truncation rule used to avoid artefactual mortality plateaus, we repeated the analysis 1 shape calculation using quasi-stable-distribution convergence thresholds of 0.5% and 5%, alongside the 1% threshold used in the main analysis. For each population-level MPM that remained estimable under all three thresholds, we recalculated the point estimate of shape and the bootstrap sampling-distribution summary using the threshold-specific truncation age \(q\). We then compared the resulting shape estimates to the 1% baseline using pairwise correlations, absolute differences, sign changes around zero, and shifts in \(q\).
+To assess whether the shape metric was sensitive to the truncation rule used to avoid artefactual mortality plateaus, we repeated the analysis 1 shape calculation using quasi-stable-distribution convergence thresholds of 0.5% and 5%, alongside the 1% threshold used in the main analysis. For each population-level MPM that remained estimable under all three thresholds, we recalculated the point estimate of shape and the posterior uncertainty summary using the threshold-specific truncation age \(q\). We then compared the resulting shape estimates to the 1% baseline using pairwise correlations, absolute differences, sign changes around zero, and shifts in \(q\).
 
 # Supplementary Results
 
@@ -1451,7 +1488,7 @@ For spring-temperature models, posterior medians differed only slightly between 
 # Supplementary Tables
 
 
-Table S1. Single-MPM derived-parameter summary for the focal *Agrimonia eupatoria* example. Reported values are point estimates and uncertainty intervals from parametric bootstrap sampling distributions, showing substantial uncertainty for several derived demographic quantities.
+Table S1. Single-MPM derived-parameter summary for the focal *Agrimonia eupatoria* example. Reported values are point estimates and 95% credible intervals from reconstructed posterior distributions, showing substantial uncertainty for several derived demographic quantities.
 
 ```{r supp-table-fig1-derived}
 ft <- make_flextable(table_s1_2)
