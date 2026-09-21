@@ -370,23 +370,9 @@ stage_levels <- stage_surv %>%
   mutate(stage_label = paste0("Stage ", stage)) %>%
   pull(stage_label)
 
-# For non-estimable stages, show descriptive markers only (no uncertainty bars).
-stage_placeholders <- stage_surv %>%
-  group_by(stage) %>%
-  summarize(
-    mean_surv = mean(surv, na.rm = TRUE),
-    all_survive = all(n_fail == 0),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    stage_label = paste0("Stage ", stage),
-    x = case_when(
-      stage == 1 ~ mean_surv,
-      stage == 4 & all_survive ~ 1,
-      TRUE ~ NA_real_
-    )
-  ) %>%
-  filter(!is.na(x))
+# Keep missing stages visible without placing survival probabilities on a coefficient axis.
+stage_placeholders <- tibble(stage_label = stage_levels) %>%
+  anti_join(stage_beta %>% filter(!is.na(beta)), by = "stage_label")
 
 p3 <- ggplot(stage_beta %>% filter(!is.na(beta)),
   aes(x = beta, y = stage_label, color = model)
@@ -398,21 +384,20 @@ p3 <- ggplot(stage_beta %>% filter(!is.na(beta)),
     linewidth = 0.7
   ) +
   geom_point(position = position_dodge(width = 0.6), size = 1.6) +
-  geom_point(
+  geom_text(
     data = stage_placeholders,
-    aes(x = x, y = stage_label),
+    aes(x = Inf, y = stage_label, label = "Not estimable"),
     inherit.aes = FALSE,
-    shape = 1,
-    size = 2.2,
-    stroke = 0.8,
-    color = cols$light
+    hjust = 1.05,
+    size = 3,
+    color = "grey40"
   ) +
   scale_color_manual(values = model_cols, drop = FALSE) +
   scale_y_discrete(limits = rev(stage_levels), drop = FALSE) +
   guides(color = guide_legend(nrow = 1, byrow = TRUE)) +
   labs(
     x = expression(paste("Temperature coefficient (logit scale, ", italic(beta), ")")),
-    y = "Stage-specific survival"
+    y = "Stage"
   ) +
   tt +
   theme(

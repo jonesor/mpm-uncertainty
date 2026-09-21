@@ -452,24 +452,9 @@ analyze_site <- function(SpeciesAuthor, MatrixPopulation, ellis_spp, ellis_pop) 
 
   stage_levels <- paste0("Stage ", seq_len(n_stages))
 
-  stage_placeholders <- stage_surv %>%
-    group_by(stage, stage_label) %>%
-    summarize(
-      mean_surv = mean(surv, na.rm = TRUE),
-      all_survive = all(n_fail == 0),
-      .groups = "drop"
-    ) %>%
-    right_join(
-      tibble(stage = seq_len(n_stages), stage_label = paste0("Stage ", seq_len(n_stages))),
-      by = c("stage", "stage_label")
-    ) %>%
-    filter(!(stage %in% unique(stage_beta$stage[!is.na(stage_beta$beta)]))) %>%
-    mutate(
-      x = case_when(
-        isTRUE(all_survive) ~ 1,
-        TRUE ~ mean_surv
-      )
-    )
+  # Missing stages are labelled, not plotted as probabilities on the coefficient axis.
+  stage_placeholders <- tibble(stage_label = stage_levels) %>%
+    anti_join(stage_beta %>% filter(!is.na(beta)), by = "stage_label")
 
   stage_pred <- stage_surv %>%
     group_by(stage, stage_label) %>%
@@ -554,14 +539,13 @@ analyze_site <- function(SpeciesAuthor, MatrixPopulation, ellis_spp, ellis_pop) 
       linewidth = 0.7
     ) +
     geom_point(position = position_dodge(width = 0.6), size = 1.6) +
-    geom_point(
+    geom_text(
       data = stage_placeholders,
-      aes(x = x, y = stage_label),
+      aes(x = Inf, y = stage_label, label = "Not estimable"),
       inherit.aes = FALSE,
-      shape = 1,
-      size = 2.2,
-      stroke = 0.8,
-      color = cols$light
+      hjust = 1.05,
+      size = 3,
+      color = "grey40"
     ) +
     scale_color_manual(
       values = model_cols,
