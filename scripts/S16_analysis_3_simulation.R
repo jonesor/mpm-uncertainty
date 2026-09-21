@@ -161,9 +161,17 @@ simulate_one_dataset <- function(beta_true, n_stage, seed, t_years,
 }
 
 fit_gaussian_point <- function(dat) {
-  fit <- lm(fhat_14 ~ x_t, data = dat)
+  # Match the generating model's log-scale effect without logging observed zeros.
+  fit <- glm(
+    fhat_14 ~ x_t,
+    family = gaussian(link = "log"),
+    start = c(log(mean(dat$fhat_14)), 0),
+    data = dat
+  )
+  if (!isTRUE(fit$converged)) stop("Gaussian log-link model did not converge.")
   est <- unname(coef(fit)[["x_t"]])
-  int <- suppressMessages(confint(fit, "x_t", level = 0.95))
+  se <- coef(summary(fit))["x_t", "Std. Error"]
+  int <- est + qt(c(0.025, 0.975), df = df.residual(fit)) * se
 
   tibble(
     model = "Gaussian point estimate",
