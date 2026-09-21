@@ -535,9 +535,11 @@ table_studies_sources <- studies_sources |>
 
 ## S1.1 Sampling-distribution workflow used for each MPM
 
-For each focal matrix population model (MPM), we reconstructed transition-level sampling distributions from reported transition counts (or equivalent sample-size information). We then generated 2,000 parametric bootstrap draws per MPM by sampling each transition from its likelihood (multinomial for survival/growth/retrogression transitions and Poisson for recruitment transitions), rebuilding the full MPM for each draw, and recalculating each derived demographic quantity from that draw. We treated structural zeros (biologically impossible transitions) as fixed zeros in all draws, and treated sampling zeros (possible but unobserved transitions) as uncertain parameters under the same likelihood models used for non-zero transitions. When a recovered stage-specific sample size was zero, we retained the published point-estimate transition column unchanged in all bootstrap draws rather than treating it as structurally fixed at zero; this preserves the published matrix while acknowledging that no additional sampling variance can be propagated for that column.
+We reconstructed transition-rate uncertainty by direct conjugate posterior sampling, using 2,000 draws per MPM for the illustrative example and 1,000 for analysis 1. For each origin-stage column of \(U\), allowed living transitions and death were drawn jointly from \(\mathrm{Dirichlet}(k_1+1,\ldots,k_m+1)\), corresponding to a multinomial likelihood and a \(\mathrm{Dirichlet}(1,\ldots,1)\) prior. Counts \(k_m\) were reconstructed as transition rates multiplied by stage sample size, after rescaling any \(U\) column whose sum exceeded 1. These reconstructed counts may be fractional for rounded or averaged matrix entries. Each allowed reproductive rate was drawn from \(\mathrm{Gamma}(1+k,\text{rate}=n)\), where \(k=nF_{ij}\), corresponding to a Poisson likelihood and an improper flat prior on the non-negative rate scale. These are posterior parameter draws, not bootstrap resamples of observations. We rebuilt each MPM and recalculated derived quantities for every draw.
 
-This produced a sampling distribution for each derived quantity used downstream (e.g. life expectancy, shape, log population growth rate). Point estimates in the manuscript correspond to values derived directly from the reported matrix entries; uncertainty-aware summaries correspond to moments of these bootstrap distributions.
+Allowed-transition masks default to positive entries in the focal matrix; where masks are constructed across matrices, an entry is allowed if positive in any contributing matrix. Other entries remain zero. Death is included even when its reconstructed count is zero, provided the column has an allowed living transition. This does not establish that excluded zero-valued transitions are biologically impossible. A missing sample size leaves its column unchanged; a sample size of zero produces a missing simulated column. Neither case supplies a posterior uncertainty estimate for that column. Figure 1C displays normalised marginal binomial or Poisson likelihood curves under flat priors over the plotted range; these are distinct from the joint Dirichlet draws used for derived quantities.
+
+Point estimates correspond to values derived directly from the reported matrix entries; uncertainty-aware summaries describe the reconstructed posterior distributions.
 
 ## S1.2 Age-from-stage derivation, truncation, and shape metric
 
@@ -545,7 +547,7 @@ Life expectancy and shape were derived from survivorship trajectories obtained u
 
 ## S1.3 Pooled and mean MPM handling
 
-Analysis 1 used one population-level MPM per population. Where a pooled population MPM was available, it was used; otherwise, a mean population MPM was used; if neither was available, a population-level matrix was constructed as the element-wise mean of the available annual individual MPMs. When COMPADRE included both site-specific population rows and aggregate rows that combined multiple populations, only the site-specific population rows were retained, so that each population contributed a single analysis unit. For uncertainty propagation in pooled or mean matrices, stage-specific sample sizes were pooled across years before bootstrap simulation. This captures within-year sampling variation but does not fully represent between-year process variation, so the resulting uncertainty should be interpreted conservatively.
+Analysis 1 used one population-level MPM per population. Where a pooled population MPM was available, it was used; otherwise, a mean population MPM was used; if neither was available, a population-level matrix was constructed as the element-wise mean of the available annual individual MPMs. When COMPADRE included both site-specific population rows and aggregate rows that combined multiple populations, only the site-specific population rows were retained, so that each population contributed a single analysis unit. For uncertainty propagation in pooled or mean matrices, stage-specific sample sizes were pooled across years before posterior sampling. This captures within-year sampling variation but does not fully represent between-year process variation, so the resulting uncertainty should be interpreted conservatively.
 
 ## S1.4 Bayesian model priors and fitting settings
 
@@ -565,7 +567,7 @@ Fitting settings used in scripts:
 
 For each parameter, the total observed variance was partitioned into:
 
-- sampling component: mean within-MPM sampling variance from bootstrap draws;
+- sampling component: mean within-MPM sampling variance from posterior draws;
 - residual component: remaining variance among populations/species.
 
 The reported summary is Eq. \@ref(eq:var-ratio):
@@ -620,7 +622,7 @@ To examine factors associated with point-estimate displacement in analysis 1, we
 
 ## S1.13 Sensitivity to the quasi-stable-distribution truncation threshold
 
-To assess whether the shape metric was sensitive to the truncation rule used to avoid artefactual mortality plateaus, we repeated the analysis 1 shape calculation using quasi-stable-distribution convergence thresholds of 0.5% and 5%, alongside the 1% threshold used in the main analysis. For each population-level MPM that remained estimable under all three thresholds, we recalculated the point estimate of shape and the bootstrap sampling-distribution summary using the threshold-specific truncation age \(q\). We then compared the resulting shape estimates to the 1% baseline using pairwise correlations, absolute differences, sign changes around zero, and shifts in \(q\).
+To assess whether the shape metric was sensitive to the truncation rule used to avoid artefactual mortality plateaus, we repeated the analysis 1 shape calculation using quasi-stable-distribution convergence thresholds of 0.5% and 5%, alongside the 1% threshold used in the main analysis. For each population-level MPM that remained estimable under all three thresholds, we recalculated the point estimate of shape and the posterior uncertainty summary using the threshold-specific truncation age \(q\). We then compared the resulting shape estimates to the 1% baseline using pairwise correlations, absolute differences, sign changes around zero, and shifts in \(q\).
 
 # Supplementary Results
 
@@ -657,7 +659,7 @@ For spring-temperature models, posterior medians differed only slightly between 
 # Supplementary Tables
 
 
-Table S1. Single-MPM derived-parameter summary for the focal *Agrimonia eupatoria* example. Reported values are point estimates and uncertainty intervals from parametric bootstrap sampling distributions, showing substantial uncertainty for several derived demographic quantities.
+Table S1. Single-MPM derived-parameter summary for the focal *Agrimonia eupatoria* example. Reported values are point estimates and 95% credible intervals from reconstructed posterior distributions, showing substantial uncertainty for several derived demographic quantities.
 
 ```{r table-fig1-derived}
 ft <- make_flextable(table_s1_2)
