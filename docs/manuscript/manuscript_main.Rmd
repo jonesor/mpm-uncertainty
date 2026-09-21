@@ -544,6 +544,8 @@ where \(\beta_{\text{true}}\) was set to 0.1, 0.3, or 0.5, and \(z_t \sim \text{
 
 For each simulated dataset, we fit three models to estimate the climate effect on recruitment: (i) a Gaussian regression with a log link on annual point estimates of fecundity, (ii) a Poisson count model using observed seedling counts and an offset for the number of reproductive individuals, and (iii) a Poisson uncertainty-aware model that additionally included a latent year-specific process term analogous to \(z_t\). All three models target the same log-scale climate effect; the Gaussian model uses untransformed rates as its response and assumes constant residual variance. Its 95% intervals use the coefficient estimate ± a Student-t critical value times its standard error, with residual degrees of freedom. We then compared the models in terms of bias and 95% interval coverage (the proportion of replicate datasets in which the 95% interval contained the true effect \(\beta_{\text{true}}\); a well-calibrated model achieves coverage close to the nominal 0.95). Both Poisson models account for finite-sample count variation; their comparison tests the effect of additionally modelling year-to-year process variation under known truth. A supplementary multisite robustness analysis applying the analysis 2 framework to three *Astragalus scaphoides* populations is reported in Supplementary Methods section S1.10 and Supplementary Results section S2.5.
 
+Priors and fitting settings for the simulation model are given in Supplementary Methods section S1.4.
+
 All analyses were run in R (`r as.character(getRversion())`) using RStan (`r as.character(utils::packageVersion("rstan"))`), with data handling and plotting in tidyverse packages.
 
 

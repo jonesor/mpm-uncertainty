@@ -551,16 +551,18 @@ Analysis 1 used one population-level MPM per population. Where a pooled populati
 
 ## S1.4 Bayesian model priors and fitting settings
 
-Stan models and priors are defined in `models/*.stan`. For the two main analyses:
+Stan models and priors are defined in `models/*.stan`. For the three main analyses:
 
-- Analysis 1 models use weakly informative normal priors for location/slope terms and normal priors for scale terms (see `models/regress_hier.stan` and `models/regress_hier_error.stan`).
-- Analysis 2 uses two models with Gaussian-process regression forms and normal priors on GP hyperparameters and coefficients (see `models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`).
+- Analysis 1 models use normal priors for location/slope terms and half-normal priors for positive scale terms (see `models/regress2.stan` and `models/regress_hier_error.stan`).
+- Analysis 2 uses Gaussian-process recruitment models with normal priors on GP hyperparameters and coefficients (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`), plus spring-temperature models (`models/regress.stan` and `models/regress_log_err.stan`).
+- Analysis 3 fits its model with year-specific process variation using `models/poisson_climate_latent.stan`: the intercept and climate coefficient have \(\text{Normal}(0,2)\) and \(\text{Normal}(0,1)\) priors, respectively; the process standard deviation has an \(\text{Exponential}(1)\) prior, and the standardised year effects have \(\text{Normal}(0,1)\) priors. Its Gaussian and Poisson point-estimate models use `stats::glm()` and have no Bayesian priors.
 - The multisite *Astragalus scaphoides* robustness analysis uses the same Gaussian-process recruitment model pair as analysis 2 (`models/movbeta_gprc.stan` and `models/movbeta_gprc_err.stan`) together with a simpler spring-temperature regression pair using weakly informative normal priors on regression coefficients and scale terms (`models/regress.stan` and `models/regress_log_err.stan`).
 
 Fitting settings used in scripts:
 
 - Analysis 1 (`scripts/S07_case_study_1_analysis.R`): `chains = 2`, `iter = 4000`, `warmup = 2000-3000`, `seed = 5654`.
 - Analysis 2 (`scripts/S12_case_study_2.R`): `iter = 5000` for key models, `seed = 5654`, with additional control settings for GP fits.
+- Analysis 3 (`scripts/S16_analysis_3_simulation.R`): `chains = 4`, `iter = 3000`, `warmup = 1500`, and a separate reproducible seed for each simulated time series.
 - Multisite *Astragalus scaphoides* robustness analysis (`scripts/S14_case_study_3_astragalus.R`): `iter = 5000`, `seed = 5654`, using the same GP control settings as analysis 2 for recruitment models and matched regression settings for the simplified spring-temperature models.
 
 ## S1.5 Variance-component summary (sampling-to-other ratio)
