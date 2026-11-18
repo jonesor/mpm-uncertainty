@@ -23,3 +23,6 @@ docs/manuscript/zenodo/archive/*
 # Shiny deployment metadata
 rsconnect/
 apps/**/rsconnect/
+
+# Word lock files
+~$*
