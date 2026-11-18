@@ -74,6 +74,7 @@ prepare_zenodo_bundle <- function(
     "models/movbeta_gprc_err.stan",
     "models/null.stan",
     "models/null_err.stan",
+    "models/poisson_climate_latent.stan",
     "models/poisson_hier.stan",
     "models/regress.stan",
     "models/regress2.stan",
@@ -91,53 +92,20 @@ prepare_zenodo_bundle <- function(
     "data/raw/compadre/COMPADRE_v6.26.3.0_Corrected.RData",
     "data/raw/ellis_2012",
     "data/derived/README.md",
-    "data/derived/studies/README.md",
-    "data/derived/studies/_data_sources.csv",
-    "data/derived/studies/aschero_U.RData",
-    "data/derived/studies/andrieu_n.csv",
-    "data/derived/studies/andrello_n.csv",
-    "data/derived/studies/arroyo_n.csv",
-    "data/derived/studies/auestad_n.csv",
-    "data/derived/studies/crone_n.csv",
-    "data/derived/studies/csergo_n.csv",
-    "data/derived/studies/dias_n.csv",
-    "data/derived/studies/dostalek_n.csv",
-    "data/derived/studies/ehrlen_n.csv",
-    "data/derived/studies/eriksson_n.csv",
-    "data/derived/studies/ferrer_n.csv",
-    "data/derived/studies/flores_n.csv",
-    "data/derived/studies/jacquemyns_n.csv",
-    "data/derived/studies/jolls_n.csv",
-    "data/derived/studies/keller_n.csv",
-    "data/derived/studies/kiviniemi_n.csv",
-    "data/derived/studies/law_n.csv",
-    "data/derived/studies/lazaro_n.csv",
-    "data/derived/studies/lemke_n.csv",
-    "data/derived/studies/lopez_n.csv",
-    "data/derived/studies/martin_n.csv",
-    "data/derived/studies/martinez_n.csv",
-    "data/derived/studies/noel_n.csv",
-    "data/derived/studies/plank_n.csv",
-    "data/derived/studies/portela_n.csv",
-    "data/derived/studies/raghu_n.csv",
-    "data/derived/studies/satterthwaite_n.csv",
-    "data/derived/studies/scanga_n.csv",
-    "data/derived/studies/shryock_n.csv",
-    "data/derived/studies/target_studies.csv",
-    "data/derived/studies/toledo_n.csv",
-    "data/derived/studies/torres_n.csv",
-    "data/derived/climate/README.md",
-    "data/derived/climate/species_coords.csv",
-    "data/derived/climate/species_clim_prism.csv",
+    "data/derived/studies",
+    "data/derived/climate",
     "figures/README.md",
     "figures/Figure_1_transition_rates_single_mpm.png",
     "figures/Figure_2_derived_parameters_single_mpm.png",
     "figures/Figure_3_analysis1_point_vs_sampling_distributions.png",
     "figures/Figure_4_analysis1_life_expectancy_shape_relationship.png",
     "figures/Figure_5_analysis2_climate_effects_recruitment.png",
+    "figures/Figure_6_analysis3_simulation_performance.png",
     "figures/Figure_6_analysis3_climate_effects_multisite.png",
     "figures/Figure_S1_boundary_estimate_diagnostic.png",
     "figures/Figure_S2_boundary_survivorship_illustration.png",
+    "figures/Figure_S3_displacement_boundary_diagnostics.png",
+    "figures/Figure_S4_shape_threshold_sensitivity.png",
     "data/metadata/sources.md",
     ".lintr"
   )
@@ -171,11 +139,22 @@ prepare_zenodo_bundle <- function(
     "scripts/S12_case_study_2.R",
     "scripts/S13_supplement.R",
     "scripts/S14_case_study_3_astragalus.R",
+    "scripts/S15_case_study_1_qsd_threshold_sensitivity.R",
+    "scripts/S16_analysis_3_simulation.R",
+    "scripts/check_compadre_latest_concordance.R",
     "scripts/prepare_zenodo_bundle.R",
     "scripts/validate_reproduction.R"
   )
 
-  copy_paths <- c(copy_paths, script_paths)
+  # Summary caches (small CSV files) read by the manuscript and table scripts.
+  # Large intermediate .RData caches are excluded; scripts S04-S16 regenerate them.
+  cache_dir <- "data/derived/analysis_cache"
+  cache_paths <- c(
+    file.path(cache_dir, "README.md"),
+    list.files(cache_dir, pattern = "\\.csv$", full.names = TRUE)
+  )
+
+  copy_paths <- c(copy_paths, script_paths, cache_paths)
 
   copy_item <- function(path) {
     if (!file.exists(path)) {
@@ -216,6 +195,9 @@ prepare_zenodo_bundle <- function(
     "# source('scripts/S11_case_study_2_prism.R')",
     "source('scripts/S12_case_study_2.R')",
     "source('scripts/S13_supplement.R')",
+    "source('scripts/S14_case_study_3_astragalus.R')",
+    "source('scripts/S15_case_study_1_qsd_threshold_sensitivity.R')",
+    "source('scripts/S16_analysis_3_simulation.R')",
     "source('scripts/99_make_tables.R')"
   )
   if (bundle_type == "standard") {

@@ -607,17 +607,17 @@ More broadly, the growing availability of large, compiled demographic databases 
 
 We are indebted to the COMPADRE data digitisation team and management committee for their work in developing the COMPADRE Plant Matrix Database. We thank the original study authors who shared additional sample-size information and supporting materials, which enabled the inclusion of those matrices in our analyses. We are especially grateful to Patrick Barks for substantial preparatory work and early analytical contributions to this project. This work was supported by a grant from the Independent Research Fund Denmark (grant 6108-00467B).
 
-# Author contributions
-
-ORJ conceived and designed the study, curated data from the COMPADRE database and data provided by authors of papers selected for the analyses, conducted the analysis, and wrote the first draft of the manuscript. EGS contributed to conceptualization and interpretation of results, and reviewed and edited the manuscript. Both authors approved the final version for submission.
-
 # Conflict of interest
 
 The authors declare no conflict of interest.
 
+# Author contributions
+
+Owen R. Jones conceived and designed the study, curated data from the COMPADRE database and data provided by authors of papers selected for the analyses, conducted the analysis, and wrote the first draft of the manuscript. Emily G. Simmonds contributed to conceptualization and interpretation of results, and reviewed and edited the manuscript. Both authors approved the final version for publication.
+
 # Data availability
 
-Data and code required to reproduce our analyses are archived on Zenodo: https://doi.org/10.5281/zenodo.19474729.
+Data and code required to reproduce our analyses are available via Zenodo: https://doi.org/10.5281/zenodo.19474728 (Jones and Simmonds 2026).
 
 # Supplementary Materials
 
@@ -631,7 +631,7 @@ The supplementary materials include the following items:
 - **Supplementary Methods S1.6**: Simplified spring-temperature model (Analysis 2).
 - **Supplementary Methods S1.7**: Reporting recommendations for future MPM studies.
 - **Supplementary Methods S1.8**: Included versus excluded studies in the current target-study screen.
-- **Supplementary Methods S1.9**: Species identities in Analysis 1.
+- **Supplementary Methods S1.9**: Study and species identities in Analysis 1.
 - **Supplementary Methods S1.10**: Multisite robustness extension of Analysis 2 (*Astragalus scaphoides*).
 - **Supplementary Methods S1.11**: Boundary survival estimates and small stage-specific sample sizes in Analysis 1.
 - **Supplementary Methods S1.12**: Displacement magnitude versus boundary survival structure.
@@ -669,9 +669,13 @@ Adler, P. B., Salguero-Gómez, R., Compagnoni, A., Hsu, J. S., Ray-Mukherjee, J.
 
 Baudisch, A. (2011) The pace and shape of ageing. *Methods in Ecology and Evolution*, 2, 375-382. https://doi.org/10.1111/j.2041-210X.2010.00087.x
 
+Baudisch, A., and Stott, I. (2019) A pace and shape perspective on fertility. *Methods in Ecology and Evolution*, 10, 1941-1951. https://doi.org/10.1111/2041-210X.13289
+
 Baudisch, A., Salguero-Gómez, R., Jones, O. R., Wrycza, T., Mbeau-Ache, C., Franco, M., and Colchero, F. (2013) The pace and shape of senescence in angiosperms. *Journal of Ecology*, 101, 596-606. https://doi.org/10.1111/1365-2745.12084
 
 Biggs, R., Carpenter, S. R., and Brock, W. A. (2009) Spurious certainty: how ignoring measurement error and environmental heterogeneity may contribute to environmental controversies. *BioScience*, 59, 65-76. https://doi.org/10.1525/bio.2009.59.1.10
+
+Carpenter, B., Gelman, A., Hoffman, M. D., Lee, D., Goodrich, B., Betancourt, M., Brubaker, M., Guo, J., Li, P., and Riddell, A. (2017) Stan: A probabilistic programming language. *Journal of Statistical Software*, 76, 1-32. https://doi.org/10.18637/jss.v076.i01
 
 Caswell, H. (2001) *Matrix population models: construction, analysis, and interpretation*, 2nd ed. Sinauer, Sunderland, MA.
 
@@ -703,6 +707,8 @@ Horvitz, C. C., and Tuljapurkar, S. (2008) Stage dynamics, period survival, and 
 
 Jones, K. E., Bielby, J., Cardillo, M., Fritz, S. A., O'Dell, J., Orme, C. D. L., Safi, K., Sechrest, W., Boakes, E. H., Carbone, C., Connolly, C., Cutts, M. J., Foster, J. K., Grenyer, R., Habib, M., Plaster, C. A., Price, S. A., Rigby, E. A., Rist, J., Teacher, A., Bininda-Emonds, O. R. P., Gittleman, J. L., Mace, G. M., and Purvis, A. (2009) PanTHERIA: a species-level database of life history, ecology, and geography of extant and recently extinct mammals. *Ecology*, 90, 2648-2648. https://doi.org/10.1890/08-1494.1
 
+Jones, O. R., and Simmonds, E. G. (2026) Data and code for "When does sampling uncertainty matter in matrix population models? Evidence from published projection matrices" [Dataset]. Zenodo. https://doi.org/10.5281/zenodo.19474728
+
 Jones, O. R., Scheuerlein, A., Salguero-Gómez, R., Camarda, C. G., Schaible, R., Casper, B. B., Dahlgren, J. P., Ehrlén, J., García, M. B., Menges, E. S., Quintana-Ascencio, P. F., Caswell, H., Baudisch, A., and Vaupel, J. W. (2014) Diversity of ageing across the tree of life. *Nature*, 505, 169-173. https://doi.org/10.1038/nature12789
 
 Kendall, B. E. (1998) Estimating the magnitude of environmental stochasticity in survivorship data. *Ecological Applications*, 8, 184-193. https://doi.org/10.1890/1051-0761(1998)008[0184:ETMOES]2.0.CO;2
@@ -730,10 +736,6 @@ Salguero-Gómez, R., Jones, O. R., Archer, C. R., Buckley, Y. M., Che-Castaldo, 
 Salguero-Gómez, R., Jones, O. R., Archer, C. R., Bein, C., de Buhr, H., Farack, C., Gottschalk, F., Hartmann, A., Henning, A., Hoppe, G., Romer, G., Ruoff, T., Sommer, V., Wille, J., Voigt, J., Zeh, S., Vieregg, D., Buckley, Y. M., Che-Castaldo, J., Hodgson, D., Scheuerlein, A., Caswell, H., and Vaupel, J. W. (2016a) COMADRE: a global data base of animal demography. *Journal of Animal Ecology*, 85, 371-384. https://doi.org/10.1111/1365-2656.12482
 
 Salguero-Gómez, R., Jones, O. R., Jongejans, E., Blomberg, S. P., Hodgson, D. J., Mbeau-Ache, C., Zuidema, P. A., de Kroon, H., and Buckley, Y. M. (2016b) Fast–slow continuum and reproductive strategies structure plant life-history variation worldwide. *Proceedings of the National Academy of Sciences*, 113, 230-235. https://doi.org/10.1073/pnas.1506215112
-
-Baudisch, A., and Stott, I. (2019) A pace and shape perspective on fertility. *Methods in Ecology and Evolution*, 10, 1941-1951. https://doi.org/10.1111/2041-210X.13289
-
-Carpenter, B., Gelman, A., Hoffman, M. D., Lee, D., Goodrich, B., Betancourt, M., Brubaker, M., Guo, J., Li, P., and Riddell, A. (2017) Stan: A probabilistic programming language. *Journal of Statistical Software*, 76, 1-32. https://doi.org/10.18637/jss.v076.i01
 
 Simmonds, E. G., and Jones, O. R. (2024) Uncertainty propagation in matrix population models: gaps, importance and guidelines. *Methods in Ecology and Evolution*, 15, 427-438. https://doi.org/10.1111/2041-210X.14276
 

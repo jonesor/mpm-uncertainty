@@ -287,7 +287,8 @@ table_case2_gprc <- case2_gprc |>
     `Median beta` = beta_med,
     `Lower 95%` = beta_low95,
     `Upper 95%` = beta_upp95
-  )
+  ) |>
+  dplyr::select(-dplyr::any_of("lag_err"))
 
 table_case2_spring <- case2_spring |>
   dplyr::mutate(
@@ -448,7 +449,7 @@ table_case1_disp_models <- case1_disp_models |>
     ),
     Slope = sprintf("%.3f", slope),
     `95% CI` = sprintf("[%.3f, %.3f]", conf_low, conf_upp),
-    `P value` = format.pval(p_value, digits = 2, eps = 1e-4),
+    `P value` = vapply(p_value, function(p) if (p < 1e-4) "< 0.0001" else format(signif(p, 2), scientific = FALSE), character(1)),
     `R²` = sprintf("%.3f", r_squared)
   ) |>
   dplyr::transmute(
@@ -583,7 +584,7 @@ table_studies_sources <- studies_sources |>
 
 We reconstructed transition-rate uncertainty by direct conjugate posterior sampling, using 2,000 draws per MPM for the illustrative example and 1,000 for Analysis 1. For each origin-stage column of \(U\), allowed living transitions and death were drawn jointly from \(\mathrm{Dirichlet}(k_1+1,\ldots,k_m+1)\), corresponding to a multinomial likelihood and a \(\mathrm{Dirichlet}(1,\ldots,1)\) prior. Counts \(k_m\) were reconstructed as transition rates multiplied by stage sample size, after rescaling any \(U\) column whose sum exceeded 1. These reconstructed counts may be fractional for rounded or averaged matrix entries. Each allowed reproductive rate was drawn from \(\mathrm{Gamma}(1+k,\text{rate}=n)\), where \(k=nF_{ij}\), corresponding to a Poisson likelihood and an improper flat prior on the non-negative rate scale. These are posterior parameter draws, not bootstrap resamples of observations. We rebuilt each MPM and recalculated derived quantities for every draw.
 
-Allowed-transition masks default to positive entries in the focal matrix; where masks are constructed across matrices, an entry is allowed if positive in any contributing matrix. Other entries remain zero. Death is included even when its reconstructed count is zero, provided the column has an allowed living transition. This does not establish that excluded zero-valued transitions are biologically impossible. A missing sample size leaves its column unchanged; a sample size of zero produces a missing simulated column. Neither case supplies a posterior uncertainty estimate for that column. Figure 1C displays normalised marginal binomial or Poisson likelihood curves under flat priors over the plotted range; these are distinct from the joint Dirichlet draws used for derived quantities.
+Allowed-transition masks default to positive entries in the focal matrix; where masks are constructed across matrices, an entry is allowed if positive in any contributing matrix. Other entries remain zero. Death is included even when its reconstructed count is zero, provided the column has an allowed living transition. This does not establish that excluded zero-valued transitions are biologically impossible. A missing sample size leaves its column unchanged; a sample size of zero produces a missing simulated column. Neither case supplies a posterior uncertainty estimate for that column. Figure 1C of the main text displays normalised marginal binomial or Poisson likelihood curves under flat priors over the plotted range; these are distinct from the joint Dirichlet draws used for derived quantities.
 
 Point estimates correspond to values derived directly from the reported matrix entries; uncertainty-aware summaries describe the reconstructed posterior distributions.
 
@@ -646,7 +647,7 @@ These items are usually sufficient for parametric uncertainty reconstruction in 
 
 ## S1.8 Included versus excluded studies in the current target-study screen
 
-To assess whether the studies retained for uncertainty analysis differed systematically from those screened but not retained, we compared the 23 post-2010 studies in the final dataset that still fall within the current reproducible COMPADRE screen against the remaining 69 screened studies. For each study, we summarized mean matrix dimension, mean stage-specific survival (the average of \(U\)-column survival probabilities across matrices), and the proportions of stage-specific survival estimates equal to 0, equal to 1, or at either boundary. Dominant life form was defined as the modal `OrganismType` among a study's matrices. Three additional post-2010 studies in the final dataset do not fall within the current screen under `r compadre_version_label` (`r paste(sprintf('*%s*', included_not_in_screen$SpeciesAccepted), collapse = ', ')`), and five further studies were pre-2010 additions assembled on the basis of temporal replication (at least four annual matrices); these eight studies were excluded from this screen-based comparison. The requirement of at least four annual matrices applied only to those five pre-2010 studies, which were added to support the time-series analyses; it was not a selection criterion for the full 31-study dataset used across all analyses.
+To assess whether the studies retained for uncertainty analysis differed systematically from those screened but not retained, we compared the 23 post-2010 studies in the final dataset that still fall within the current reproducible COMPADRE screen against the remaining 69 screened studies. For each study, we summarised mean matrix dimension, mean stage-specific survival (the average of \(U\)-column survival probabilities across matrices), and the proportions of stage-specific survival estimates equal to 0, equal to 1, or at either boundary. Dominant life form was defined as the modal `OrganismType` among a study's matrices. Three additional post-2010 studies in the final dataset do not fall within the current screen under `r sub("\\(created ([A-Za-z]+)_([0-9]+)_([0-9]+)\\)", "(created \\2 \\1 \\3)", compadre_version_label)` (`r paste(sprintf('*%s*', included_not_in_screen$SpeciesAccepted), collapse = ', ')`), and five further studies were pre-2010 additions assembled on the basis of temporal replication (at least four annual matrices); these eight studies were excluded from this screen-based comparison. The requirement of at least four annual matrices applied only to those five pre-2010 studies, which were added to support the time-series analyses; it was not a selection criterion for the full 31-study dataset used across all analyses.
 
 ## S1.9 Study and species identities in Analysis 1
 
@@ -662,11 +663,11 @@ For sensitivity analyses intended to mimic database-only use (no access to true 
 
 ## S1.11 Boundary survival estimates and small stage-specific sample sizes in Analysis 1
 
-To assess whether the conditions most likely to distort point estimates were concentrated in particular parts of the Analysis 1 dataset, we summarized a separate set of 68 population-level entries from 28 species with recovered stage counts by COMPADRE `OrganismType` (used here as the available life-form grouping) and by broad matrix-dimension class (3-5 versus 6+ stages). For each population-level matrix, we recorded whether any stage-specific survival estimate lay exactly on the boundary (0 or 1), whether any stage had \(N < 20\) or \(N < 50\), and the minimum stage-specific sample size. This audit used unscaled \(U\) matrices, with exactly 100% survival in 22/68 entries, rather than the rescaled matrices and model subset described in the main Discussion. These summaries are descriptive and intended to identify where potentially fragile point estimates are concentrated in the analysed subset.
+To assess whether the conditions most likely to distort point estimates were concentrated in particular parts of the Analysis 1 dataset, we summarised a separate set of 68 population-level entries from 28 species with recovered stage counts by COMPADRE `OrganismType` (used here as the available life-form grouping) and by broad matrix-dimension class (3-5 versus 6+ stages). For each population-level matrix, we recorded whether any stage-specific survival estimate lay exactly on the boundary (0 or 1), whether any stage had \(N < 20\) or \(N < 50\), and the minimum stage-specific sample size. This audit used unscaled \(U\) matrices, with exactly 100% survival in 22/68 entries, rather than the rescaled matrices and model subset described in the main Discussion. These summaries are descriptive and intended to identify where potentially fragile point estimates are concentrated in the analysed subset.
 
 ## S1.12 Displacement magnitude versus boundary survival structure
 
-To examine factors associated with point-estimate displacement in Analysis 1, we compared each population-level point estimate to the median of its sampling distribution for mature life expectancy and shape. We defined displacement magnitude as the absolute difference between the point estimate and the sampling-distribution median; for life expectancy, this was calculated on the \(\log_{10}\) scale to reflect multiplicative discrepancies. We then related displacement magnitude to two predictors derived from the same population-level matrix: (i) the number of stage-specific survival estimates at the boundary (0 or 1), and (ii) the proportion of observed individuals belonging to boundary-survival stages, calculated from the recovered stage-specific sample sizes. We summarized these relationships with simple linear regressions and visualized them with scatter plots and fitted lines.
+To examine factors associated with point-estimate displacement in Analysis 1, we compared each population-level point estimate to the median of its sampling distribution for mature life expectancy and shape. We defined displacement magnitude as the absolute difference between the point estimate and the sampling-distribution median; for life expectancy, this was calculated on the \(\log_{10}\) scale to reflect multiplicative discrepancies. We then related displacement magnitude to two predictors derived from the same population-level matrix: (i) the number of stage-specific survival estimates at the boundary (0 or 1), and (ii) the proportion of observed individuals belonging to boundary-survival stages, calculated from the recovered stage-specific sample sizes. We summarised these relationships with simple linear regressions and visualised them with scatter plots and fitted lines.
 
 ## S1.13 Sensitivity to the quasi-stable-distribution truncation threshold
 
@@ -690,7 +691,7 @@ Boundary survival estimates can arise from finite sampling of discrete stage cla
 
 ## S2.3 Does displacement increase with boundary survival structure?
 
-Displacement magnitude increased with both measures of boundary-survival structure (Figure S3; Table S13). For shape, the absolute difference between the point estimate and the sampling-distribution median increased with the number of boundary survival stages (slope = `r shape_nb_slope`, 95% CI `r shape_nb_ci`) and with the proportion of individuals in boundary-survival stages (slope = `r shape_pb_slope`, 95% CI `r shape_pb_ci`). For mature life expectancy, the same pattern was evident on the \(\log_{10}\) scale (number of boundary stages: slope = `r l0_nb_slope`, 95% CI `r l0_nb_ci`; proportion of individuals in boundary-survival stages: slope = `r l0_pb_slope`, 95% CI `r l0_pb_ci`). The fitted models explained a modest but non-trivial share of the among-matrix variation in displacement magnitude (\(R^2 = `r sprintf('%.3f', disp_r2_min)`-`r sprintf('%.3f', disp_r2_max)`\)). These associations are consistent with the proposed mechanism, but do not establish causality.
+Displacement magnitude increased with both measures of boundary-survival structure (Figure S3; Table S13). For shape, the absolute difference between the point estimate and the sampling-distribution median increased with the number of boundary survival stages (slope = `r shape_nb_slope`, 95% CI `r shape_nb_ci`) and with the proportion of individuals in boundary-survival stages (slope = `r shape_pb_slope`, 95% CI `r shape_pb_ci`). For mature life expectancy, the same pattern was evident on the \(\log_{10}\) scale (number of boundary stages: slope = `r l0_nb_slope`, 95% CI `r l0_nb_ci`; proportion of individuals in boundary-survival stages: slope = `r l0_pb_slope`, 95% CI `r l0_pb_ci`). The fitted models explained a modest but non-trivial share of the among-matrix variation in displacement magnitude (\(R^2\) = `r sprintf('%.3f', disp_r2_min)`–`r sprintf('%.3f', disp_r2_max)`). These associations are consistent with the proposed mechanism, but do not establish causality.
 
 ## S2.4 How sensitive are shape estimates to the truncation threshold?
 
@@ -798,7 +799,7 @@ ft
 
 \newpage
 
-Table S9. Analysis 2 stage-specific survival-temperature coefficients under two point-estimate weighting scenarios. “No weights” treats annual stage-specific survival proportions equally, whereas “SSD weights” applies stable-stage-distribution weights from the annual \(U\) matrix.
+Table S9. Analysis 2 stage-specific survival-temperature coefficients under two point-estimate weighting scenarios. “No weights” treats annual stage-specific survival proportions equally, whereas “SSD weights” applies stable-stage-distribution weights from the annual \(U\) matrix. Blank cells indicate stages that were not estimable (see section S1.6).
 
 ```{r table-case2-stage-weight}
 ft <- make_flextable(table_case2_stage_weight)
@@ -807,7 +808,7 @@ ft
 
 \newpage
 
-Table S10. Multisite robustness-analysis stage-specific survival-temperature coefficients under two point-estimate weighting scenarios across sites. The comparison shows how coefficient estimates and interval widths change when no stage sample-size information is used and SSD weights are substituted.
+Table S10. Multisite robustness-analysis stage-specific survival-temperature coefficients under two point-estimate weighting scenarios across sites. The comparison shows how coefficient estimates and interval widths change when no stage sample-size information is used and SSD weights are substituted. Blank cells indicate stages that were not estimable (see section S1.6).
 
 ```{r table-case3-stage-weight}
 ft <- make_flextable(table_case3_stage_weight)
@@ -844,7 +845,7 @@ ft <- flextable::width(ft, j = "Predictor", width = 1.80)
 ft <- flextable::width(ft, j = "Population entries, n", width = 0.70)
 ft <- flextable::width(ft, j = "Slope", width = 0.50)
 ft <- flextable::width(ft, j = "95% CI", width = 0.80)
-ft <- flextable::width(ft, j = "P value", width = 0.55)
+ft <- flextable::width(ft, j = "P value", width = 0.65)
 ft <- flextable::width(ft, j = "R²", width = 0.45)
 ft
 ```
@@ -855,6 +856,9 @@ Table S14. Sensitivity of Analysis 1 shape estimates to the quasi-stable-distrib
 
 ```{r table-case1-qsd-threshold}
 ft <- make_flextable(table_case1_qsd_sens)
+ft <- flextable::set_table_properties(ft, layout = "fixed")
+ft <- flextable::fontsize(ft, size = 7, part = "all")
+ft <- flextable::width(ft, width = c(0.80, 0.55, 0.70, 0.60, 0.65, 0.55, 0.65, 0.50, 0.45, 0.55))
 ft
 ```
 
