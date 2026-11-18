@@ -26,3 +26,9 @@ apps/**/rsconnect/
 
 # Word lock files
 ~$*
+
+# Rendered manuscript outputs (rebuild with docs/manuscript/render_manuscripts.R;
+# the accepted versions are kept in final_version/)
+docs/manuscript/*.docx
+docs/manuscript/manuscript_combined.Rmd
+docs/manuscript/submission/*.docx

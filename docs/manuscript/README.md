@@ -1,37 +1,28 @@
 # Manuscript files
 
-This folder contains the paper source files, rendered outputs, style template, and Zenodo packaging workspace.
+Sources and build tools for the paper. Rendered outputs are **not** stored here.
 
 ## Core files
 
 - `manuscript_main.Rmd` main manuscript source.
 - `manuscript_supplement.Rmd` supplementary materials source.
-- `render_manuscripts.R` render script for both documents and Zenodo bundle staging.
-
-## Rendered outputs
-
-- `sampling_uncertainty_mpm_main.docx` rendered main manuscript.
-- `sampling_uncertainty_mpm_supplement.docx` rendered supplement.
-
-## Styling
-
+- `render_manuscripts.R` renders both documents, copies the main figures and builds the Zenodo bundle.
 - `styles/reference.docx` Word reference style template used by both Rmd files.
 
-## Reproducibility packaging
+## Outputs
 
-- `zenodo/` Zenodo deposition workspace:
-  - `staging/` temporary bundle builds (git-ignored except `README.md`).
-  - `archive/` zipped bundles for deposition (git-ignored except `README.md`).
+All rendered files go to `final_version/` at the project root (git-tracked, accepted versions):
 
-## Submission bundle
+- `sampling_uncertainty_mpm_main_final.docx`
+- `sampling_uncertainty_mpm_supplement_final.docx`
+- `figures/Figure_1.png` to `Figure_6.png` (300 dpi, journal file names)
 
-- `submission/` curated submission-ready files:
-  - main and supplement `.docx`,
-  - combined manuscript+supplement `.docx`,
-  - latest Zenodo `.zip`,
-  - plain-text Zenodo description,
-  - draft cover letters,
-  - main manuscript figure files.
+Figures themselves are created by the analysis scripts in `figures/` (the only copy of each).
+
+## Zenodo
+
+- `zenodo/` bundle workspace (`staging/` and `archive/` are git-ignored).
+- `submission/` holds the deposited Zenodo zip, its description text and the cover letters.
 
 ## Usage
 
@@ -41,4 +32,5 @@ From the project root in R:
 source("docs/manuscript/render_manuscripts.R")
 ```
 
-This renders both `.docx` files and then prepares a Zenodo staging bundle.
+Rendering requires a UTF-8 locale and pandoc (RStudio bundles one).
+Peer-review history and earlier versions are in `peer_review/`.

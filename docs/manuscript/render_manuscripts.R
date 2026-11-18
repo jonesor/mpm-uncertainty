@@ -1,5 +1,8 @@
 # Render main manuscript and supplement ----
 #
+# Rendered .docx files and the main figure PNGs are written to final_version/
+# (the single output folder). Nothing else is copied around.
+#
 # Usage (from project root):
 #   source('docs/manuscript/render_manuscripts.R')
 # This script also runs:
@@ -20,13 +23,15 @@ if (!file.exists(main_rmd) || !file.exists(supp_rmd)) {
 main_out <- rmarkdown::render(
   main_rmd,
   output_format = "bookdown::word_document2",
-  output_file = "sampling_uncertainty_mpm_main.docx",
+  output_file = "sampling_uncertainty_mpm_main_final.docx",
+  output_dir = "final_version",
   quiet = TRUE
 )
 supp_out <- rmarkdown::render(
   supp_rmd,
   output_format = "bookdown::word_document2",
-  output_file = "sampling_uncertainty_mpm_supplement.docx",
+  output_file = "sampling_uncertainty_mpm_supplement_final.docx",
+  output_dir = "final_version",
   quiet = TRUE
 )
 
@@ -34,31 +39,26 @@ cat("Rendered manuscript files:\n")
 cat("- ", main_out, "\n", sep = "")
 cat("- ", supp_out, "\n", sep = "")
 
-# Copy manuscript figure PNGs to docs/manuscript with manuscript-numbered names.
-figure_map <- c(
-  "figures/Figure_1_transition_rates_single_mpm.png" = "docs/manuscript/Figure_1_transition_rates_single_mpm.png",
-  "figures/Figure_2_derived_parameters_single_mpm.png" = "docs/manuscript/Figure_2_derived_parameters_single_mpm.png",
-  "figures/Figure_3_analysis1_point_vs_sampling_distributions.png" = "docs/manuscript/Figure_3_analysis1_point_vs_sampling_distributions.png",
-  "figures/Figure_4_analysis1_life_expectancy_shape_relationship.png" = "docs/manuscript/Figure_4_analysis1_life_expectancy_shape_relationship.png",
-  "figures/Figure_5_analysis2_climate_effects_recruitment.png" = "docs/manuscript/Figure_5_analysis2_climate_effects_recruitment.png",
-  "figures/Figure_6_analysis3_simulation_performance.png" = "docs/manuscript/Figure_6_analysis3_simulation_performance.png",
-  "figures/Figure_S1_boundary_estimate_diagnostic.png" = "docs/manuscript/Figure_S1_boundary_estimate_diagnostic.png",
-  "figures/Figure_S2_boundary_survivorship_illustration.png" = "docs/manuscript/Figure_S2_boundary_survivorship_illustration.png"
+# Copy main-text figures to final_version/figures/ with journal file names.
+fig_src <- c(
+  "Figure_1_transition_rates_single_mpm.png",
+  "Figure_2_derived_parameters_single_mpm.png",
+  "Figure_3_analysis1_point_vs_sampling_distributions.png",
+  "Figure_4_analysis1_life_expectancy_shape_relationship.png",
+  "Figure_5_analysis2_climate_effects_recruitment.png",
+  "Figure_6_analysis3_simulation_performance.png"
 )
-
-for (src in names(figure_map)) {
-  dst <- figure_map[[src]]
+dir.create("final_version/figures", recursive = TRUE, showWarnings = FALSE)
+for (f in fig_src) {
+  src <- file.path("figures", f)
+  dst <- file.path("final_version", "figures", sub("^(Figure_[0-9]+)_.*$", "\\1.png", f))
   if (!file.exists(src)) {
     warning("Missing figure source file: ", src)
     next
   }
   file.copy(src, dst, overwrite = TRUE)
 }
-
-cat("\nCopied manuscript figure PNGs:\n")
-for (dst in unname(figure_map)) {
-  if (file.exists(dst)) cat("- ", dst, "\n", sep = "")
-}
+cat("\nCopied main figures to final_version/figures/\n")
 
 # Build Zenodo bundle after rendering (skip re-render to avoid duplication).
 source("scripts/prepare_zenodo_bundle.R")
@@ -66,90 +66,9 @@ bundle_dir <- prepare_zenodo_bundle(skip_render = TRUE)
 cat("\nZenodo bundle prepared at:\n")
 cat("- ", bundle_dir, "\n", sep = "")
 
-# Refresh submission bundle artifacts (cover letters are preserved as-is).
+# Submission folder holds only the Zenodo zip, its description and cover letters.
 submission_dir <- "docs/manuscript/submission"
 if (!dir.exists(submission_dir)) dir.create(submission_dir, recursive = TRUE, showWarnings = FALSE)
-
-main_doc <- "docs/manuscript/sampling_uncertainty_mpm_main.docx"
-supp_doc <- "docs/manuscript/sampling_uncertainty_mpm_supplement.docx"
-combined_doc <- file.path(submission_dir, "sampling_uncertainty_mpm_combined.docx")
-
-file.copy(main_doc, file.path(submission_dir, basename(main_doc)), overwrite = TRUE)
-file.copy(supp_doc, file.path(submission_dir, basename(supp_doc)), overwrite = TRUE)
-
-# Build combined manuscript+supplement DOCX by concatenating Rmd sources and rendering.
-strip_yaml <- function(lines) {
-  if (length(lines) < 3 || trimws(lines[1]) != "---") {
-    return(lines)
-  }
-  end_idx <- which(trimws(lines[-1]) == "---")[1] + 1
-  if (is.na(end_idx)) {
-    return(lines)
-  }
-  if (end_idx >= length(lines)) {
-    return(character(0))
-  }
-  lines[(end_idx + 1):length(lines)]
-}
-
-prefix_r_chunk_labels <- function(lines, prefix = "supp-") {
-  starts <- grepl("^```\\{r[^}]*\\}$", lines)
-  if (!any(starts)) return(lines)
-  lines[starts] <- vapply(
-    lines[starts],
-    FUN.VALUE = character(1),
-    function(x) {
-      inside <- sub("^```\\{r\\s*", "", x)
-      inside <- sub("\\}$", "", inside)
-      comma_pos <- regexpr(",", inside, fixed = TRUE)
-
-      if (comma_pos[1] > 0) {
-        label <- trimws(substr(inside, 1, comma_pos[1] - 1))
-        rest <- substr(inside, comma_pos[1], nchar(inside))
-      } else {
-        label <- trimws(inside)
-        rest <- ""
-      }
-
-      if (identical(label, "")) return(x)
-      paste0("```{r ", prefix, label, rest, "}")
-    }
-  )
-  lines
-}
-
-main_lines <- readLines(main_rmd, warn = FALSE, encoding = "UTF-8")
-supp_lines <- readLines(supp_rmd, warn = FALSE, encoding = "UTF-8")
-supp_body <- strip_yaml(supp_lines)
-supp_body <- prefix_r_chunk_labels(supp_body, prefix = "supp-")
-
-combined_rmd <- file.path("docs", "manuscript", "manuscript_combined.Rmd")
-combined_lines <- c(
-  main_lines,
-  "",
-  "\\newpage",
-  "",
-  supp_body
-)
-writeLines(combined_lines, combined_rmd, useBytes = TRUE)
-
-combined_out <- tryCatch(
-  rmarkdown::render(
-    input = combined_rmd,
-    output_format = "bookdown::word_document2",
-    output_file = basename(combined_doc),
-    output_dir = submission_dir,
-    quiet = TRUE
-  ),
-  error = function(e) {
-    warning("Could not build combined DOCX from combined Rmd: ", conditionMessage(e))
-    NA_character_
-  }
-)
-
-if (is.na(combined_out) || !file.exists(combined_doc)) {
-  warning("Combined DOCX was not produced at: ", combined_doc)
-}
 
 zip_path <- file.path(
   "docs", "manuscript", "zenodo", "archive",
@@ -169,24 +88,6 @@ latest_zip <- file.path(submission_dir, basename(zip_path))
 stale_zips <- setdiff(submission_zips, latest_zip)
 if (length(stale_zips) > 0) {
   invisible(file.remove(stale_zips))
-}
-
-# Remove legacy combined-Rmd copy in submission if present.
-legacy_combined_rmd <- file.path(submission_dir, "sampling_uncertainty_mpm_combined.Rmd")
-if (file.exists(legacy_combined_rmd)) {
-  file.remove(legacy_combined_rmd)
-}
-
-main_figs <- c(
-  "docs/manuscript/Figure_1_transition_rates_single_mpm.png",
-  "docs/manuscript/Figure_2_derived_parameters_single_mpm.png",
-  "docs/manuscript/Figure_3_analysis1_point_vs_sampling_distributions.png",
-  "docs/manuscript/Figure_4_analysis1_life_expectancy_shape_relationship.png",
-  "docs/manuscript/Figure_5_analysis2_climate_effects_recruitment.png",
-  "docs/manuscript/Figure_6_analysis3_simulation_performance.png"
-)
-for (fig in main_figs) {
-  if (file.exists(fig)) file.copy(fig, file.path(submission_dir, basename(fig)), overwrite = TRUE)
 }
 
 desc_path <- file.path(submission_dir, "zenodo_zip_description.txt")

@@ -28,7 +28,9 @@ Folder guide
 - `data/metadata/`      Data dictionaries and provenance notes.
 - `figures/`            Generated figures for the paper.
 - `docs/`               Notes, methods, and documentation.
-- `docs/manuscript/`    Main manuscript and supplement Rmd files, render scripts, and submission materials.
+- `docs/manuscript/`    Main manuscript and supplement Rmd files and the render script.
+- `final_version/`      Rendered accepted manuscript, supplement and main figures (outputs of the render script).
+- `peer_review/`        Read-only history of submission, revision and preprint files.
 
 Notes
 -----
